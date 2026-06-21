@@ -1,0 +1,66 @@
+# See https://help.github.com/articles/ignoring-files/
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# testing
+/coverage
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# local env — never commit secrets
+.env
+.env.*
+!.env.example
+
+# local binaries / installers
+*.exe
+*.msi
+*.dmg
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.cursor/
+*.swp
+*.swo
+
+# supabase local CLI
+.supabase/
+
+# scratch / local test files
+test.js
+test2.js
+
+# OS / tooling
+.agents/

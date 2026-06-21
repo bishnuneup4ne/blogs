@@ -1,0 +1,43 @@
+/* Static SVG diagram container - matches Mermaid styling */
+.box {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow-x: auto;
+}
+
+:global([data-theme="light"]) .box {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 2rem;
+}
+
+.inner :global(svg) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.caption {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  font-style: italic;
+}
+
+:global([data-theme="light"]) .caption {
+  color: rgba(0, 0, 0, 0.5);
+}

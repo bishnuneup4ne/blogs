@@ -1,0 +1,46 @@
+.themeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--static-space-24);
+  height: var(--static-space-24);
+  min-height: var(--static-space-24);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: #a3a3a3;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: #fafafa;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  svg {
+    color: currentColor;
+  }
+}
+
+:global([data-theme="light"]) .themeBtn {
+  color: #52525b;
+
+  &:hover,
+  &:focus-visible {
+    color: #18181b;
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+}

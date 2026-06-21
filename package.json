@@ -1,0 +1,53 @@
+{
+  "name": "@once-ui-system/magic-portfolio",
+  "version": "2.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
+    "dev:clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev",
+    "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
+    "build": "next build",
+    "build:start": "npm run build && next start",
+    "start": "next start",
+    "lint": "next lint",
+    "biome-write": "npx @biomejs/biome format --write ."
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.0",
+    "@next/mdx": "^16.0.10",
+    "@once-ui-system/core": "latest",
+    "@supabase/supabase-js": "^2.106.1",
+    "classnames": "^2.5.1",
+    "cookie": "^1.0.2",
+    "easymde": "^2.21.0",
+    "gray-matter": "^4.0.3",
+    "lint-staged": "^16.1.5",
+    "mermaid": "^11.15.0",
+    "next": "^16.2.6",
+    "next-mdx-remote": "^6.0.0",
+    "postcss": "^8.5.15",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
+    "react-simplemde-editor": "^5.2.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.12.3",
+    "sass": "^1.86.3",
+    "transliteration": "^2.3.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/cookie": "^0.6.0",
+    "@types/node": "^20.17.30",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.25.0",
+    "gh-pages": "^6.3.0",
+    "supabase": "^2.101.0",
+    "typescript": "^5.8.3",
+    "tzdata": "^1.0.44"
+  }
+}

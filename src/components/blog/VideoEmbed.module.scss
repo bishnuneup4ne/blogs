@@ -1,0 +1,27 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: var(--glass-shadow, 0 8px 32px rgba(0, 0, 0, 0.4));
+}
+
+.iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.invalid {
+  margin: 0;
+  padding: 1rem;
+  font-size: 13px;
+  color: var(--neutral-on-background-weak);
+  border: 1px dashed var(--neutral-border-medium);
+  border-radius: 8px;
+}

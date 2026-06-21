@@ -1,0 +1,354 @@
+.imageContainer {
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent !important;
+  background-color: transparent !important;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    transform: scale(1.01);
+
+    .zoomIcon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--neutral-border-strong);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+}
+
+.zoomIcon {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  font-size: 24px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeIn 0.25s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  pointer-events: auto;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  background-color: rgba(0, 0, 0, 0.88);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 95vw;
+  height: 95vh;
+  animation: zoomIn 0.3s ease;
+  pointer-events: auto;
+  z-index: 1000;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.zoomedImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.closeButton {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.resetButton {
+  position: absolute;
+  top: 20px;
+  right: 70px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1001;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.controls {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 40px;
+  padding: 12px 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1001;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.zoomButton {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: auto;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+.zoomLevel {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+  font-family: ui-monospace, monospace;
+}
+
+.hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeIn 0.4s ease 0.3s both;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .modal {
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+
+  .closeButton {
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+    top: 16px;
+    right: 16px;
+  }
+
+  .resetButton {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    top: 16px;
+    right: 60px;
+  }
+
+  .controls {
+    bottom: 70px;
+    padding: 6px 12px;
+    gap: 10px;
+  }
+
+  .zoomButton {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .zoomLevel {
+    font-size: 11px;
+    min-width: 45px;
+  }
+
+  .hint {
+    font-size: 11px;
+    bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    max-width: 98vw;
+    max-height: 98vh;
+  }
+
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .resetButton {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    top: 12px;
+    right: 52px;
+  }
+
+  .controls {
+    bottom: 60px;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .zoomButton {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+
+  .zoomLevel {
+    font-size: 10px;
+    min-width: 40px;
+  }
+
+  .hint {
+    font-size: 10px;
+    bottom: 14px;
+  }
+}

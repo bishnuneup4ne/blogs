@@ -1,0 +1,33 @@
+.videoBlock {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  box-shadow: var(--glass-shadow);
+}
+
+.body {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+}
+
+[data-theme="dark"] .body {
+  background: #000000;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+:global([data-theme="light"]) .body {
+  background: #ffffff;
+  border: none;
+  backdrop-filter: none;
+}
