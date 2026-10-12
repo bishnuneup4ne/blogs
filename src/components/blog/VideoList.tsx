@@ -51,9 +51,6 @@ export async function VideoList({ category = "Personal" }: { category?: string }
           >
             Video posts will show up here as soon as they are published.
           </Text>
-          <Text variant="label-default-s" onBackground="neutral-weak" align="center">
-            Tip: publish a writeup with a video URL from Admin → Videos.
-          </Text>
         </Column>
       </Column>
     );
