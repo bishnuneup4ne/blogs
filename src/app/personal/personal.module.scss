@@ -2,40 +2,57 @@
   display: inline-flex;
   align-self: flex-start;
   gap: 4px;
-  margin-top: 16px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--neutral-alpha-weak);
-  border: 1px solid var(--neutral-border-weak);
+  margin-top: 18px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--neutral-border-weak);
 }
 
 .tab,
 .tabActive {
-  padding: 8px 18px;
-  border-radius: 999px;
+  position: relative;
+  padding: 8px 14px 12px;
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-decoration: none;
-  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  background: transparent;
+  border: none;
+  transition: color 0.2s ease;
 }
 
 .tab {
-  color: var(--neutral-on-background-weak);
+  color: var(--neutral-on-background-weak) !important;
+}
+
+.tab::after,
+.tabActive::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-solid-medium);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .tab:hover {
-  color: var(--neutral-on-background-strong);
-  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-strong) !important;
+  background: transparent;
+}
+
+.tab:hover::after {
+  transform: scaleX(0.5);
 }
 
 .tabActive {
-  color: var(--page-background);
-  background: var(--neutral-on-background-strong);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28);
+  color: var(--neutral-on-background-strong) !important;
+  background: transparent;
 }
 
-.tabActive:hover {
-  color: var(--page-background);
-  background: var(--neutral-on-background-strong);
+.tabActive::after {
+  transform: scaleX(1);
 }
