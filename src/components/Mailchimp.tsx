@@ -208,7 +208,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
                 variant="primary"
                 size="l"
                 suffixIcon="arrowRight"
-                disabled={loading || !!error || !email}
+                disabled={loading}
                 label={loading ? "Subscribing..." : "Subscribe"}
               />
             </>

@@ -128,7 +128,7 @@ export const Header = () => {
   const navItems = [
     {
       name: "Home",
-      href: "/blogs",
+      href: "/",
       icon: HomeIcon,
       selected: onHome && !onBlogPost,
       show: routes["/blogs"],
