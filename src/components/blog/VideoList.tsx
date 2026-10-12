@@ -1,3 +1,4 @@
+import { Column, Heading, Icon, Row, Text } from "@once-ui-system/core";
 import { getSupabasePostsWithContent } from "@/utils/supabasePosts";
 import { formatListDateUpper } from "@/utils/formatDate";
 import { VideoGalleryClient } from "./VideoGalleryClient";
@@ -20,9 +21,41 @@ export async function VideoList({ category = "Personal" }: { category?: string }
 
   if (videos.length === 0) {
     return (
-      <p className={styles.empty}>
-        No videos yet. Add a writeup with a video URL in Admin → Videos.
-      </p>
+      <Column
+        fillWidth
+        horizontal="center"
+        padding="40"
+        radius="l"
+        border="neutral-alpha-weak"
+        background="surface"
+      >
+        <Column maxWidth="m" horizontal="center" align="center" gap="12">
+          <Row
+            horizontal="center"
+            vertical="center"
+            radius="full"
+            border="neutral-alpha-weak"
+            background="neutral-alpha-weak"
+            className={styles.emptyIcon}
+          >
+            <Icon name="play" size="l" onBackground="neutral-strong" />
+          </Row>
+          <Heading variant="heading-strong-m" align="center">
+            No videos yet
+          </Heading>
+          <Text
+            variant="body-default-s"
+            onBackground="neutral-weak"
+            align="center"
+            wrap="balance"
+          >
+            Video posts will show up here as soon as they are published.
+          </Text>
+          <Text variant="label-default-s" onBackground="neutral-weak" align="center">
+            Tip: publish a writeup with a video URL from Admin → Videos.
+          </Text>
+        </Column>
+      </Column>
     );
   }
 

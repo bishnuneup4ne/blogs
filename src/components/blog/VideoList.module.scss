@@ -153,9 +153,10 @@
   text-transform: uppercase;
 }
 
-.empty {
-  color: var(--neutral-on-background-weak);
-  font-size: 14px;
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
 }
 
 /* —— Modal / preview panel —— */
