@@ -41,8 +41,10 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
   const imageCacheRef = useRef<Set<string>>(new Set());
   const tlRef = useRef<gsap.core.Tween | gsap.core.Timeline | null>(null);
   const visibleRef = useRef(false);
+  const lastSlugRef = useRef<string | null>(null);
 
   const [active, setActive] = useState<BlogListItem | null>(null);
+  const [listHover, setListHover] = useState(false);
   const [readyImage, setReadyImage] = useState("");
   const [canHoverState, setCanHoverState] = useState(false);
 
@@ -61,33 +63,29 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
   }, []);
 
   useEffect(() => {
-    if (!tipRef.current || !hoverEnabled) return;
-    tlRef.current?.kill();
+    const tip = tipRef.current;
+    if (!tip || !hoverEnabled) return;
 
-    const content = tipRef.current.querySelectorAll("[data-tip-content]");
+    const content = tip.querySelectorAll("[data-tip-content]");
+    const wasVisible = visibleRef.current;
 
-    if (active) {
-      const p = lastPoint.current;
-      const h = tipRef.current.offsetHeight || 320;
-      let tx = (p?.x ?? 0) + TIP_OFFSET_X;
-      if (tx + TIP_WIDTH + TIP_MARGIN > window.innerWidth) tx = (p?.x ?? 0) - TIP_WIDTH - TIP_OFFSET_X;
-      let ty = (p?.y ?? 0) - h / 2;
-      ty = Math.max(TIP_MARGIN, Math.min(ty, window.innerHeight - h - TIP_MARGIN));
-      gsap.set(tipRef.current, { x: tx, y: ty });
+    if (listHover && active) {
+      if (!wasVisible) {
+        // Entering the list: place at the cursor, pop the card in, stagger content.
+        const p = lastPoint.current;
+        const h = tip.offsetHeight || 320;
+        let tx = (p?.x ?? 0) + TIP_OFFSET_X;
+        if (tx + TIP_WIDTH + TIP_MARGIN > window.innerWidth) tx = (p?.x ?? 0) - TIP_WIDTH - TIP_OFFSET_X;
+        let ty = (p?.y ?? 0) - h / 2;
+        ty = Math.max(TIP_MARGIN, Math.min(ty, window.innerHeight - h - TIP_MARGIN));
 
-      if (visibleRef.current) {
-        // Already showing: crossfade just the content for a smooth item switch.
-        const tl = gsap.timeline();
-        tl.to(content, { autoAlpha: 0, y: -6, duration: 0.12, ease: "power1.in" });
-        tl.set(content, { y: 10 });
-        tl.to(content, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.04, ease: "power2.out" });
-        tlRef.current = tl;
-      } else {
-        // First show: fade + scale the card in, then stagger its content.
         visibleRef.current = true;
+        lastSlugRef.current = active.slug;
+        tlRef.current?.kill();
+        gsap.set(tip, { x: tx, y: ty });
         const tl = gsap.timeline();
         tl.fromTo(
-          tipRef.current,
+          tip,
           { autoAlpha: 0, scale: 0.94 },
           { autoAlpha: 1, scale: 1, duration: 0.32, ease: "back.out(1.6)" },
         );
@@ -98,19 +96,31 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
           0.08,
         );
         tlRef.current = tl;
+      } else if (lastSlugRef.current !== active.slug) {
+        // Moving to another post while visible: glide stays on, crossfade the content.
+        lastSlugRef.current = active.slug;
+        tlRef.current?.kill();
+        const tl = gsap.timeline();
+        tl.to(content, { autoAlpha: 0, y: -6, duration: 0.12, ease: "power1.in" });
+        tl.set(content, { y: 10 });
+        tl.to(content, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.04, ease: "power2.out" });
+        tlRef.current = tl;
       }
-    } else {
+    } else if (wasVisible) {
+      // Left the list: fade the card out.
       visibleRef.current = false;
+      lastSlugRef.current = null;
       rotTo.current?.(0);
-      tlRef.current = gsap.to(tipRef.current, {
+      tlRef.current?.kill();
+      tlRef.current = gsap.to(tip, {
         autoAlpha: 0,
         scale: 0.94,
         rotation: 0,
-        duration: 0.22,
+        duration: 0.24,
         ease: "power2.in",
       });
     }
-  }, [active?.slug, hoverEnabled]);
+  }, [listHover, active?.slug, hoverEnabled]);
 
   useEffect(() => {
     if (!tipImgRef.current || !hoverEnabled || !active) return;
@@ -185,7 +195,13 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
       <ul
         ref={listRef}
         className={styles.list}
-        onMouseLeave={() => setActive(null)}
+        onMouseEnter={(e) => {
+          if (!hoverEnabled) return;
+          lastPoint.current = { x: e.clientX, y: e.clientY };
+          setActive((prev) => prev ?? items[0] ?? null);
+          setListHover(true);
+        }}
+        onMouseLeave={() => setListHover(false)}
         onMouseMove={onListMouseMove}
       >
         {items.map((item) => (
@@ -194,7 +210,10 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
               href={item.href}
               className={`${styles.row} ${active?.slug === item.slug ? styles.rowActive : ""}`}
               onMouseEnter={() => hoverEnabled && setActive(item)}
-              onFocus={() => setActive(item)}
+              onFocus={() => {
+                setActive(item);
+                setListHover(true);
+              }}
             >
               <span className={styles.index}>{String(item.index).padStart(2, "0")}</span>
               <span className={styles.title}>{item.title}</span>
