@@ -36,22 +36,11 @@
 
 .meta {
   flex-shrink: 0;
-  margin: 0 0 0.35rem;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 0.4rem;
+  font-family: var(--font-label);
+  font-size: 0.8rem;
+  color: var(--neutral-on-background-weak);
   white-space: nowrap;
-}
-
-:global([data-theme="light"]) .meta {
-  border-color: rgba(0, 0, 0, 0.12);
-  background: rgba(0, 0, 0, 0.03);
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .meta a {
