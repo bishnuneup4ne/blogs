@@ -40,8 +40,13 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
 
   const [active, setActive] = useState<BlogListItem | null>(null);
   const [readyImage, setReadyImage] = useState("");
+  const [canHoverState, setCanHoverState] = useState(false);
 
-  const hoverEnabled = showPreview && canHover();
+  useEffect(() => {
+    setCanHoverState(canHover());
+  }, []);
+
+  const hoverEnabled = showPreview && canHoverState;
 
   useEffect(() => {
     if (!tipRef.current) return;
