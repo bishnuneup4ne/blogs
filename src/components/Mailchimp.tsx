@@ -6,7 +6,8 @@ import { Button, Heading, Input, Text, Background, Column, Row } from "@once-ui-
 import { ClientOnly } from "@/components/ClientOnly";
 import styles from "./Mailchimp.module.scss";
 import { Opacity, SpacingToken } from "@once-ui-system/core";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 
 function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
   let timeout: ReturnType<typeof setTimeout>;
@@ -52,6 +53,31 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
       setError("Please enter a valid email address.");
     }
   };
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const pill = form.querySelector("[data-anim]");
+    if (!pill) return;
+    gsap.set(pill, { autoAlpha: 0, y: 18 });
+    let revealed = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !revealed) {
+            revealed = true;
+            gsap.to(pill, { autoAlpha: 1, y: 0, duration: 0.6, ease: "power3.out" });
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(form);
+    return () => io.disconnect();
+  }, []);
 
   if (newsletter.display === false) return null;
 
@@ -129,6 +155,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
         </Text>
       </Column>
       <form
+        ref={formRef}
         style={{
           width: "100%",
           display: "flex",
@@ -163,6 +190,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
         }}
       >
         <Row
+          data-anim
           className={styles.pill}
           fillWidth
           maxWidth={26}
@@ -187,7 +215,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
                 name="email"
                 type="email"
                 variant="ghost"
-                height="l"
+                height="s"
                 placeholder="Email address"
                 required
                 value={email}
