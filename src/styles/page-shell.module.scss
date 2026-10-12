@@ -12,6 +12,23 @@
   }
 }
 
+.back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--neutral-on-background-weak);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--neutral-on-background-strong);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
 .header {
   display: flex;
   align-items: flex-end;

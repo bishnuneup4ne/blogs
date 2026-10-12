@@ -59,15 +59,15 @@ export default async function Blog({
         }}
       />
 
+      {category ? (
+        <Link href="/blogs" className={pageStyles.back}>
+          ← All posts
+        </Link>
+      ) : null}
+
       <header className={pageStyles.header}>
         <h1 className={pageStyles.title}>{title}</h1>
         <p className={pageStyles.meta}>
-          {category ? (
-            <>
-              <Link href="/blogs">← All posts</Link>
-              {" · "}
-            </>
-          ) : null}
           {filtered.length} post{filtered.length === 1 ? "" : "s"}
         </p>
       </header>
