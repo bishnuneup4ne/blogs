@@ -187,7 +187,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
                 name="email"
                 type="email"
                 variant="ghost"
-                height="xl"
+                height="s"
                 placeholder="Email address"
                 required
                 value={email}
