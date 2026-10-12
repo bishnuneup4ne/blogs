@@ -74,22 +74,18 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-/* Selected nav link (current page) */
+/* Selected nav link (current page) — same color as the rest */
 .navLinkSelected {
-  color: #ffffff;
-  background: rgba(0, 0, 0, 0.4);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  font-weight: 500;
 }
 
 /* Light theme selected link */
 :global([data-theme="light"]) .navLinkSelected {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.12);
-  font-weight: 600;
-}
-
-:global([data-theme="light"]) .navLinkSelected:hover {
-  background: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.65);
+  background: transparent;
+  font-weight: 500;
 }
 
 /* Dropdown container */
@@ -309,16 +305,16 @@
   }
 }
 
-/* Mobile Selected Navigation Link */
+/* Mobile Selected Navigation Link — same color as the rest */
 .mobileNavLinkSelected {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
   font-weight: 600;
 }
 
 :global([data-theme="light"]) .mobileNavLinkSelected {
-  color: #000000;
-  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.6);
+  background: transparent;
 }
 
 /* Mobile Nav Container for dropdown */
