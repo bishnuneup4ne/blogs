@@ -19,7 +19,7 @@ export default async function CategoriesPage() {
 
   return (
     <div className={pageStyles.shell}>
-      <Row fillWidth horizontal="between" vertical="end" marginBottom="xl">
+      <Row fillWidth horizontal="between" vertical="end" marginBottom="m">
         <Heading variant="display-strong-m">Categories</Heading>
         <Row fitWidth vertical="end">
           <Text variant="body-default-s" onBackground="neutral-weak" marginBottom="xs">

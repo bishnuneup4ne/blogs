@@ -70,7 +70,7 @@ export default async function Blog({
         </Column>
       ) : null}
 
-      <Row fillWidth horizontal="between" vertical="end" marginBottom="xl">
+      <Row fillWidth horizontal="between" vertical="end" marginBottom="m">
         <Heading variant="display-strong-m">{title}</Heading>
         <Row fitWidth vertical="end">
           <Text variant="body-default-s" onBackground="neutral-weak" marginBottom="xs">

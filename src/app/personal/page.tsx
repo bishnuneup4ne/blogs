@@ -25,7 +25,7 @@ export default async function Personal({
 
   return (
     <div className={pageStyles.shell}>
-      <Column fillWidth marginBottom="xl">
+      <Column fillWidth marginBottom="m">
         <Heading variant="display-strong-m">Personal</Heading>
         <nav className={styles.tabs} aria-label="Personal sections">
           <Link
