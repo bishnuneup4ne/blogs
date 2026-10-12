@@ -21,7 +21,7 @@ export default async function CategoriesPage() {
       <header className={pageStyles.header}>
         <h1 className={pageStyles.title}>Categories</h1>
         <p className={pageStyles.meta}>
-          {categories.length} categor{categories.length === 1 ? "y" : "ies"} — tap to view posts
+          {categories.length} categor{categories.length === 1 ? "y" : "ies"}
         </p>
       </header>
 

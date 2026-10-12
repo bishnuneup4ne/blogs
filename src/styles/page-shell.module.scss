@@ -13,6 +13,11 @@
 }
 
 .header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
   margin-bottom: 2.5rem;
 }
 
@@ -30,13 +35,23 @@
 }
 
 .meta {
-  margin: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+  margin: 0 0 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
 }
 
 :global([data-theme="light"]) .meta {
-  color: rgba(0, 0, 0, 0.55);
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .meta a {
