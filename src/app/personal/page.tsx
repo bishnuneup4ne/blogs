@@ -1,4 +1,4 @@
-import { Column, Heading } from "@once-ui-system/core";
+import { Heading, Row } from "@once-ui-system/core";
 import { Posts } from "@/components/blog/Posts";
 import { VideoList } from "@/components/blog/VideoList";
 import { getSupabasePosts } from "@/utils/supabasePosts";
@@ -25,7 +25,7 @@ export default async function Personal({
 
   return (
     <div className={pageStyles.shell}>
-      <Column fillWidth marginBottom="m">
+      <Row fillWidth horizontal="between" vertical="end" marginBottom="m">
         <Heading variant="display-strong-m">Personal</Heading>
         <nav className={styles.tabs} aria-label="Personal sections">
           <Link
@@ -41,7 +41,7 @@ export default async function Personal({
             Videos
           </Link>
         </nav>
-      </Column>
+      </Row>
 
       {isVideos ? (
         <VideoList category="Personal" />
