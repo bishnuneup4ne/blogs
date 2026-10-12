@@ -12,7 +12,7 @@ export function getMermaidInitOptions(): MermaidConfig {
   return {
     startOnLoad: false,
     theme: isDarkTheme ? "dark" : "default",
-    securityLevel: "loose",
+    securityLevel: "strict",
     logLevel: "error",
     deterministicIds: true,
     suppressErrorRendering: false,

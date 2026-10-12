@@ -55,7 +55,6 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter admin password"
-              autoFocus
               required
             />
           </div>

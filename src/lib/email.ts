@@ -2,23 +2,21 @@ import supabaseAdmin from "@/lib/supabaseAdmin";
 
 /**
  * Sender + brand info in a single site_config query (used by email broadcasts).
- * Sender resolution: 1) Admin Settings → Email (site_config.email.from_address)
- *  2) RESEND_FROM_EMAIL env  3) Resend's test sender (only reaches account owner).
+ * Sender resolution: 1) RESEND_FROM_EMAIL env
+ *  2) Resend's test sender (only reaches account owner).
  */
 export async function getSenderInfo(): Promise<{ from: string; siteName: string }> {
   try {
     const { data } = await supabaseAdmin
       .from("site_config")
-      .select("email, person")
+      .select("person")
       .eq("id", 1)
       .maybeSingle();
     const row = data as {
-      email?: { from_address?: string };
       person?: { name?: string };
     } | null;
 
     const from =
-      row?.email?.from_address?.trim() ||
       process.env.RESEND_FROM_EMAIL?.trim() ||
       "onboarding@resend.dev";
     const siteName = row?.person?.name?.trim() || "Blog";

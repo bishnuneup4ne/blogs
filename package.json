@@ -7,7 +7,7 @@
     "dev:webpack": "next dev --webpack",
     "dev:clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
-    "build": "next build",
+    "build": "next build --webpack",
     "build:start": "npm run build && next start",
     "start": "next start",
     "lint": "biome lint src",

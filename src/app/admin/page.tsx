@@ -87,7 +87,8 @@ export default function AdminDashboard() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    let ok = 0, fail = 0;
+    let ok = 0;
+    let fail = 0;
     for (const id of selectedIds) {
       const res = await fetch(`/api/admin/writeups/${id}`, { method: "DELETE" });
       if (res.ok) ok++; else fail++;
@@ -102,7 +103,8 @@ export default function AdminDashboard() {
 
   const handleBulkStatus = async (status: string) => {
     if (selectedIds.size === 0) return;
-    let ok = 0, fail = 0;
+    let ok = 0;
+    let fail = 0;
     for (const id of selectedIds) {
       const res = await fetch(`/api/admin/writeups/${id}`, {
         method: "PATCH",

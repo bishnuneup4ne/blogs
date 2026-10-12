@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     }
 
     const tags = tagsParam.split(",").map((t) => t.trim().toLowerCase());
-    const limit = Math.min(parseInt(limitParam || "10"), 50); // Max 50 posts
+    const limit = Math.min(Number.parseInt(limitParam || "10"), 50); // Max 50 posts
 
     const { data, error } = await supabase
       .from("writeups")
