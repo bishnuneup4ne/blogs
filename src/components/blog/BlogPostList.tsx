@@ -22,7 +22,7 @@ type BlogPostListProps = {
   showPreview?: boolean;
 };
 
-const TIP_WIDTH = 320;
+const TIP_WIDTH = 360;
 const TIP_OFFSET_X = 28;
 const TIP_MARGIN = 16;
 
@@ -59,29 +59,52 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
 
   useEffect(() => {
     if (!tipRef.current) return;
-    xTo.current = gsap.quickTo(tipRef.current, "x", { duration: 0.4, ease: "power3" });
-    yTo.current = gsap.quickTo(tipRef.current, "y", { duration: 0.4, ease: "power3" });
-    gsap.set(tipRef.current, { autoAlpha: 0, scale: 0.96 });
+    xTo.current = gsap.quickTo(tipRef.current, "x", { duration: 0.45, ease: "power3" });
+    yTo.current = gsap.quickTo(tipRef.current, "y", { duration: 0.45, ease: "power3" });
+    gsap.set(tipRef.current, { autoAlpha: 0, scale: 0.92, yPercent: 4 });
   }, []);
 
   useEffect(() => {
-    if (!tipRef.current) return;
+    if (!tipRef.current || !hoverEnabled) return;
+    const content = tipRef.current.querySelectorAll("[data-tip-content]");
+    let tween: gsap.core.Tween | gsap.core.Timeline;
     if (active) {
-      gsap.to(tipRef.current, { autoAlpha: 1, scale: 1, duration: 0.25, ease: "power2.out" });
+      tween = gsap.timeline();
+      tween.to(tipRef.current, {
+        autoAlpha: 1,
+        scale: 1,
+        yPercent: 0,
+        duration: 0.32,
+        ease: "power3.out",
+      });
+      tween.fromTo(
+        content,
+        { autoAlpha: 0, y: 10 },
+        { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.05, ease: "power2.out" },
+        0.06,
+      );
     } else {
-      gsap.to(tipRef.current, { autoAlpha: 0, scale: 0.96, duration: 0.2, ease: "power2.in" });
+      tween = gsap.to(tipRef.current, {
+        autoAlpha: 0,
+        scale: 0.92,
+        yPercent: 4,
+        duration: 0.22,
+        ease: "power2.in",
+      });
     }
-  }, [active?.slug]);
+    return () => {
+      tween.kill();
+    };
+  }, [active?.slug, hoverEnabled]);
 
   useEffect(() => {
-    if (tipImgRef.current && active) {
-      gsap.fromTo(
-        tipImgRef.current,
-        { scale: 1.08 },
-        { scale: 1, duration: 0.6, ease: "power3.out" },
-      );
-    }
-  }, [active?.slug, readyImage]);
+    if (!tipImgRef.current || !hoverEnabled) return;
+    const img = tipImgRef.current.querySelector("img");
+    const tween = img ? gsap.fromTo(img, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "power2.out" }) : null;
+    return () => {
+      tween?.kill();
+    };
+  }, [active?.slug, readyImage, hoverEnabled]);
 
   const previewImage = active?.image ? normalizeImageUrl(active.image) : "";
 
@@ -164,10 +187,11 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
         <div ref={tipRef} className={styles.tooltip} aria-hidden="true">
           {active && (
             <>
-              <div className={styles.tipImageWrap} ref={tipImgRef}>
+              <div className={styles.tipImageWrap} ref={tipImgRef} data-tip-content>
                 {readyImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
+                    key={readyImage}
                     className={styles.tipImage}
                     src={readyImage}
                     alt=""
@@ -178,11 +202,13 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
                   <div className={styles.tipImageEmpty}>{previewImage ? "Loading…" : "No image"}</div>
                 )}
               </div>
-              <p className={styles.tipTitle}>{active.title}</p>
-              <p className={styles.tipSummary}>
+              <p className={styles.tipTitle} data-tip-content>
+                {active.title}
+              </p>
+              <p className={styles.tipSummary} data-tip-content>
                 {active.summary || "No summary"}
               </p>
-              <span className={styles.tipDate} suppressHydrationWarning>
+              <span className={styles.tipDate} data-tip-content suppressHydrationWarning>
                 {active.date}
               </span>
             </>
