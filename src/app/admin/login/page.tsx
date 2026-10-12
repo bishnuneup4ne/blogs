@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button, Card, Column, Heading, Input, Text } from "@once-ui-system/core";
 
 function LoginForm() {
   const [password, setPassword] = useState("");
@@ -9,7 +10,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/admin";
+  const from = searchParams.get("next") || searchParams.get("from") || "/admin";
+  // Only allow same-site admin paths — never an absolute URL.
+  const safeFrom = from.startsWith("/admin") && !from.startsWith("//") ? from : "/admin";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,55 +26,83 @@ function LoginForm() {
     });
 
     if (res.ok) {
-      router.push(from);
+      router.push(safeFrom);
       router.refresh();
-    } else {
-      let message = "Invalid password. Access denied.";
-      try {
-        const data = await res.json();
-        if (data?.message) message = data.message;
-      } catch {
-        // keep the default message
-      }
-      setError(message);
-      setLoading(false);
+      return;
     }
+
+    let message = "Invalid password. Access denied.";
+    try {
+      const data = await res.json();
+      if (data?.message) message = data.message;
+    } catch {
+      // keep the default message
+    }
+    setError(message);
+    setLoading(false);
   };
 
   return (
-    <div className="admin-login-wrap" suppressHydrationWarning>
-      <div className="admin-login-card" suppressHydrationWarning>
-        <div className="admin-login-logo">
-          <div className="admin-login-icon">⚡</div>
-          <h1>Admin Panel</h1>
-          <p>Secure access required to continue</p>
-        </div>
-        <form onSubmit={handleLogin} className="admin-login-form">
-          <div className="form-field">
-            <label className="form-label">Password</label>
-            <input
+    <Column
+      fillWidth
+      horizontal="center"
+      vertical="center"
+      minHeight="100dvh"
+      padding="l"
+      suppressHydrationWarning
+    >
+      <Card
+        className="glass-card"
+        background="transparent"
+        border="transparent"
+        padding="24"
+        radius="l"
+        style={{ width: "min(440px, 100%)" }}
+      >
+        <Column fillWidth gap="8" marginBottom="24">
+          <Heading as="h1" size="l">
+            Admin Panel
+          </Heading>
+          <Text size="s" onBackground="neutral-weak">
+            Secure access required to continue
+          </Text>
+        </Column>
+
+        <form onSubmit={handleLogin}>
+          <Column fillWidth gap="16">
+            <Input
+              id="admin-password"
               type="password"
-              className="form-input"
+              label="Password"
+              placeholder="Enter admin password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
+              error={Boolean(error)}
+              errorMessage={error || undefined}
               autoFocus
               required
             />
-          </div>
-          {error && <div className="admin-error">⚠ {error}</div>}
-          <button type="submit" className="admin-login-submit" disabled={loading}>
-            {loading ? "Authenticating..." : "Access Dashboard →"}
-          </button>
+            <Button type="submit" variant="primary" fillWidth loading={loading}>
+              {loading ? "Authenticating…" : "Access Dashboard"}
+            </Button>
+          </Column>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Column>
   );
 }
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="admin-login-wrap"><div className="admin-login-card"><p style={{color:"#64748b",textAlign:"center"}}>Loading...</p></div></div>}>
+    <Suspense
+      fallback={
+        <Column fillWidth horizontal="center" vertical="center" minHeight="100dvh">
+          <Text size="s" onBackground="neutral-weak">
+            Loading…
+          </Text>
+        </Column>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

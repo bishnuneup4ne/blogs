@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { safeUrl, safeFetch } from '@/lib/safeUrl';
 
 export const runtime = 'edge';
 
@@ -18,8 +19,8 @@ function decodeHTMLEntities(text: string): string {
     
     if (entity.startsWith('#')) {
       const code = entity.startsWith('#x') ? 
-        parseInt(entity.slice(2), 16) : 
-        parseInt(entity.slice(1), 10);
+        Number.parseInt(entity.slice(2), 16) : 
+        Number.parseInt(entity.slice(1), 10);
       return String.fromCharCode(code);
     }
     
@@ -27,23 +28,8 @@ function decodeHTMLEntities(text: string): string {
   });
 }
 
-async function fetchWithTimeout(url: string, timeout = 5000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, { 
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'bot'
-      }
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
+async function fetchWithTimeout(url: string, timeout = 8000) {
+  return safeFetch(url, { timeoutMs: timeout, headers: { 'User-Agent': 'bot' } });
 }
 
 async function extractMetadata(html: string) {
@@ -73,6 +59,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'URL is required' }, { status: 400 });
   }
 
+  if (!safeUrl(url)) {
+    return NextResponse.json({ error: 'Invalid or disallowed URL' }, { status: 400 });
+  }
+
   try {
     const response = await fetchWithTimeout(url);
     
@@ -80,7 +70,9 @@ export async function GET(request: Request) {
       throw new Error(`Failed to fetch URL: ${response.status}`);
     }
 
-    const html = await response.text();
+    let html = await response.text();
+    // Metadata lives near the top; cap parsed payload to avoid memory abuse.
+    if (html.length > 512 * 1024) html = html.slice(0, 512 * 1024);
     const metadata = await extractMetadata(html);
 
     return NextResponse.json({

@@ -7,6 +7,9 @@ const withMDX = mdx({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ui: {
+    devIndicators: false,
+  },
   async redirects() {
     return [
       { source: "/blog", destination: "/blogs", permanent: true },
@@ -16,9 +19,22 @@ const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   transpilePackages: ["next-mdx-remote"],
   experimental: {
-    optimizePackageImports: ["@once-ui-system/core", "react-icons"],
+    optimizePackageImports: ["react-icons"],
+    // Supabase Storage + REST from this region are slow on cold hits (seen
+    // 16–28s). Give the image optimizer enough headroom so the first gallery
+    // burst doesn't fail with "upstream image response timed out"; successful
+    // results are cached for a day via minimumCacheTTL.
+    imgOptTimeoutInSeconds: 60,
   },
   images: {
+    // Supabase Storage cold fetches stall badly when the browser bursts many
+    // images at once, so the server-side optimizer kept failing with
+    // "upstream image response timed out" on /gallery. The originals are
+    // already small (~15–22 KB, sometimes smaller than the optimized output),
+    // so serving them directly is faster AND reliable — the browser fetches
+    // them over HTTP/2 with no single-server bottleneck.
+    unoptimized: true,
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",

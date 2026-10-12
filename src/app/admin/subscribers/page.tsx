@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminSidebar } from "../AdminSidebar";
 import { useAdminToast } from "@/lib/adminToast";
 
 interface Subscriber {
@@ -125,7 +124,6 @@ export default function SubscribersPage() {
 
   return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>

@@ -3,7 +3,6 @@
 import { useEffect, useState, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AdminSidebar } from "../../../AdminSidebar";
 import { MarkdownEditor, type MarkdownEditorHandle } from "@/components/admin/MarkdownEditor";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { CategoryField } from "@/components/admin/CategoryField";
@@ -128,7 +127,6 @@ export default function EditWriteup({ params }: { params: Promise<{ id: string }
 
   if (loading) return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ color: "var(--text-muted)" }}>Loading writeup...</p>
       </main>
@@ -137,7 +135,6 @@ export default function EditWriteup({ params }: { params: Promise<{ id: string }
 
   if (!form) return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-alert admin-alert-error">⚠ {error || "Writeup not found."}</div>
         <Link href="/admin" className="btn btn-ghost">← Back to Dashboard</Link>
@@ -147,7 +144,6 @@ export default function EditWriteup({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>

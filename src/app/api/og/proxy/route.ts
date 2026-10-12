@@ -1,38 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeUrl, safeFetch } from '@/lib/safeUrl';
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the URL parameter
     const url = new URL(request.url);
     const imageUrl = url.searchParams.get('url');
-    
-    if (!imageUrl) {
-      return NextResponse.json({ error: 'Missing URL parameter' }, { status: 400 });
+
+    // Reject private / non-http targets before any request is made.
+    if (!safeUrl(imageUrl)) {
+      return NextResponse.json({ error: 'Invalid or disallowed URL' }, { status: 400 });
     }
-    
-    // Fetch the image
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
-      },
-    });
-    
+
+    const response = await safeFetch(imageUrl!, { timeoutMs: 8000 });
+
     if (!response.ok) {
       return NextResponse.json(
         { error: `Failed to fetch image: ${response.status}` },
-        { status: response.status }
+        { status: 502 }
       );
     }
-    
-    // Get the image data
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // Only ever proxy real images — never HTML, JSON, or scripts.
+    const contentType = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() || '';
+    if (!contentType.startsWith('image/')) {
+      return NextResponse.json({ error: 'URL is not an image' }, { status: 415 });
+    }
+
+    const declared = Number(response.headers.get('content-length') || 0);
+    if (declared > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: 'Image too large' }, { status: 413 });
+    }
+
     const imageData = await response.arrayBuffer();
-    
-    // Return the image with appropriate headers
+    if (imageData.byteLength > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: 'Image too large' }, { status: 413 });
+    }
+
     return new NextResponse(imageData, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
+        'Content-Security-Policy': "default-src 'none'; sandbox",
       },
     });
   } catch (error) {

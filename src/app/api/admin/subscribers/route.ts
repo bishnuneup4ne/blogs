@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
+import { cachedQuery, invalidateCache } from "@/lib/apiCache";
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
@@ -8,10 +9,17 @@ export async function GET() {
   }
 
   try {
-    const { data: subscribers, error } = await supabaseAdmin
-      .from("subscribers")
-      .select("*")
-      .order("subscribed_at", { ascending: false });
+    const { data: subscribers, error } = await cachedQuery<Record<string, unknown>[]>(
+      "admin:subscribers",
+      30_000,
+      () =>
+        supabaseAdmin
+          .from("subscribers")
+          .select("id, email, status, subscribed_at")
+          .order("subscribed_at", { ascending: false })
+          .limit(1000)
+          .then((r) => ({ data: r.data, error: r.error ? { message: r.error.message } : null })),
+    );
 
     if (error) {
       console.error("Failed to fetch subscribers:", error);
@@ -55,6 +63,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Failed to unsubscribe." }, { status: 500 });
     }
 
+    invalidateCache("admin:");
     return NextResponse.json({ success: true, message: "Subscriber unsubscribed." });
   } catch (error) {
     console.error("Unsubscribe API error:", error);
@@ -85,6 +94,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Failed to delete subscriber." }, { status: 500 });
     }
 
+    invalidateCache("admin:");
     return NextResponse.json({ success: true, message: "Subscriber deleted." });
   } catch (error) {
     console.error("Delete subscriber API error:", error);

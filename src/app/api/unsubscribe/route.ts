@@ -25,13 +25,7 @@ async function unsubscribe(rawEmail: unknown) {
     );
   }
 
-  if (!data || data.length === 0) {
-    return NextResponse.json(
-      { error: "This email is not in our subscriber list." },
-      { status: 404 },
-    );
-  }
-
+  // Uniform response — never reveal whether the email exists (enumeration).
   return NextResponse.json({ message: "You've been unsubscribed." }, { status: 200 });
 }
 

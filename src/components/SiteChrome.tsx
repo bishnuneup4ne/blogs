@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Column, Flex } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
 import { PageBackdrop } from "@/components/PageBackdrop";
-import { SiteMetaBar } from "@/components/SiteMetaBar";
 import { ConfigProvider, type SiteConfig } from "@/components/ConfigProvider";
 type SiteChromeProps = {
   config: SiteConfig;
@@ -34,10 +33,6 @@ export function SiteChrome({ config, children }: SiteChromeProps) {
           suppressHydrationWarning
         >
           <PageBackdrop />
-          <Flex fillWidth minHeight="16" s={{ hide: true }} />
-          <Suspense fallback={null}>
-            <SiteMetaBar />
-          </Suspense>
           <Suspense fallback={null}>
             <Header />
           </Suspense>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./admin.css";
 import { AdminToastProvider } from "@/lib/adminToast";
+import { AdminShell } from "./AdminShell";
 
 export const metadata: Metadata = {
   title: "Admin — Dashboard",
@@ -8,12 +9,12 @@ export const metadata: Metadata = {
 };
 
 // NOTE: No <html> or <body> here — root layout.tsx handles those.
-// This layout wraps /admin/* routes inside the existing shell.
+// The shell (sidebar + main area) is provided once for all /admin/* pages.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="admin-root">
       <AdminToastProvider>
-        {children}
+        <AdminShell>{children}</AdminShell>
       </AdminToastProvider>
     </div>
   );

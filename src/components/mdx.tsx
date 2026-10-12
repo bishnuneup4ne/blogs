@@ -71,7 +71,7 @@ function rehypeFixTablesAndAttributes() {
           } else if (child.type === "element" && child.tagName === "tr") {
             // Buffer <tr> elements to wrap in tbody
             tbodyBuffer.push(child);
-          } else if (child.type !== "text" || (child.value && child.value.trim())) {
+          } else if (child.type !== "text" || (child.value?.trim())) {
             // Keep other meaningful children
             newChildren.push(child);
           }
@@ -427,7 +427,7 @@ function extractText(node: any): string {
   if (typeof node === "string") return node;
   if (typeof node === "number") return node.toString();
   if (Array.isArray(node)) return node.map(extractText).join("");
-  if (node && node.props && node.props.children) return extractText(node.props.children);
+  if (node?.props?.children) return extractText(node.props.children);
   return "";
 }
 
@@ -495,7 +495,7 @@ function createInlineCode({ children }: { children: ReactNode }) {
 
 function createCodeBlock(props: any) {
   // For pre tags that contain code blocks
-  if (props.children && props.children.props && props.children.props.className) {
+  if (props.children?.props?.className) {
     const { className, children } = props.children.props;
 
     // Extract language from className (format: language-xxx)

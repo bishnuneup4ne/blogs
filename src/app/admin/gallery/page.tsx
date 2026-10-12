@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminSidebar } from "../AdminSidebar";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { AdminImage } from "@/components/admin/AdminImage";
 import { normalizeImageUrl } from "@/lib/normalizeImageUrl";
@@ -110,7 +109,6 @@ export default function AdminGalleryPage() {
 
   return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main">
         {alert && (
           <div className={`admin-alert admin-alert-${alert.type}`}>{alert.msg}</div>

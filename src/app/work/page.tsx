@@ -1,7 +1,8 @@
-import { Column, Heading, Meta, Schema } from "@once-ui-system/core";
+import { Meta, Schema } from "@once-ui-system/core";
 import { baseURL } from "@/resources";
 import { getSiteConfig } from "@/lib/config";
 import { Projects } from "@/components/work/Projects";
+import { PageShell, PageHeader } from "@/components/ui";
 
 export async function generateMetadata() {
   const config = await getSiteConfig();
@@ -18,7 +19,8 @@ export default async function Work() {
   const config = await getSiteConfig();
   const { work, person, about } = config;
   return (
-    <Column maxWidth="m" paddingTop="24">
+    <PageShell width="medium">
+      <PageHeader title={work.title} meta={work.description} />
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -32,10 +34,7 @@ export default async function Work() {
           image: `${baseURL}${person.avatar}`,
         }}
       />
-      <Heading marginBottom="l" variant="heading-strong-xl" align="center">
-        {work.title}
-      </Heading>
       <Projects />
-    </Column>
+    </PageShell>
   );
 }

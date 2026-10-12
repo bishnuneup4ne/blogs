@@ -8,9 +8,7 @@ import {
   LuFileText,
   LuVideo,
   LuTag,
-  LuBriefcase,
   LuImage,
-  LuSlidersHorizontal,
   LuMail,
   LuSettings,
   LuTrash2,
@@ -21,18 +19,22 @@ import {
 } from "react-icons/lu";
 import type { IconType } from "react-icons/lib";
 
-const CONTENT_LINKS: { href: string; label: string; icon: IconType; exact?: boolean }[] = [
+const MAIN_LINKS: { href: string; label: string; icon: IconType; exact?: boolean }[] = [
   { href: "/admin", label: "Dashboard", icon: LuLayoutDashboard, exact: true },
+];
+
+const CONTENT_LINKS: { href: string; label: string; icon: IconType; exact?: boolean }[] = [
   { href: "/admin/writeups", label: "Writeups", icon: LuFileText },
   { href: "/admin/videos", label: "Videos", icon: LuVideo },
   { href: "/admin/categories", label: "Categories", icon: LuTag },
-  { href: "/admin/projects", label: "Projects", icon: LuBriefcase },
 ];
 
-const SITE_LINKS: { href: string; label: string; icon: IconType }[] = [
-  { href: "/admin/gallery", label: "Gallery", icon: LuImage },
-  { href: "/admin/image-settings", label: "Image Styling", icon: LuSlidersHorizontal },
+const AUDIENCE_LINKS: { href: string; label: string; icon: IconType }[] = [
   { href: "/admin/subscribers", label: "Subscribers", icon: LuMail },
+  { href: "/admin/gallery", label: "Gallery", icon: LuImage },
+];
+
+const SYSTEM_LINKS: { href: string; label: string; icon: IconType }[] = [
   { href: "/admin/settings", label: "Settings", icon: LuSettings },
   { href: "/admin/trash", label: "Trash", icon: LuTrash2 },
 ];
@@ -40,6 +42,34 @@ const SITE_LINKS: { href: string; label: string; icon: IconType }[] = [
 function isActive(pathname: string, href: string, exact?: boolean) {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+type NavLink = { href: string; label: string; icon: IconType; exact?: boolean };
+
+function NavGroup({ title, links, pathname, onClick }: {
+  title: string;
+  links: NavLink[];
+  pathname: string;
+  onClick: () => void;
+}) {
+  return (
+    <>
+      <p className="admin-nav-section">{title}</p>
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          onClick={onClick}
+          className={isActive(pathname, link.href, link.exact) ? "active" : ""}
+        >
+          <span className="admin-nav-icon">
+            <link.icon size={16} />
+          </span>
+          <span className="admin-nav-label">{link.label}</span>
+        </Link>
+      ))}
+    </>
+  );
 }
 
 export function AdminSidebar() {
@@ -72,43 +102,18 @@ export function AdminSidebar() {
 
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="admin-sidebar-logo">
-          <span className="admin-logo-badge">Y</span>
+          <span className="admin-logo-badge">B</span>
           <div className="admin-logo-text">
-            <h2>YNUBSEC</h2>
-            <p>Admin Console</p>
+            <h2>bishnuneup4ne</h2>
+            <p>Admin console</p>
           </div>
         </div>
 
         <nav className="admin-nav">
-          <p className="admin-nav-section">Content</p>
-          {CONTENT_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={closeSidebar}
-              className={isActive(pathname, link.href, link.exact) ? "active" : ""}
-            >
-              <span className="admin-nav-icon">
-                <link.icon size={16} />
-              </span>
-              <span className="admin-nav-label">{link.label}</span>
-            </Link>
-          ))}
-
-          <p className="admin-nav-section">Site</p>
-          {SITE_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={closeSidebar}
-              className={isActive(pathname, link.href) ? "active" : ""}
-            >
-              <span className="admin-nav-icon">
-                <link.icon size={16} />
-              </span>
-              <span className="admin-nav-label">{link.label}</span>
-            </Link>
-          ))}
+          <NavGroup title="Overview" links={MAIN_LINKS} pathname={pathname} onClick={closeSidebar} />
+          <NavGroup title="Content" links={CONTENT_LINKS} pathname={pathname} onClick={closeSidebar} />
+          <NavGroup title="Audience" links={AUDIENCE_LINKS} pathname={pathname} onClick={closeSidebar} />
+          <NavGroup title="System" links={SYSTEM_LINKS} pathname={pathname} onClick={closeSidebar} />
         </nav>
 
         <div className="admin-sidebar-footer">

@@ -5,7 +5,8 @@ import { baseURL } from "@/resources";
 import { getSiteConfig } from "@/lib/config";
 import { getSupabasePosts } from "@/utils/supabasePosts";
 import Link from "next/link";
-import pageStyles from "@/styles/page-shell.module.scss";
+import { Text } from "@once-ui-system/core";
+import { PageShell, PageHeader, GlassCard } from "@/components/ui";
 
 export const revalidate = 60;
 
@@ -44,7 +45,7 @@ export default async function Blog({
   const title = category ? category : blog.title;
 
   return (
-    <div className={pageStyles.shell}>
+    <PageShell>
       <Schema
         as="blogPosting"
         baseURL={baseURL}
@@ -59,26 +60,32 @@ export default async function Blog({
         }}
       />
 
-      <header className={pageStyles.header}>
-        <h1 className={pageStyles.title}>{title}</h1>
-        <p className={pageStyles.meta}>
-          {category ? (
-            <>
-              <Link href="/blogs">← All posts</Link>
-              {" · "}
-            </>
-          ) : null}
-          {filtered.length} post{filtered.length === 1 ? "" : "s"}
-        </p>
-      </header>
+      <PageHeader
+        title={title}
+        meta={
+          <>
+            {category ? (
+              <>
+                <Link href="/blogs">← All posts</Link>
+                <Text as="span" size="s">
+                  ·
+                </Text>
+              </>
+            ) : null}
+            <span>
+              {filtered.length} post{filtered.length === 1 ? "" : "s"}
+            </span>
+          </>
+        }
+      />
 
       <Posts posts={filtered} variant="minimal" />
 
       {!category && (
-        <section className={pageStyles.newsletter}>
-          <Mailchimp marginTop="0" marginBottom="0" padding="l" />
-        </section>
+        <GlassCard padding="l" marginTop="l">
+          <Mailchimp marginTop="0" marginBottom="0" padding="0" />
+        </GlassCard>
       )}
-    </div>
+    </PageShell>
   );
 }

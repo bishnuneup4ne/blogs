@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminSidebar } from "../AdminSidebar";
 
 export default function SettingsPage() {
   const [configJson, setConfigJson] = useState("");
@@ -58,7 +57,6 @@ export default function SettingsPage() {
 
   return (
     <div className="admin-shell">
-      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>
@@ -78,7 +76,7 @@ export default function SettingsPage() {
         )}
 
         {loading ? (
-          <p style={{ color: "#64748b" }}>Loading settings...</p>
+          <p style={{ color: "var(--text-muted)" }}>Loading settings...</p>
         ) : (
           <>
             <div className="admin-card">
