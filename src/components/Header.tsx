@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import classNames from "classnames";
 import { Line } from "@once-ui-system/core";
 import { display, routes } from "@/resources";
@@ -95,13 +95,9 @@ function NavDropdown({ selected, children, dropdownItems, isIconDropdown = false
 
 export const Header = () => {
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams();
-  const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -110,14 +106,9 @@ export const Header = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const activeCategory = mounted ? searchParams.get("category") : null;
-
   const onHome = pathname === "/blogs" || pathname === "/";
   const onBlogPost = pathname.startsWith("/blogs/");
-  const onCategories =
-    pathname === "/categories" ||
-    pathname.startsWith("/category/") ||
-    (pathname === "/blogs" && !!activeCategory);
+  const onCategories = pathname === "/categories" || pathname.startsWith("/category/");
   const onPersonal = pathname.startsWith("/personal");
 
   const personalDropdownItems = [
@@ -156,8 +147,6 @@ export const Header = () => {
       show: routes["/gallery"],
     },
   ];
-
-  if (!mounted) return null;
 
   if (isMobile) {
     return (
