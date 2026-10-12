@@ -1,6 +1,7 @@
 import { getSupabasePosts } from "@/utils/supabasePosts";
 import { formatCalendarDate, formatListDateUpper } from "@/utils/formatDate";
 import { Grid } from "@once-ui-system/core";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { BlogPostList } from "./BlogPostList";
 import Post from "./Post";
 
@@ -58,6 +59,16 @@ export async function Posts({
   const displayedBlogs = range
     ? sortedBlogs.slice(range[0] - 1, range.length === 2 ? range[1] : sortedBlogs.length)
     : sortedBlogs;
+
+  if (displayedBlogs.length === 0) {
+    return (
+      <EmptyState
+        icon="screen"
+        title="No posts yet"
+        description="Blog posts will show up here as soon as they are published."
+      />
+    );
+  }
 
   const isCompact = variant === "compact";
   const isMinimal = variant === "minimal";

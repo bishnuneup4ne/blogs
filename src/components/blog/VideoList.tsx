@@ -1,8 +1,7 @@
-import { Column, Heading, Icon, Row, Text } from "@once-ui-system/core";
 import { getSupabasePostsWithContent } from "@/utils/supabasePosts";
 import { formatListDateUpper } from "@/utils/formatDate";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { VideoGalleryClient } from "./VideoGalleryClient";
-import styles from "./VideoList.module.scss";
 
 export async function VideoList({ category = "Personal" }: { category?: string }) {
   const posts = await getSupabasePostsWithContent();
@@ -21,38 +20,11 @@ export async function VideoList({ category = "Personal" }: { category?: string }
 
   if (videos.length === 0) {
     return (
-      <Column
-        fillWidth
-        horizontal="center"
-        padding="40"
-        radius="l"
-        border="neutral-alpha-weak"
-        background="surface"
-      >
-        <Column maxWidth="m" horizontal="center" align="center" gap="12">
-          <Row
-            horizontal="center"
-            vertical="center"
-            radius="full"
-            border="neutral-alpha-weak"
-            background="neutral-alpha-weak"
-            className={styles.emptyIcon}
-          >
-            <Icon name="play" size="l" onBackground="neutral-strong" />
-          </Row>
-          <Heading variant="heading-strong-m" align="center">
-            No videos yet
-          </Heading>
-          <Text
-            variant="body-default-s"
-            onBackground="neutral-weak"
-            align="center"
-            wrap="balance"
-          >
-            Video posts will show up here as soon as they are published.
-          </Text>
-        </Column>
-      </Column>
+      <EmptyState
+        icon="play"
+        title="No videos yet"
+        description="Video posts will show up here as soon as they are published."
+      />
     );
   }
 

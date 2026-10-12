@@ -2,6 +2,7 @@ import { Heading, Row, Text } from "@once-ui-system/core";
 import { getCategoriesWithCounts } from "@/lib/categories";
 import { getSiteConfig } from "@/lib/config";
 import { CategoryList } from "@/components/categories/CategoryList";
+import { EmptyState } from "@/components/ui/EmptyState";
 import pageStyles from "@/styles/page-shell.module.scss";
 
 export const revalidate = 60;
@@ -29,9 +30,11 @@ export default async function CategoriesPage() {
       </Row>
 
       {categories.length === 0 ? (
-        <Text variant="body-default-m" onBackground="neutral-weak">
-          No categories yet. Add them in Admin → Categories.
-        </Text>
+        <EmptyState
+          icon="plus"
+          title="No categories yet"
+          description="Categories will show up here as soon as they are created."
+        />
       ) : (
         <CategoryList categories={categories} />
       )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { Media, MasonryGrid, Text, Column } from "@once-ui-system/core";
+import { Media, MasonryGrid } from "@once-ui-system/core";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useConfig } from "@/components/ConfigProvider";
 
 export default function GalleryView() {
@@ -8,11 +9,11 @@ export default function GalleryView() {
 
   if (!gallery.images?.length) {
     return (
-      <Column paddingY="xl" horizontal="center">
-        <Text variant="body-default-l" onBackground="neutral-weak" align="center">
-          No gallery images yet. Add them in Admin → Gallery.
-        </Text>
-      </Column>
+      <EmptyState
+        icon="sparkle"
+        title="No images yet"
+        description="Gallery images will show up here as soon as they are added."
+      />
     );
   }
 
