@@ -36,9 +36,11 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
   const tipImgRef = useRef<HTMLDivElement>(null);
   const xTo = useRef<((v: number) => void) | null>(null);
   const yTo = useRef<((v: number) => void) | null>(null);
+  const rotTo = useRef<((v: number) => void) | null>(null);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
   const imageCacheRef = useRef<Set<string>>(new Set());
   const tlRef = useRef<gsap.core.Tween | gsap.core.Timeline | null>(null);
+  const visibleRef = useRef(false);
 
   const [active, setActive] = useState<BlogListItem | null>(null);
   const [readyImage, setReadyImage] = useState("");
@@ -52,14 +54,17 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
 
   useEffect(() => {
     if (!tipRef.current) return;
-    xTo.current = gsap.quickTo(tipRef.current, "x", { duration: 0.45, ease: "power3" });
-    yTo.current = gsap.quickTo(tipRef.current, "y", { duration: 0.45, ease: "power3" });
-    gsap.set(tipRef.current, { autoAlpha: 0, scale: 0.94, transformOrigin: "center left" });
+    xTo.current = gsap.quickTo(tipRef.current, "x", { duration: 0.5, ease: "power3" });
+    yTo.current = gsap.quickTo(tipRef.current, "y", { duration: 0.5, ease: "power3" });
+    rotTo.current = gsap.quickTo(tipRef.current, "rotation", { duration: 0.7, ease: "power3" });
+    gsap.set(tipRef.current, { autoAlpha: 0, scale: 0.94, rotation: 0, transformOrigin: "center left" });
   }, []);
 
   useEffect(() => {
     if (!tipRef.current || !hoverEnabled) return;
     tlRef.current?.kill();
+
+    const content = tipRef.current.querySelectorAll("[data-tip-content]");
 
     if (active) {
       const p = lastPoint.current;
@@ -70,26 +75,38 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
       ty = Math.max(TIP_MARGIN, Math.min(ty, window.innerHeight - h - TIP_MARGIN));
       gsap.set(tipRef.current, { x: tx, y: ty });
 
-      const content = tipRef.current.querySelectorAll("[data-tip-content]");
-      const tl = gsap.timeline();
-      tl.to(tipRef.current, {
-        autoAlpha: 1,
-        scale: 1,
-        duration: 0.32,
-        ease: "power3.out",
-      });
-      tl.fromTo(
-        content,
-        { autoAlpha: 0, y: 10 },
-        { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.05, ease: "power2.out" },
-        0.05,
-      );
-      tlRef.current = tl;
+      if (visibleRef.current) {
+        // Already showing: crossfade just the content for a smooth item switch.
+        const tl = gsap.timeline();
+        tl.to(content, { autoAlpha: 0, y: -6, duration: 0.12, ease: "power1.in" });
+        tl.set(content, { y: 10 });
+        tl.to(content, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.04, ease: "power2.out" });
+        tlRef.current = tl;
+      } else {
+        // First show: fade + scale the card in, then stagger its content.
+        visibleRef.current = true;
+        const tl = gsap.timeline();
+        tl.fromTo(
+          tipRef.current,
+          { autoAlpha: 0, scale: 0.94 },
+          { autoAlpha: 1, scale: 1, duration: 0.32, ease: "back.out(1.6)" },
+        );
+        tl.fromTo(
+          content,
+          { autoAlpha: 0, y: 12 },
+          { autoAlpha: 1, y: 0, duration: 0.36, stagger: 0.05, ease: "power2.out" },
+          0.08,
+        );
+        tlRef.current = tl;
+      }
     } else {
+      visibleRef.current = false;
+      rotTo.current?.(0);
       tlRef.current = gsap.to(tipRef.current, {
         autoAlpha: 0,
         scale: 0.94,
-        duration: 0.2,
+        rotation: 0,
+        duration: 0.22,
         ease: "power2.in",
       });
     }
@@ -134,6 +151,7 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
 
   const moveTip = useCallback(
     (x: number, y: number) => {
+      const prev = lastPoint.current;
       lastPoint.current = { x, y };
       if (!tipRef.current || !xTo.current || !yTo.current) return;
       const h = tipRef.current.offsetHeight || 320;
@@ -145,6 +163,11 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
       ty = Math.max(TIP_MARGIN, Math.min(ty, vh - h - TIP_MARGIN));
       xTo.current(tx);
       yTo.current(ty);
+      if (rotTo.current && prev) {
+        const vx = x - prev.x;
+        const tilt = Math.max(-9, Math.min(9, vx * 0.5));
+        rotTo.current(tilt);
+      }
     },
     [],
   );
