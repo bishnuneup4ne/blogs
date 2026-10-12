@@ -5,8 +5,13 @@
 }
 
 .item {
-  margin: 0 0 0.85rem;
-  padding: 0;
+  margin: 0;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--neutral-border-weak);
+}
+
+.item:last-child {
+  border-bottom: none;
 }
 
 .row {
@@ -17,7 +22,6 @@
   width: 100%;
   padding: 1.5rem 0.5rem;
   margin: 0 -0.5rem;
-  border-bottom: 1px solid var(--neutral-border-weak);
   border-radius: 8px;
   text-decoration: none;
   color: inherit;
@@ -36,9 +40,11 @@
   }
 }
 
-:global([data-theme="light"]) .row {
+:global([data-theme="light"]) .item {
   border-bottom-color: rgba(0, 0, 0, 0.08);
+}
 
+:global([data-theme="light"]) .row {
   &:hover,
   &:focus-visible {
     background: rgba(0, 0, 0, 0.035);
