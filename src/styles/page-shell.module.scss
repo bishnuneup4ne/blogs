@@ -36,24 +36,13 @@
 
 .meta {
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.5rem;
   font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--neutral-on-background-weak);
   white-space: nowrap;
-}
-
-.meta::before {
-  content: "";
-  display: inline-block;
-  width: 20px;
-  height: 1px;
-  background: var(--neutral-border-strong);
 }
 
 .meta a {
