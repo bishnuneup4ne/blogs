@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { normalizeImageUrl } from "@/lib/normalizeImageUrl";
 import styles from "./BlogPostList.module.scss";
@@ -42,19 +42,6 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
   const [readyImage, setReadyImage] = useState("");
 
   const hoverEnabled = showPreview && canHover();
-
-  useLayoutEffect(() => {
-    if (!listRef.current) return;
-    const rows = listRef.current.querySelectorAll("[data-post-row]");
-    const tween = gsap.fromTo(
-      rows,
-      { autoAlpha: 0, y: 18 },
-      { autoAlpha: 1, y: 0, duration: 0.55, stagger: 0.07, ease: "power2.out" },
-    );
-    return () => {
-      tween.revert();
-    };
-  }, [items]);
 
   useEffect(() => {
     if (!tipRef.current) return;
