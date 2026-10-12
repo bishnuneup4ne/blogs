@@ -2,7 +2,7 @@
 
 import { mailchimp } from "@/resources";
 import { useConfig } from "@/components/ConfigProvider";
-import { Heading, Input, Text, Background, Column, Row } from "@once-ui-system/core";
+import { Button, Heading, Input, Text, Background, Column, Row } from "@once-ui-system/core";
 import { ClientOnly } from "@/components/ClientOnly";
 import styles from "./Mailchimp.module.scss";
 import { Opacity, SpacingToken } from "@once-ui-system/core";
@@ -163,10 +163,15 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
         }}
       >
         <Row
+          className={styles.pill}
           fillWidth
-          maxWidth={24}
-          s={{ direction: "column" }}
+          maxWidth={26}
+          radius="full"
+          border="neutral-medium"
+          padding="4"
           gap="8"
+          vertical="center"
+          s={{ direction: "column", radius: "l", border: "transparent", padding: "0", gap: "8" }}
         >
           {success ? (
             <Row height="48" vertical="center" horizontal="center" fillWidth>
@@ -177,9 +182,12 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
           ) : (
             <>
               <Input
+                className={styles.pillInput}
                 id="newsletter-email"
                 name="email"
                 type="email"
+                variant="ghost"
+                height="xl"
                 placeholder="Email address"
                 required
                 value={email}
@@ -194,15 +202,15 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
                 onBlur={handleBlur}
                 errorMessage={error}
               />
-              <Row height="48" vertical="center" fillWidth>
-                <button
-                  type="submit"
-                  className={styles.subscribeBtn}
-                  disabled={loading || !!error || !email}
-                >
-                  {loading ? "Subscribing..." : "Subscribe"}
-                </button>
-              </Row>
+              <Button
+                className={styles.pillBtn}
+                type="submit"
+                variant="secondary"
+                size="l"
+                suffixIcon="arrowRight"
+                disabled={loading || !!error || !email}
+                label={loading ? "Subscribing..." : "Subscribe"}
+              />
             </>
           )}
         </Row>
