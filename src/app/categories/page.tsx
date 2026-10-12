@@ -1,3 +1,4 @@
+import { Column, Heading, Meta, Text } from "@once-ui-system/core";
 import { getCategoriesWithCounts } from "@/lib/categories";
 import { getSiteConfig } from "@/lib/config";
 import { CategoryList } from "@/components/categories/CategoryList";
@@ -18,15 +19,17 @@ export default async function CategoriesPage() {
 
   return (
     <div className={pageStyles.shell}>
-      <header className={pageStyles.header}>
-        <h1 className={pageStyles.title}>Categories</h1>
-        <p className={pageStyles.meta}>
+      <Column fillWidth marginBottom="xl" gap="xs">
+        <Heading variant="display-strong-l">Categories</Heading>
+        <Text variant="body-default-s" onBackground="neutral-weak">
           {categories.length} categor{categories.length === 1 ? "y" : "ies"}
-        </p>
-      </header>
+        </Text>
+      </Column>
 
       {categories.length === 0 ? (
-        <p className={pageStyles.meta}>No categories yet. Add them in Admin → Categories.</p>
+        <Text variant="body-default-m" onBackground="neutral-weak">
+          No categories yet. Add them in Admin → Categories.
+        </Text>
       ) : (
         <CategoryList categories={categories} />
       )}

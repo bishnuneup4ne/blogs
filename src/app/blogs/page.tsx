@@ -1,10 +1,9 @@
-import { Meta, Schema } from "@once-ui-system/core";
+import { Button, Column, Heading, Meta, Schema, Text } from "@once-ui-system/core";
 import { Posts } from "@/components/blog/Posts";
 import { Mailchimp } from "@/components/Mailchimp";
 import { baseURL } from "@/resources";
 import { getSiteConfig } from "@/lib/config";
 import { getSupabasePosts } from "@/utils/supabasePosts";
-import Link from "next/link";
 import pageStyles from "@/styles/page-shell.module.scss";
 
 export const revalidate = 60;
@@ -60,17 +59,23 @@ export default async function Blog({
       />
 
       {category ? (
-        <Link href="/blogs" className={pageStyles.back}>
-          ← All posts
-        </Link>
+        <Column marginBottom="l">
+          <Button
+            variant="ghost"
+            size="s"
+            prefixIcon="chevronLeft"
+            href="/blogs"
+            label="All posts"
+          />
+        </Column>
       ) : null}
 
-      <header className={pageStyles.header}>
-        <h1 className={pageStyles.title}>{title}</h1>
-        <p className={pageStyles.meta}>
+      <Column fillWidth marginBottom="xl" gap="xs">
+        <Heading variant="display-strong-l">{title}</Heading>
+        <Text variant="body-default-s" onBackground="neutral-weak">
           {filtered.length} post{filtered.length === 1 ? "" : "s"}
-        </p>
-      </header>
+        </Text>
+      </Column>
 
       <Posts posts={filtered} variant="minimal" />
 
