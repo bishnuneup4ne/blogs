@@ -43,14 +43,14 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Navigation links */
+/* Navigation links (inactive = dim) */
 .navLink {
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 0.875rem;
   border-radius: 20px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.55);
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
@@ -66,7 +66,7 @@
 
 /* Light theme nav links */
 :global([data-theme="light"]) .navLink {
-  color: rgba(0, 0, 0, 0.65);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 :global([data-theme="light"]) .navLink:hover {
@@ -74,18 +74,18 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-/* Selected nav link (current page) — same color as the rest */
+/* Selected nav link (current page) — brighter, no pill */
 .navLinkSelected {
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   background: transparent;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Light theme selected link */
 :global([data-theme="light"]) .navLinkSelected {
-  color: rgba(0, 0, 0, 0.65);
+  color: #000000;
   background: transparent;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Dropdown container */
@@ -280,7 +280,7 @@
   padding: 0.4rem;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.55);
   font-size: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -297,7 +297,7 @@
 
 /* Light theme mobile nav links */
 :global([data-theme="light"]) .mobileNavLink {
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.5);
 
   &:hover {
     color: #000000;
@@ -305,15 +305,15 @@
   }
 }
 
-/* Mobile Selected Navigation Link — same color as the rest */
+/* Mobile Selected Navigation Link — brighter */
 .mobileNavLinkSelected {
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
   background: transparent;
   font-weight: 600;
 }
 
 :global([data-theme="light"]) .mobileNavLinkSelected {
-  color: rgba(0, 0, 0, 0.6);
+  color: #000000;
   background: transparent;
 }
 
