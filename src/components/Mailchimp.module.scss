@@ -9,12 +9,14 @@
 .pillInput {
   flex: 1;
   min-width: 0;
-  min-height: var(--static-space-48);
 }
 
 .pillBtn {
   flex-shrink: 0;
+  box-sizing: border-box;
   height: var(--static-space-48);
+  align-self: center;
+  border-radius: var(--radius-full);
 }
 
 @media (max-width: 767px) {
