@@ -11,10 +11,17 @@
 
 .shell {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
   animation: fadeUp 0.4s ease;
+}
+
+@media (min-width: 1440px) {
+  .shell {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
 }
 
 /* Add extra padding on mobile for floating navbar (tighter side gutters) */
