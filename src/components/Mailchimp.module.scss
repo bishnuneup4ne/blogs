@@ -13,18 +13,6 @@
 
 .pillBtn {
   flex-shrink: 0;
-  background: var(--brand-background-strong);
-  color: var(--brand-on-background-strong);
-  border: none;
-  transition: opacity 0.15s ease;
-
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-  }
 }
 
 @media (max-width: 767px) {

@@ -205,7 +205,7 @@ export const Mailchimp: React.FC<React.ComponentProps<typeof Column>> = ({ ...fl
               <Button
                 className={styles.pillBtn}
                 type="submit"
-                variant="secondary"
+                variant="primary"
                 size="l"
                 suffixIcon="arrowRight"
                 disabled={loading || !!error || !email}
