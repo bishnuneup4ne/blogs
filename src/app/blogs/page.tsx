@@ -1,4 +1,4 @@
-import { Button, Column, Heading, Meta, Schema, Text } from "@once-ui-system/core";
+import { Button, Column, Heading, Meta, Row, Schema, Text } from "@once-ui-system/core";
 import { Posts } from "@/components/blog/Posts";
 import { Mailchimp } from "@/components/Mailchimp";
 import { baseURL } from "@/resources";
@@ -70,12 +70,14 @@ export default async function Blog({
         </Column>
       ) : null}
 
-      <Column fillWidth marginBottom="xl" gap="xs">
-        <Heading variant="display-strong-l">{title}</Heading>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {filtered.length} post{filtered.length === 1 ? "" : "s"}
-        </Text>
-      </Column>
+      <Row fillWidth horizontal="between" vertical="end" marginBottom="xl">
+        <Heading variant="display-strong-m">{title}</Heading>
+        <Row fitWidth vertical="end">
+          <Text variant="body-default-s" onBackground="neutral-weak" marginBottom="xs">
+            {filtered.length} post{filtered.length === 1 ? "" : "s"}
+          </Text>
+        </Row>
+      </Row>
 
       <Posts posts={filtered} variant="minimal" />
 

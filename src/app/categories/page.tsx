@@ -1,4 +1,4 @@
-import { Column, Heading, Meta, Text } from "@once-ui-system/core";
+import { Heading, Row, Text } from "@once-ui-system/core";
 import { getCategoriesWithCounts } from "@/lib/categories";
 import { getSiteConfig } from "@/lib/config";
 import { CategoryList } from "@/components/categories/CategoryList";
@@ -19,12 +19,14 @@ export default async function CategoriesPage() {
 
   return (
     <div className={pageStyles.shell}>
-      <Column fillWidth marginBottom="xl" gap="xs">
-        <Heading variant="display-strong-l">Categories</Heading>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {categories.length} categor{categories.length === 1 ? "y" : "ies"}
-        </Text>
-      </Column>
+      <Row fillWidth horizontal="between" vertical="end" marginBottom="xl">
+        <Heading variant="display-strong-m">Categories</Heading>
+        <Row fitWidth vertical="end">
+          <Text variant="body-default-s" onBackground="neutral-weak" marginBottom="xs">
+            {categories.length} categor{categories.length === 1 ? "y" : "ies"}
+          </Text>
+        </Row>
+      </Row>
 
       {categories.length === 0 ? (
         <Text variant="body-default-m" onBackground="neutral-weak">
