@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminSidebar } from "../AdminSidebar";
 
 type TrashWriteup = {
   id: string;
@@ -10,8 +11,16 @@ type TrashWriteup = {
   updated_at: string;
 };
 
+type TrashProject = {
+  id: string;
+  title: string;
+  slug: string;
+  updated_at: string;
+};
+
 export default function AdminTrashPage() {
   const [writeups, setWriteups] = useState<TrashWriteup[]>([]);
+  const [projects, setProjects] = useState<TrashProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
@@ -21,6 +30,7 @@ export default function AdminTrashPage() {
     if (res.ok) {
       const data = await res.json();
       setWriteups(data.writeups ?? []);
+      setProjects(data.projects ?? []);
     }
     setLoading(false);
   }, []);
@@ -34,7 +44,12 @@ export default function AdminTrashPage() {
     setTimeout(() => setAlert(null), 4000);
   };
 
-  const act = async (action: "restore" | "purge", id: string, title: string) => {
+  const act = async (
+    action: "restore" | "purge",
+    type: "writeup" | "project",
+    id: string,
+    title: string,
+  ) => {
     if (action === "purge" && !confirm(`Permanently delete "${title}"? This cannot be undone.`)) {
       return;
     }
@@ -43,7 +58,7 @@ export default function AdminTrashPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ action, type: "writeup", id }),
+      body: JSON.stringify({ action, type, id }),
     });
 
     if (res.ok) {
@@ -64,10 +79,11 @@ export default function AdminTrashPage() {
         })
       : "—";
 
-  const empty = !loading && writeups.length === 0;
+  const empty = !loading && writeups.length === 0 && projects.length === 0;
 
   return (
     <div className="admin-shell">
+      <AdminSidebar />
       <main className="admin-main">
         {alert && (
           <div className={`admin-alert admin-alert-${alert.type}`}>{alert.msg}</div>
@@ -77,7 +93,7 @@ export default function AdminTrashPage() {
           <div>
             <h1 className="admin-page-title">Trash</h1>
             <p className="admin-page-subtitle">
-              Restore soft-deleted writeups or remove them permanently.
+              Restore soft-deleted items or remove them permanently.
             </p>
           </div>
         </div>
@@ -87,49 +103,96 @@ export default function AdminTrashPage() {
         ) : empty ? (
           <div className="admin-card admin-empty">
             <h3>Trash is empty</h3>
-            <p>Deleted writeups appear here.</p>
+            <p>Deleted writeups and projects appear here.</p>
           </div>
         ) : (
-          <div className="admin-card">
-            <div className="table-responsive">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Deleted</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {writeups.map((w) => (
-                    <tr key={w.id}>
-                      <td>{w.title}</td>
-                      <td className="text-muted">{w.category || "—"}</td>
-                      <td className="text-muted text-small">{fmt(w.updated_at)}</td>
-                      <td style={{ textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          style={{ marginRight: 8 }}
-                          onClick={() => act("restore", w.id, w.title)}
-                        >
-                          Restore
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-danger btn-sm"
-                          onClick={() => act("purge", w.id, w.title)}
-                        >
-                          Delete forever
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <>
+            {writeups.length > 0 && (
+              <div className="admin-card" style={{ marginBottom: 24 }}>
+                <h2 style={{ fontSize: 16, marginBottom: 16 }}>Writeups</h2>
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Deleted</th>
+                        <th style={{ textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {writeups.map((w) => (
+                        <tr key={w.id}>
+                          <td>{w.title}</td>
+                          <td className="text-muted">{w.category || "—"}</td>
+                          <td className="text-muted text-small">{fmt(w.updated_at)}</td>
+                          <td style={{ textAlign: "right" }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              style={{ marginRight: 8 }}
+                              onClick={() => act("restore", "writeup", w.id, w.title)}
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              onClick={() => act("purge", "writeup", w.id, w.title)}
+                            >
+                              Delete forever
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {projects.length > 0 && (
+              <div className="admin-card">
+                <h2 style={{ fontSize: 16, marginBottom: 16 }}>Projects</h2>
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Deleted</th>
+                        <th style={{ textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {projects.map((p) => (
+                        <tr key={p.id}>
+                          <td>{p.title}</td>
+                          <td className="text-muted text-small">{fmt(p.updated_at)}</td>
+                          <td style={{ textAlign: "right" }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              style={{ marginRight: 8 }}
+                              onClick={() => act("restore", "project", p.id, p.title)}
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              onClick={() => act("purge", "project", p.id, p.title)}
+                            >
+                              Delete forever
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

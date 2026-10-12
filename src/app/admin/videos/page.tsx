@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { AdminSidebar } from "../AdminSidebar";
 
 type WriteupRow = {
   id: string;
@@ -36,6 +37,7 @@ export default function AdminVideosPage() {
 
   return (
     <div className="admin-shell">
+      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>
@@ -54,9 +56,9 @@ export default function AdminVideosPage() {
 
         <div className="admin-card">
           {loading ? (
-            <p style={{ color: "var(--text-muted)" }}>Loading…</p>
+            <p style={{ color: "#64748b" }}>Loading…</p>
           ) : items.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>
+            <p style={{ color: "#64748b" }}>
               No videos yet. Add a writeup with a YouTube/Vimeo URL — category should be{" "}
               <strong>Personal</strong> so it appears on the Personal → Videos tab. You can add an
               optional short description and markdown notes in the editor; they show in the video

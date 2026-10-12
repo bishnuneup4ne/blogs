@@ -1,23 +1,12 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
-let client: SupabaseClient | null = null;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-function getSupabase(): SupabaseClient {
-  if (!client) {
-    client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "anon-key-missing"
-    );
-  }
-  return client;
+if (!supabaseUrl || !supabaseAnonKey) {
+  // It's fine in local/dev to have empty values; runtime will surface errors.
 }
 
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    const c = getSupabase();
-    const value = Reflect.get(c, prop, c);
-    return typeof value === "function" ? value.bind(c) : value;
-  },
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default supabase;

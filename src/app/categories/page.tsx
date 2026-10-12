@@ -1,7 +1,7 @@
 import { getCategoriesWithCounts } from "@/lib/categories";
 import { getSiteConfig } from "@/lib/config";
 import { CategoryList } from "@/components/categories/CategoryList";
-import { PageShell, PageHeader } from "@/components/ui";
+import pageStyles from "@/styles/page-shell.module.scss";
 
 export const revalidate = 60;
 
@@ -17,17 +17,19 @@ export default async function CategoriesPage() {
   const categories = await getCategoriesWithCounts();
 
   return (
-    <PageShell width="medium">
-      <PageHeader
-        title="Categories"
-        meta={`${categories.length} categor${categories.length === 1 ? "y" : "ies"} — tap to view posts`}
-      />
+    <div className={pageStyles.shell}>
+      <header className={pageStyles.header}>
+        <h1 className={pageStyles.title}>Categories</h1>
+        <p className={pageStyles.meta}>
+          {categories.length} categor{categories.length === 1 ? "y" : "ies"} — tap to view posts
+        </p>
+      </header>
 
       {categories.length === 0 ? (
-        <p>No categories yet. Add them in Admin → Categories.</p>
+        <p className={pageStyles.meta}>No categories yet. Add them in Admin → Categories.</p>
       ) : (
         <CategoryList categories={categories} />
       )}
-    </PageShell>
+    </div>
   );
 }

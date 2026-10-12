@@ -1,6 +1,5 @@
-import { Meta, Schema } from "@once-ui-system/core";
+import { Flex, Meta, Schema } from "@once-ui-system/core";
 import GalleryView from "@/components/gallery/GalleryView";
-import { PageShell, PageHeader } from "@/components/ui";
 import { baseURL } from "@/resources";
 import { getSiteConfig } from "@/lib/config";
 
@@ -19,8 +18,7 @@ export default async function Gallery() {
   const config = await getSiteConfig();
   const { gallery, person } = config;
   return (
-    <PageShell>
-      <PageHeader title={gallery.title} meta={gallery.description} />
+    <Flex maxWidth="l">
       <Schema
         as="webPage"
         baseURL={baseURL}
@@ -35,6 +33,6 @@ export default async function Gallery() {
         }}
       />
       <GalleryView />
-    </PageShell>
+    </Flex>
   );
 }

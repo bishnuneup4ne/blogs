@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { verifyAdminToken, ADMIN_COOKIE_NAME } from "./adminSession";
 
 export async function isAdminAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
-  return verifyAdminToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value);
+  const authToken = cookieStore.get("admin_auth");
+  return authToken?.value === "authenticated";
 }
 
 export function unauthorizedResponse() {

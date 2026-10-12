@@ -2,12 +2,12 @@ import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/
 import { Line, Row, Text } from "@once-ui-system/core";
 
 const person: Person = {
-  firstName: "bishnuneup4ne",
+  firstName: "YNUBSEC",
   lastName: "",
-  name: "bishnuneup4ne",
+  name: `YNUBSEC`,
   role: "Security Newsroom",
-  avatar: "/images/brand/logo-primary.svg",
-  email: "bishnuneup4ne@gmail.com",
+  avatar: "/images/ynubsec/logo-primary.png",
+  email: "contact@ynubsec.com",
   location: "Asia/Kathmandu", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English"], // optional: Leave the array empty if you don't want to display languages
 };
@@ -43,7 +43,7 @@ const social: Social = [
   {
     name: "Threads",
     icon: "threads",
-    link: "https://www.threads.com/@bishnuneup4ne",
+    link: "https://www.threads.com/@once_ui",
     essential: true,
   },
   {
@@ -102,7 +102,7 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        bishnuneup4ne Newsletter brings you professional insights into security, technology, and digital innovation. We are committed to delivering high-quality, thoroughly researched content that helps readers stay informed about the latest developments across the security landscape.
+        YNUBSEC Newsletter brings you professional insights into security, technology, and digital innovation. We are committed to delivering high-quality, thoroughly researched content that helps readers stay informed about the latest developments across the security landscape.
       </>
     ),
   },
@@ -128,7 +128,7 @@ const about: About = {
           // optional: leave the array empty if you don't want to display images
           {
             src: "/images/projects/project-01/cover-01.jpg",
-            alt: "bishnuneup4ne project",
+            alt: "YNUBSEC project",
             width: 16,
             height: 9,
           },

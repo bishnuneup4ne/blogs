@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import classNames from "classnames";
 import { CustomMDX, ScrollToHash } from "@/components";
 import { Meta, Schema, Column, HeadingNav, Row, Media } from "@once-ui-system/core";
 import { baseURL } from "@/resources";
@@ -11,7 +10,6 @@ import { RecentPosts } from "@/components/blog/RecentPosts";
 import { ShareSection } from "@/components/blog/ShareSection";
 import { VideoEmbed } from "@/components/blog/VideoEmbed";
 import { PostHeader } from "@/components/blog/PostHeader";
-import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import styles from "./post.module.scss";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
@@ -88,12 +86,15 @@ export default async function BlogPostPage({
       <Column fillWidth horizontal="center">
         {!isVideoPost && post.metadata.image && (
           <div
-            className={classNames(
-              styles.coverWrap,
-              coverWidth === "full" && styles.coverWrapFull,
-            )}
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              padding: coverWidth === "full" ? "0" : "0 clamp(12px, 3vw, 24px)",
+              marginBottom: "0",
+            }}
           >
-            <div className={styles.coverInner} style={{ "--cover-width": coverWidthCss } as React.CSSProperties}>
+            <div style={{ width: coverWidthCss, maxWidth: "100%" }}>
               <Media
                 src={post.metadata.image}
                 alt={post.metadata.title}
@@ -155,7 +156,6 @@ export default async function BlogPostPage({
 
           <RecentPosts excludeSlug={post.slug} limit={3} />
           <ScrollToHash />
-          <AnalyticsTracker slug={post.slug} />
         </Column>
       </Column>
       {showToc && (

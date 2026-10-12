@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
-import { cachedQuery, invalidateCache } from "@/lib/apiCache";
 import { getSiteConfig } from "@/lib/config";
 
 export async function GET() {
@@ -11,18 +10,15 @@ export async function GET() {
   }
 
   try {
-    const { data } = await cachedQuery<Record<string, unknown>>(
-      "admin:settings",
-      30_000,
-      async () => {
-        const config = await getSiteConfig();
-        return {
-          data: config as unknown as Record<string, unknown>,
-          error: null,
-        };
-      },
-    );
-    return NextResponse.json(data);
+    const config = await getSiteConfig();
+    // Include the admin email settings (from-address for Resend broadcasts).
+    const { data: row } = await supabaseAdmin
+      .from("site_config")
+      .select("email")
+      .eq("id", 1)
+      .maybeSingle();
+    const email = (row as { email?: unknown } | null)?.email ?? null;
+    return NextResponse.json({ ...config, email });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to load settings";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -51,6 +47,7 @@ export async function POST(request: Request) {
         blog: data.blog,
         work: data.work,
         gallery: data.gallery,
+        email: data.email ?? null,
         updated_at: new Date().toISOString()
       }).eq("id", 1);
     } else {
@@ -64,6 +61,7 @@ export async function POST(request: Request) {
         blog: data.blog,
         work: data.work,
         gallery: data.gallery,
+        email: data.email ?? null,
       });
     }
 
@@ -72,7 +70,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: res.error.message }, { status: 500 });
     }
 
-    invalidateCache("admin:");
     revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error: any) {

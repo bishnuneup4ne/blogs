@@ -56,8 +56,8 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json(
-          { message: "Successfully subscribed!" },
-          { status: 200 },
+          { error: "This email is already subscribed!" },
+          { status: 409 },
         );
       }
 

@@ -3,27 +3,20 @@ import { revalidatePath } from "next/cache";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
 import { toSlug } from "@/lib/slug";
-import { cachedQuery, invalidateCache } from "@/lib/apiCache";
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
     return unauthorizedResponse();
   }
 
-  const { data, error } = await cachedQuery<Record<string, unknown>[]>(
-    "admin:categories",
-    60_000,
-    () =>
-      supabaseAdmin
-        .from("categories")
-        .select("id, name, slug, sort_order, created_at")
-        .order("sort_order", { ascending: true })
-        .order("name", { ascending: true })
-        .then((r) => ({ data: r.data, error: r.error ? { message: r.error.message } : null })),
-  );
+  const { data, error } = await supabaseAdmin
+    .from("categories")
+    .select("id, name, slug, sort_order, created_at")
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
 
   if (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json(data ?? []);
@@ -68,7 +61,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    invalidateCache("admin:");
     revalidatePath("/", "layout");
     return NextResponse.json(data, { status: 201 });
   } catch (e: unknown) {

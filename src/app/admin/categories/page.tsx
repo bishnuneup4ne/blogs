@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminSidebar } from "../AdminSidebar";
 
 type Category = {
   id: string;
@@ -110,6 +111,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="admin-shell">
+      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>
@@ -145,9 +147,9 @@ export default function CategoriesPage() {
 
         <div className="admin-card">
           {loading ? (
-            <p style={{ color: "var(--text-muted)" }}>Loading categories…</p>
+            <p style={{ color: "#64748b" }}>Loading categories…</p>
           ) : categories.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>
+            <p style={{ color: "#64748b" }}>
               No categories yet. Add one above — it will appear in the navbar.
             </p>
           ) : (
@@ -189,7 +191,7 @@ export default function CategoriesPage() {
                         </div>
                       </td>
                       <td>{cat.name}</td>
-                      <td style={{ fontFamily: "monospace", fontSize: "12px", color: "var(--text-muted)" }}>
+                      <td style={{ fontFamily: "monospace", fontSize: "12px", color: "#64748b" }}>
                         {cat.slug}
                       </td>
                       <td style={{ textAlign: "right" }}>

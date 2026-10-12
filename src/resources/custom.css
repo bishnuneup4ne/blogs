@@ -1,66 +1,19 @@
-/* ────────────────────────────────────────────────────────────────
-   Glassmorphism layer — loaded AFTER once-ui styles.css + tokens.css
-   so it can remap once-ui design tokens onto a pure-black glass UI.
-   No !important page overrides; everything flows through tokens.
-   ──────────────────────────────────────────────────────────────── */
+/* ── Pure black + glassmorphism (dark) ───────────────────────────── */
 
-:root {
-  /* shared content widths — kill the three-width drift */
-  --content-wide: 1300px;
-  --content-medium: 900px;
-  --content-narrow: 700px;
-
-  --glass-blur: 20px;
-}
-
-/* ── Dark: pure black page + frosted glass surfaces ─────────────── */
 [data-theme="dark"] {
   --page-background: #000000;
   --static-background: #000000;
 
-  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg: rgba(255, 255, 255, 0.04);
   --glass-bg-hover: rgba(255, 255, 255, 0.08);
   --glass-bg-active: rgba(255, 255, 255, 0.12);
-  --glass-bg-panel: rgba(12, 14, 18, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.11);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --glass-border-strong: rgba(255, 255, 255, 0.18);
-  --glass-border-hover: rgba(255, 255, 255, 0.22);
+  --glass-border-hover: rgba(255, 255, 255, 0.2);
+  --glass-blur: 20px;
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --glass-glow: 0 0 32px rgba(34, 211, 238, 0.1);
-
-  /* remap once-ui surfaces onto glass (specificity matches once-ui's own rule) */
-}
-
-[data-surface="translucent"][data-theme="dark"] {
-  --surface-background: var(--glass-bg);
-  --surface-border: var(--glass-border);
-  --backdrop-filter: blur(var(--glass-blur));
-}
-
-[data-theme="dark"] {
-  /* deepen once-ui neutral stack so nothing renders grey-on-black */
-  --neutral-background-weak: #0a0a0a;
-  --neutral-background-medium: #060606;
-  --neutral-background-strong: #000000;
-}
-
-/* ── Light: white page + subtle glass ───────────────────────────── */
-[data-theme="light"] {
-  --page-background: #ffffff;
-  --static-background: #ffffff;
-
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-bg-hover: rgba(255, 255, 255, 0.82);
-  --glass-bg-active: rgba(0, 0, 0, 0.06);
-  --glass-bg-panel: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-border-strong: rgba(0, 0, 0, 0.14);
-  --glass-border-hover: rgba(0, 0, 0, 0.16);
-  --glass-blur: 16px;
-  --glass-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
-  --glass-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.1);
-  --glass-glow: 0 0 28px rgba(8, 145, 178, 0.06);
+  --glass-glow: 0 0 30px rgba(99, 102, 241, 0.08);
 }
 
 html,
@@ -69,61 +22,28 @@ body {
   min-height: 100%;
 }
 
-/* ── Reusable glass surfaces (apply via once-ui className prop) ─── */
-.glass-panel {
-  border-radius: var(--border-radius-l-1, 14px);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--glass-shadow);
-  transition:
-    background 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+[data-theme="dark"] html,
+[data-theme="dark"] body {
+  background-color: #000000 !important;
 }
 
-.glass-panel:hover {
-  border-color: var(--glass-border-strong);
+[data-theme="light"] {
+  --page-background: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-strong: rgba(0, 0, 0, 0.14);
+  --glass-blur: 18px;
+  --glass-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.1);
 }
 
-.glass-card {
-  border-radius: var(--border-radius-l-1, 14px);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--glass-shadow);
-  transition:
-    transform 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.3s ease,
-    background 0.25s ease;
+[data-theme="light"] html,
+[data-theme="light"] body {
+  background-color: #ffffff !important;
 }
 
-.glass-card:hover {
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--glass-shadow-lg), var(--glass-glow);
-}
-
-[data-theme="dark"] .glass-card {
-  background: rgba(255, 255, 255, 0.035);
-}
-
-[data-theme="light"] .glass-card {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-/* Sticky glass chrome (header / admin sidebar) */
-.glass-bar {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  border-color: var(--glass-border);
-}
-
-/* ── Glass container for MDX tables etc ─────────────────────────── */
+/* Glass container for MDX tables etc */
 .glass-container {
   overflow-x: auto;
   margin: 24px 0;
@@ -132,13 +52,19 @@ body {
 }
 
 [data-theme="dark"] .glass-container {
-  background: #000000;
-  border: 1px solid var(--glass-border);
+  background: #000000 !important;
+  border: none !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
 [data-theme="light"] .glass-container {
-  background: #ffffff;
-  border: 1px solid var(--glass-border);
+  background: #ffffff !important;
+  border: none !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
 }
 
 .glass-table {
@@ -158,7 +84,7 @@ body {
 }
 
 [data-theme="dark"] .glass-table th {
-  background: rgba(255, 255, 255, 0.04);
+  background: #1a1a1a;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #fafafa;
 }
@@ -181,7 +107,65 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────── */
+/* Reusable glass panel */
+.glass-panel {
+  border-radius: 12px;
+  border: 1px solid var(--glass-border, var(--neutral-border-medium));
+  background: var(--glass-bg, var(--neutral-alpha-weak));
+  backdrop-filter: blur(var(--glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+  box-shadow: var(--glass-shadow, none);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+[data-theme="dark"] .glass-panel {
+  border-color: var(--glass-border);
+  background: var(--glass-bg);
+}
+
+[data-theme="light"] .glass-panel {
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-blur: 14px;
+}
+
+.glass-panel:hover {
+  border-color: var(--glass-border-hover, var(--glass-border-strong, var(--glass-border)));
+}
+
+.glass-card {
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.3s ease,
+    background 0.25s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--glass-border-hover, var(--glass-border-strong));
+  box-shadow: var(--glass-shadow-lg);
+}
+
+[data-theme="dark"] .glass-card {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth scrollbar for the whole page */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -192,12 +176,12 @@ body {
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 [data-theme="light"] ::-webkit-scrollbar-thumb {
@@ -209,7 +193,30 @@ body {
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* ── Article body text readability ──────────────────────────────── */
+/* Chrome links: neutral white/black (not brand accent) */
+[data-theme="dark"] header nav a,
+[data-theme="dark"] article header a {
+  color: #a3a3a3;
+}
+
+[data-theme="dark"] header nav a:hover,
+[data-theme="dark"] article header a:hover,
+[data-theme="dark"] header nav a[aria-current="page"] {
+  color: #fafafa;
+}
+
+[data-theme="light"] header nav a,
+[data-theme="light"] article header a {
+  color: #52525b;
+}
+
+[data-theme="light"] header nav a:hover,
+[data-theme="light"] article header a[aria-current="page"] {
+  color: #18181b;
+}
+
+/* ── Article body text visibility ───────────────────────────── */
+/* Ensure paragraph and body text is readable in dark theme */
 [data-theme="dark"] article p,
 [data-theme="dark"] article li,
 [data-theme="dark"] article blockquote,
@@ -227,15 +234,16 @@ body {
 }
 
 [data-theme="dark"] article a {
-  color: #22d3ee;
+  color: #60a5fa;
   text-decoration: underline;
   text-decoration-skip-ink: auto;
 }
 
 [data-theme="dark"] article a:hover {
-  color: #67e8f9;
+  color: #93c5fd;
 }
 
+/* Light theme article text */
 [data-theme="light"] article p,
 [data-theme="light"] article li,
 [data-theme="light"] article blockquote {
@@ -247,14 +255,15 @@ body {
 }
 
 [data-theme="light"] article a {
-  color: #0891b2;
+  color: #0284c7;
 }
 
 [data-theme="light"] article a:hover {
-  color: #0e7490;
+  color: #0369a1;
 }
 
-/* ── Glassmorphic Mermaid flowchart styling ─────────────────────── */
+/* ── Glassmorphic Mermaid Flowchart Styling ───────────────────────────── */
+/* Make flowchart boxes have glassmorphism effect */
 [data-theme="dark"] .mermaid-box,
 [data-theme="dark"] svg.mermaid .node,
 [data-theme="dark"] svg.mermaid .nodeLabel {
@@ -266,14 +275,14 @@ body {
 [data-theme="dark"] svg.mermaid .node ellipse {
   stroke: rgba(255, 255, 255, 0.2) !important;
   stroke-width: 1.5px !important;
-  fill: rgba(34, 211, 238, 0.1) !important;
-  filter: drop-shadow(0 4px 12px rgba(34, 211, 238, 0.16));
+  fill: rgba(99, 102, 241, 0.12) !important;
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.2));
 }
 
 [data-theme="dark"] svg.mermaid .node polygon {
   stroke: rgba(255, 255, 255, 0.2) !important;
   stroke-width: 1.5px !important;
-  fill: rgba(34, 211, 238, 0.14) !important;
+  fill: rgba(168, 85, 247, 0.12) !important;
 }
 
 [data-theme="dark"] svg.mermaid .nodeLabel {
@@ -286,14 +295,14 @@ body {
 [data-theme="light"] svg.mermaid .node ellipse {
   stroke: rgba(0, 0, 0, 0.1) !important;
   stroke-width: 1.5px !important;
-  fill: rgba(8, 145, 178, 0.08) !important;
-  filter: drop-shadow(0 2px 8px rgba(8, 145, 178, 0.1));
+  fill: rgba(59, 130, 246, 0.08) !important;
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.1));
 }
 
 [data-theme="light"] svg.mermaid .node polygon {
   stroke: rgba(0, 0, 0, 0.1) !important;
   stroke-width: 1.5px !important;
-  fill: rgba(8, 145, 178, 0.1) !important;
+  fill: rgba(147, 51, 234, 0.08) !important;
 }
 
 [data-theme="light"] svg.mermaid .nodeLabel {
@@ -301,6 +310,7 @@ body {
   font-weight: 500;
 }
 
+/* Arrow/edge styling */
 [data-theme="dark"] svg.mermaid .edgePath path {
   stroke: rgba(255, 255, 255, 0.3) !important;
   stroke-width: 1.5px !important;
@@ -311,53 +321,89 @@ body {
   stroke-width: 1.5px !important;
 }
 
-/* ── Inline tables with clickable image support ─────────────────── */
-table[pos="clickable"] {
-  border-collapse: collapse;
-  margin: 24px auto;
+/* ── Improved Table Styling with Glassmorphism ───────────────────────────── */
+/* Inline tables with clickable image support */
+[data-theme="dark"] table[pos="clickable"],
+[data-theme="dark"] table[style*="white"] {
+  background: #000000 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden;
+  box-shadow: none !important;
+  margin: 24px auto !important;
 }
 
-table[pos="clickable"] td {
-  background: transparent;
-  border: none;
+[data-theme="light"] table[pos="clickable"],
+[data-theme="light"] table[style*="white"] {
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden;
+  box-shadow: none !important;
+  margin: 24px auto !important;
 }
 
-table[pos="clickable"] img {
+[data-theme="dark"] table[pos="clickable"] td,
+[data-theme="dark"] table[style*="white"] td {
+  background: transparent !important;
+  border: none !important;
+}
+
+[data-theme="light"] table[pos="clickable"] td,
+[data-theme="light"] table[style*="white"] td {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Clickable image containers */
+[data-theme="dark"] table[pos="clickable"] img {
   cursor: zoom-in;
   transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-table[pos="clickable"] img:hover {
-  transform: scale(1.02);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 [data-theme="dark"] table[pos="clickable"] img:hover {
+  transform: scale(1.02);
   filter: brightness(1.1);
 }
 
+[data-theme="light"] table[pos="clickable"] img {
+  cursor: zoom-in;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 [data-theme="light"] table[pos="clickable"] img:hover {
+  transform: scale(1.02);
   filter: brightness(0.98);
 }
 
-/* ── Mobile: reclaim horizontal space ───────────────────────────── */
+/* ── Mobile: reclaim horizontal space ──────────────────────────── */
 /* The once-ui "l" padding is 40px on desktop; pages control their own
-   gutters, so on phones zero the sides of the site wrapper to stop
-   double margins stacking up. Desktop keeps the gutter. */
+   gutters (page-shell etc.), so on phones zero the sides of the site
+   wrapper to stop double margins stacking up. Desktop keeps the gutter. */
 @media (max-width: 767px) {
   .site-content {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 
+  /* Blog article + other fixed 24px-gutter layouts: tighten on small screens */
   .px-24 {
-    padding-left: var(--static-space-16);
-    padding-right: var(--static-space-16);
+    padding-left: var(--static-space-16) !important;
+    padding-right: var(--static-space-16) !important;
   }
 }
 
 @media (max-width: 480px) {
   .px-24 {
-    padding-left: var(--static-space-12);
-    padding-right: var(--static-space-12);
+    padding-left: var(--static-space-12) !important;
+    padding-right: var(--static-space-12) !important;
   }
 }

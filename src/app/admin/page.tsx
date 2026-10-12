@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
   LuSquarePen,
@@ -8,150 +8,251 @@ import {
   LuTag,
   LuSettings,
   LuEye,
-  LuUsers,
-  LuClock,
-  LuMail,
-  LuFlame,
-  LuTrendingUp,
+  LuTrash2,
 } from "react-icons/lu";
+import { AdminSidebar } from "./AdminSidebar";
+import { useAdminToast } from "@/lib/adminToast";
 
-interface Stats {
-  published: number;
-  drafts: number;
-  subscribers: number;
-  activeSubscribers: number;
+interface Writeup {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  category: string;
+  created_at: string;
+  date: string;
+  summary: string;
+  tags: string[];
 }
 
-interface Analytics {
-  missingTable: boolean;
-  totals: {
-    views: number;
-    uniqueVisitors: number;
-    avgReadSeconds: number;
-    engagedViews: number;
-    todayViews: number;
-    last7Views: number;
-  };
-  daily: { date: string; views: number; visitors: number }[];
-  topPosts: { slug: string; views: number; avgReadSeconds: number }[];
-  countries: { country: string; views: number; visitors: number }[];
-  devices: { desktop: number; mobile: number; tablet: number };
-}
+type SortField = "title" | "slug" | "status" | "category" | "date";
+type SortDir = "asc" | "desc";
 
-function fmtDuration(sec: number): string {
-  if (!sec) return "0s";
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-function flag(code: string): string {
-  if (code.length !== 2) return "🏳️";
-  return String.fromCodePoint(
-    ...[...code.toUpperCase()].map((c) => 0x1f1e6 - 65 + c.charCodeAt(0)),
-  );
-}
-
-function ViewsChart({ daily }: { daily: Analytics["daily"] }) {
-  const w = 560;
-  const h = 180;
-  const pad = { l: 8, r: 8, t: 10, b: 22 };
-  const max = Math.max(1, ...daily.map((d) => d.views));
-  const bw = (w - pad.l - pad.r) / Math.max(1, daily.length);
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="admin-chart" role="img" aria-label="Views per day, last 14 days">
-      {daily.map((d, i) => {
-        const bh = Math.round(((h - pad.t - pad.b) * d.views) / max);
-        const x = pad.l + i * bw;
-        const y = h - pad.b - bh;
-        return (
-          <g key={d.date}>
-            <rect x={x + 3} y={pad.t} width={bw - 6} height={h - pad.t - pad.b} rx={4} fill="transparent">
-              <title>{`${d.date}: ${d.views} views, ${d.visitors} visitors`}</title>
-            </rect>
-            <rect x={x + 3} y={y} width={bw - 6} height={Math.max(2, bh)} rx={4} className="admin-chart-bar" />
-            {(i === 0 || i === daily.length - 1 || i % 7 === 0) && (
-              <text x={x + bw / 2} y={h - 6} textAnchor="middle" className="admin-chart-label">
-                {d.date.slice(5)}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
+const PAGE_SIZE = 25;
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [writeups, setWriteups] = useState<Writeup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState<Writeup | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [projectsCount, setProjectsCount] = useState<number>(0);
+  const [subscribersCount, setSubscribersCount] = useState<number>(0);
+  const { addToast } = useAdminToast();
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [statsRes, anRes] = await Promise.all([
-        fetch("/api/admin/stats", { credentials: "include" }),
-        fetch("/api/admin/analytics", { credentials: "include" }),
-      ]);
-      if (cancelled) return;
-      if (statsRes.ok) setStats(await statsRes.json());
-      if (anRes.ok) setAnalytics(await anRes.json());
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    fetchWriteups();
+    fetchProjects();
+    fetchSubscribers();
   }, []);
 
-  const totals = analytics?.totals;
+  const fetchWriteups = async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/writeups");
+    if (res.ok) setWriteups(await res.json());
+    setLoading(false);
+  };
+
+  const fetchProjects = async () => {
+    const res = await fetch("/api/admin/projects");
+    if (res.ok) {
+      const data = await res.json();
+      setProjectsCount(data.length);
+    }
+  };
+
+  const fetchSubscribers = async () => {
+    const res = await fetch("/api/admin/subscribers");
+    if (res.ok) {
+      const data = await res.json();
+      setSubscribersCount(data.length);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const res = await fetch(`/api/admin/writeups/${deleteTarget.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setWriteups((w) => w.filter((x) => x.id !== deleteTarget.id));
+      addToast("success", `"${deleteTarget.title}" deleted successfully.`);
+    } else {
+      addToast("error", "Failed to delete. Try again.");
+    }
+    setDeleteTarget(null);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    let ok = 0, fail = 0;
+    for (const id of selectedIds) {
+      const res = await fetch(`/api/admin/writeups/${id}`, { method: "DELETE" });
+      if (res.ok) ok++; else fail++;
+    }
+    if (ok > 0) {
+      setWriteups((w) => w.filter((x) => !selectedIds.has(x.id)));
+      addToast("success", `Deleted ${ok} writeup(s).`);
+    }
+    if (fail > 0) addToast("error", `Failed to delete ${fail} writeup(s).`);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkStatus = async (status: string) => {
+    if (selectedIds.size === 0) return;
+    let ok = 0, fail = 0;
+    for (const id of selectedIds) {
+      const res = await fetch(`/api/admin/writeups/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) ok++; else fail++;
+    }
+    if (ok > 0) {
+      setWriteups((w) =>
+        w.map((x) => (selectedIds.has(x.id) ? { ...x, status } : x)),
+      );
+      addToast("success", `Updated ${ok} writeup(s) to "${status}".`);
+    }
+    if (fail > 0) addToast("error", `Failed to update ${fail} writeup(s).`);
+    setSelectedIds(new Set());
+  };
+
+  const sorted = useMemo(() => {
+    let list = [...writeups];
+    const cmp = (a: string | undefined, b: string | undefined) => {
+      const va = a ?? "";
+      const vb = b ?? "";
+      return va.localeCompare(vb);
+    };
+    list.sort((a, b) => {
+      let r = 0;
+      switch (sortField) {
+        case "title": r = cmp(a.title, b.title); break;
+        case "slug": r = cmp(a.slug, b.slug); break;
+        case "status": r = cmp(a.status, b.status); break;
+        case "category": r = cmp(a.category, b.category); break;
+        case "date": r = cmp(a.date || a.created_at, b.date || b.created_at); break;
+      }
+      return sortDir === "asc" ? r : -r;
+    });
+    return list;
+  }, [writeups, sortField, sortDir]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === sorted.length && sorted.length > 0) return new Set();
+      return new Set(sorted.map((w) => w.id));
+    });
+  }, [sorted]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const lowercaseSearch = search.toLowerCase();
+  const filtered = useMemo(
+    () =>
+      sorted.filter((w) => {
+        const matchSearch =
+          w.title?.toLowerCase().includes(lowercaseSearch) ||
+          w.slug?.toLowerCase().includes(lowercaseSearch);
+        const matchFilter =
+          filter === "all" ||
+          (filter === "published" && w.status === "Published") ||
+          (filter === "draft" && w.status !== "Published");
+        return matchSearch && matchFilter;
+      }),
+    [sorted, lowercaseSearch, filter],
+  );
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage],
+  );
+
+  const gotoPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    setSelectedIds(new Set());
+  };
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(Math.max(1, totalPages));
+  }, [totalPages, currentPage]);
+
+  const total = writeups.length;
+  const published = writeups.filter((w) => w.status === "Published").length;
+  const drafts = total - published;
+  const last7 = writeups.filter((w) => {
+    const d = new Date(w.date || w.created_at);
+    return Date.now() - d.getTime() < 7 * 86400000;
+  }).length;
+
+  const fmt = (d: string) =>
+    d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <span className="sort-icon">↕</span>;
+    return <span className="sort-icon active">{sortDir === "asc" ? "↑" : "↓"}</span>;
+  };
 
   return (
-    <main className="admin-main">
+    <div className="admin-shell">
+      <AdminSidebar />
+      <main className="admin-main">
         <div className="admin-page-header">
           <div>
             <h1 className="admin-page-title">Dashboard</h1>
-            <p className="admin-page-subtitle">
-              Reader activity, engagement and content overview
-            </p>
+            <p className="admin-page-subtitle">Manage your writeups and blog posts</p>
           </div>
           <Link href="/admin/writeups/new" className="btn btn-primary">
             + New Writeup
           </Link>
         </div>
 
-        {analytics?.missingTable && (
-          <div className="admin-alert admin-alert-error">
-            Analytics table not found. Run <strong>supabase.analytics.sql</strong> in the
-            Supabase SQL editor once to enable read tracking.
-          </div>
-        )}
-
         <div className="admin-quick-grid">
           <Link href="/admin/writeups/new" className="admin-quick-card">
             <span className="admin-quick-icon">
-              <LuSquarePen size={18} />
+              <LuSquarePen size={20} />
             </span>
             <strong>New writeup</strong>
             <small>Blog post</small>
           </Link>
           <Link href="/admin/writeups/new?mode=video" className="admin-quick-card">
             <span className="admin-quick-icon">
-              <LuVideo size={18} />
+              <LuVideo size={20} />
             </span>
             <strong>New video</strong>
             <small>Personal tab</small>
           </Link>
           <Link href="/admin/categories" className="admin-quick-card">
             <span className="admin-quick-icon">
-              <LuTag size={18} />
+              <LuTag size={20} />
             </span>
             <strong>Categories</strong>
             <small>Flow map nav</small>
           </Link>
           <Link href="/admin/settings" className="admin-quick-card">
             <span className="admin-quick-icon">
-              <LuSettings size={18} />
+              <LuSettings size={20} />
             </span>
             <strong>Settings</strong>
             <small>Site config</small>
@@ -159,145 +260,253 @@ export default function AdminDashboard() {
         </div>
 
         <div className="admin-stats-grid">
-          <div className="admin-stat-card views">
-            <div className="admin-stat-number">{totals ? totals.views.toLocaleString() : "—"}</div>
-            <div className="admin-stat-label">Views (30 days)</div>
-          </div>
-          <div className="admin-stat-card visitors">
-            <div className="admin-stat-number">{totals ? totals.uniqueVisitors.toLocaleString() : "—"}</div>
-            <div className="admin-stat-label">Unique visitors</div>
-          </div>
-          <div className="admin-stat-card readtime">
-            <div className="admin-stat-number">{totals ? fmtDuration(totals.avgReadSeconds) : "—"}</div>
-            <div className="admin-stat-label">Avg read time</div>
-          </div>
           <div className="admin-stat-card published">
-            <div className="admin-stat-number">{stats ? stats.published : "—"}</div>
+            <div className="admin-stat-number">{published}</div>
             <div className="admin-stat-label">Published</div>
           </div>
           <div className="admin-stat-card draft">
-            <div className="admin-stat-number">{stats ? stats.drafts : "—"}</div>
+            <div className="admin-stat-number">{drafts}</div>
             <div className="admin-stat-label">Drafts</div>
           </div>
+          <div className="admin-stat-card projects-count">
+            <div className="admin-stat-number">{projectsCount}</div>
+            <div className="admin-stat-label">Projects</div>
+          </div>
           <div className="admin-stat-card subscribers-count">
-            <div className="admin-stat-number">{stats ? stats.activeSubscribers.toLocaleString() : "—"}</div>
+            <div className="admin-stat-number">{subscribersCount}</div>
             <div className="admin-stat-label">Subscribers</div>
           </div>
+          <div className="admin-stat-card total">
+            <div className="admin-stat-number">{total}</div>
+            <div className="admin-stat-label">Total Posts</div>
+          </div>
+          <div className="admin-stat-card" style={{ "--accent": "#a78bfa" } as React.CSSProperties}>
+            <div className="admin-stat-number">{last7}</div>
+            <div className="admin-stat-label">Last 7 Days</div>
+          </div>
         </div>
 
-        <div className="admin-grid-2">
-          <div className="admin-card">
-            <h2 className="admin-section-title">
-              <LuTrendingUp size={15} style={{ verticalAlign: -2, marginRight: 6 }} />
-              Views — last 14 days
-            </h2>
-            {analytics && analytics.daily.length > 0 ? (
-              <ViewsChart daily={analytics.daily} />
-            ) : (
-              <p className="text-muted">{loading ? "Loading…" : "No views recorded yet."}</p>
-            )}
-            {totals && (
-              <p className="text-muted text-small" style={{ margin: "8px 0 0" }}>
-                {totals.todayViews} today · {totals.last7Views} in the last 7 days ·{" "}
-                {totals.engagedViews} engaged reads (&gt;30s) in 30 days
-              </p>
-            )}
-          </div>
+        <div className="admin-toolbar">
+          <input
+            className="admin-search-input"
+            placeholder="Search by title or slug..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); setSelectedIds(new Set()); }}
+          />
+          <select
+            className="form-select"
+            value={filter}
+            onChange={(e) => { setFilter(e.target.value); setCurrentPage(1); setSelectedIds(new Set()); }}
+            style={{ width: "auto", minWidth: "120px" }}
+          >
+            <option value="all">All</option>
+            <option value="published">Published</option>
+            <option value="draft">Drafts</option>
+          </select>
+        </div>
 
-          <div className="admin-card">
-            <h2 className="admin-section-title">
-              <LuEye size={15} style={{ verticalAlign: -2, marginRight: 6 }} />
-              Top posts
-            </h2>
-            {analytics && analytics.topPosts.length > 0 ? (
-              analytics.topPosts.map((p) => (
-                <div className="admin-list-row" key={p.slug}>
-                  <Link
-                    href={`/blogs/${p.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-truncate"
-                    style={{ color: "var(--violet)", textDecoration: "none", maxWidth: 200 }}
-                  >
-                    {p.slug}
-                  </Link>
-                  <span className="text-muted text-small">
-                    {p.views} views · <LuClock size={11} style={{ verticalAlign: -1 }} /> {fmtDuration(p.avgReadSeconds)}
-                  </span>
+        <div className={`admin-bulk-bar ${selectedIds.size > 0 ? "visible" : ""}`}>
+          <span>{selectedIds.size} selected</span>
+          <button className="btn btn-secondary btn-sm" onClick={() => handleBulkStatus("Published")}>
+            Publish all
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => handleBulkStatus("Draft")}>
+            Draft all
+          </button>
+          <button className="btn btn-danger btn-sm" onClick={handleBulkDelete}>
+            Delete all
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="admin-table-wrap">
+            <div style={{ padding: "16px 0" }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton-row">
+                  <div className="skeleton" />
+                  <div className="skeleton" />
+                  <div className="skeleton" style={{ width: "60%" }} />
+                  <div className="skeleton" style={{ width: "40%" }} />
+                  <div className="skeleton" style={{ width: "50%" }} />
+                  <div className="skeleton" style={{ width: "30%" }} />
                 </div>
-              ))
-            ) : (
-              <p className="text-muted">{loading ? "Loading…" : "No data yet."}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="admin-grid-2">
-          <div className="admin-card">
-            <h2 className="admin-section-title">
-              <LuUsers size={15} style={{ verticalAlign: -2, marginRight: 6 }} />
-              Readers by location
-            </h2>
-            {analytics && analytics.countries.length > 0 ? (
-              analytics.countries.map((c) => {
-                const maxV = analytics.countries[0].views || 1;
-                return (
-                  <div className="admin-list-row" key={c.country}>
-                    <span style={{ minWidth: 90 }}>
-                      {flag(c.country)} {c.country}
-                    </span>
-                    <span className="admin-bar-track">
-                      <span className="admin-bar-fill" style={{ width: `${(c.views / maxV) * 100}%` }} />
-                    </span>
-                    <span className="text-muted text-small" style={{ minWidth: 90, textAlign: "right" }}>
-                      {c.views} views · {c.visitors} readers
-                    </span>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-muted">{loading ? "Loading…" : "No location data yet."}</p>
-            )}
-          </div>
-
-          <div className="admin-card">
-            <h2 className="admin-section-title">
-              <LuFlame size={15} style={{ verticalAlign: -2, marginRight: 6 }} />
-              Devices &amp; audience
-            </h2>
-            {analytics && (
-              <>
-                {(["desktop", "mobile", "tablet"] as const).map((k) => {
-                  const total =
-                    analytics.devices.desktop + analytics.devices.mobile + analytics.devices.tablet || 1;
-                  return (
-                    <div className="admin-list-row" key={k}>
-                      <span style={{ minWidth: 70, textTransform: "capitalize" }}>{k}</span>
-                      <span className="admin-bar-track">
-                        <span
-                          className="admin-bar-fill"
-                          style={{ width: `${(analytics.devices[k] / total) * 100}%` }}
-                        />
-                      </span>
-                      <span className="text-muted text-small" style={{ minWidth: 40, textAlign: "right" }}>
-                        {analytics.devices[k]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-            <div className="admin-list-row" style={{ marginTop: 12 }}>
-              <span>
-                <LuMail size={13} style={{ verticalAlign: -2, marginRight: 6 }} />
-                Newsletter
-              </span>
-              <Link href="/admin/subscribers" className="btn btn-ghost btn-sm">
-                {stats ? `${stats.activeSubscribers} active` : "View"}
-              </Link>
+              ))}
             </div>
           </div>
-        </div>
-    </main>
+        ) : filtered.length === 0 ? (
+          <div className="admin-empty">
+            <h3>No writeups found</h3>
+            <p>{search ? "Try a different search term." : "Start by creating your first writeup."}</p>
+            {!search && (
+              <Link href="/admin/writeups/new" className="btn btn-primary">
+                + Create First Post
+              </Link>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th className="checkbox-col">
+                      <input
+                        type="checkbox"
+                        className="admin-checkbox"
+                        checked={selectedIds.size === sorted.length && sorted.length > 0}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th onClick={() => handleSort("title")}>
+                      Title <SortIcon field="title" />
+                    </th>
+                    <th onClick={() => handleSort("slug")}>
+                      Slug <SortIcon field="slug" />
+                    </th>
+                    <th onClick={() => handleSort("status")}>
+                      Status <SortIcon field="status" />
+                    </th>
+                    <th onClick={() => handleSort("category")}>
+                      Category <SortIcon field="category" />
+                    </th>
+                    <th onClick={() => handleSort("date")}>
+                      Date <SortIcon field="date" />
+                    </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((w) => (
+                    <tr key={w.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          className="admin-checkbox"
+                          checked={selectedIds.has(w.id)}
+                          onChange={() => toggleSelect(w.id)}
+                        />
+                      </td>
+                      <td>
+                        <div className="text-truncate">
+                          {w.title || <span className="text-muted">(no title)</span>}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="text-muted text-small" style={{ fontFamily: "monospace" }}>
+                          {w.slug}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${w.status === "Published" ? "badge-published" : "badge-draft"}`}
+                        >
+                          {w.status || "Draft"}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="text-muted text-small">{w.category || "—"}</span>
+                      </td>
+                      <td>
+                        <span className="text-muted text-small">{fmt(w.date || w.created_at)}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "nowrap" }}>
+                          <Link
+                            href={`/blogs/${w.slug}`}
+                            target="_blank"
+                            className="btn btn-ghost btn-sm btn-icon"
+                            title="View post"
+                          >
+                            <LuEye size={14} />
+                          </Link>
+                          <Link
+                            href={`/admin/writeups/${w.id}/edit`}
+                            className="btn btn-ghost btn-sm"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => setDeleteTarget(w)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="admin-pagination">
+              <div className="admin-pagination-info">
+                Showing {filtered.length > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0}–
+                {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+              </div>
+              <div className="admin-pagination-btns">
+                <button
+                  className="admin-page-btn"
+                  disabled={currentPage <= 1}
+                  onClick={() => gotoPage(currentPage - 1)}
+                >
+                  ‹ Prev
+                </button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      className={`admin-page-btn ${page === currentPage ? "active" : ""}`}
+                      onClick={() => gotoPage(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  className="admin-page-btn"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => gotoPage(currentPage + 1)}
+                >
+                  Next ›
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {deleteTarget && (
+          <div className="admin-modal-overlay" onClick={() => setDeleteTarget(null)}>
+            <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="admin-modal-title">
+                <LuTrash2 size={18} /> Delete Writeup
+              </h3>
+              <p>
+                Are you sure you want to delete <strong>"{deleteTarget.title}"</strong>?
+                This action cannot be undone.
+              </p>
+              <div className="admin-modal-actions">
+                <button className="btn btn-ghost" onClick={() => setDeleteTarget(null)}>
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={handleDelete}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

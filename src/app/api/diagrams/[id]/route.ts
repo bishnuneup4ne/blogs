@@ -1,8 +1,5 @@
 import { supabase } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(
   request: NextRequest,
@@ -10,9 +7,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    if (!UUID_RE.test(id)) {
-      return NextResponse.json({ error: "Diagram not found" }, { status: 404 });
-    }
     const { data, error } = await supabase
       .from("diagrams")
       .select("*")
@@ -30,13 +24,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await isAdminAuthenticated())) return unauthorizedResponse();
-
   try {
     const { id } = await params;
-    if (!UUID_RE.test(id)) {
-      return NextResponse.json({ error: "Invalid diagram id" }, { status: 400 });
-    }
     const { error } = await supabase
       .from("diagrams")
       .delete()

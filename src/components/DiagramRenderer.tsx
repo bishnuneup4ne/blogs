@@ -23,15 +23,6 @@ interface DiagramRendererProps {
   className?: string;
 }
 
-function esc(s: unknown): string {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
 export function DiagramRenderer({ nodes, connections, className = "" }: DiagramRendererProps) {
   const svgContent = useMemo(() => {
     if (nodes.length === 0) {
@@ -77,16 +68,16 @@ export function DiagramRenderer({ nodes, connections, className = "" }: DiagramR
 
       if (node.type === "box") {
         svg += `
-  <rect x="${x}" y="${y}" width="100" height="60" rx="4" fill="rgba(74,144,226,0.15)" stroke="${esc(node.color)}" stroke-width="2"/>
-  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${esc(node.label)}</text>`;
+  <rect x="${x}" y="${y}" width="100" height="60" rx="4" fill="rgba(74,144,226,0.15)" stroke="${node.color}" stroke-width="2"/>
+  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${node.label}</text>`;
       } else if (node.type === "diamond") {
         svg += `
-  <polygon points="${x + 50},${y} ${x + 100},${y + 30} ${x + 50},${y + 60} ${x},${y + 30}" fill="rgba(74,144,226,0.15)" stroke="${esc(node.color)}" stroke-width="2"/>
-  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${esc(node.label)}</text>`;
+  <polygon points="${x + 50},${y} ${x + 100},${y + 30} ${x + 50},${y + 60} ${x},${y + 30}" fill="rgba(74,144,226,0.15)" stroke="${node.color}" stroke-width="2"/>
+  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${node.label}</text>`;
       } else if (node.type === "circle") {
         svg += `
-  <circle cx="${x + 50}" cy="${y + 30}" r="30" fill="rgba(74,144,226,0.15)" stroke="${esc(node.color)}" stroke-width="2"/>
-  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${esc(node.label)}</text>`;
+  <circle cx="${x + 50}" cy="${y + 30}" r="30" fill="rgba(74,144,226,0.15)" stroke="${node.color}" stroke-width="2"/>
+  <text x="${x + 50}" y="${y + 35}" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="12" font-weight="500">${node.label}</text>`;
       }
     }
 

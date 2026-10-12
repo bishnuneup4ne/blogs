@@ -4,12 +4,16 @@ import { useEffect, useState, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import classNames from "classnames";
+import { Line } from "@once-ui-system/core";
 import { display, routes } from "@/resources";
 import { iconLibrary } from "@/resources/icons";
-import { useConfig } from "@/components/ConfigProvider";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Header.module.scss";
 
+const HomeIcon = iconLibrary.home;
+const CategoriesIcon = iconLibrary.book;
+const PersonalIcon = iconLibrary.person;
+const GalleryIcon = iconLibrary.gallery;
 const BlogIcon = iconLibrary.book;
 const VideoIcon = iconLibrary.document;
 
@@ -61,7 +65,9 @@ function NavDropdown({ selected, children, dropdownItems, isIconDropdown = false
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={classNames(styles.navLink, selected && styles.navLinkSelected)}>
+      <div
+        className={classNames(styles.navLink, selected && styles.navLinkSelected)}
+      >
         {children}
       </div>
       {isOpen && (
@@ -69,11 +75,7 @@ function NavDropdown({ selected, children, dropdownItems, isIconDropdown = false
           {dropdownItems.map((item) => {
             const Icon = item.icon;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={classNames(styles.dropdownItem, isIconDropdown && styles.dropdownItemIcon)}
-              >
+              <Link key={item.href} href={item.href} className={classNames(styles.dropdownItem, isIconDropdown && styles.dropdownItemIcon)}>
                 {isIconDropdown && Icon ? (
                   <div className={styles.dropdownItemContent}>
                     <Icon size={40} aria-label={item.label} />
@@ -91,50 +93,12 @@ function NavDropdown({ selected, children, dropdownItems, isIconDropdown = false
   );
 }
 
-function formatClock(timeZone: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone,
-  }).format(new Date());
-}
-
-function formatPlace(timeZone: string) {
-  const part = timeZone.split("/").pop() ?? timeZone;
-  return part.replace(/_/g, " ");
-}
-
-function MetaRow() {
-  const { person } = useConfig();
-  const [clock, setClock] = useState<string | null>(null);
-
-  useEffect(() => {
-    const tick = () => setClock(formatClock(person.location));
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, [person.location]);
-
-  if (!display.location && !display.time) return null;
-
-  return (
-    <div className={styles.metaRow} suppressHydrationWarning>
-      <span className={styles.metaPlace}>
-        {display.location ? formatPlace(person.location) : ""}
-      </span>
-      <span className={styles.metaTime}>
-        {display.time ? (clock ?? "—") : ""}
-      </span>
-    </div>
-  );
-}
-
 export const Header = () => {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -165,28 +129,29 @@ export const Header = () => {
     {
       name: "Home",
       href: "/blogs",
-      icon: iconLibrary.home,
+      icon: HomeIcon,
       selected: onHome && !onBlogPost,
       show: routes["/blogs"],
     },
     {
       name: "Categories",
       href: "/categories",
-      icon: iconLibrary.book,
+      icon: CategoriesIcon,
       selected: onCategories && !onBlogPost,
       show: true,
     },
     {
       name: "Personal",
       href: "/personal",
-      icon: iconLibrary.person,
+      icon: PersonalIcon,
       selected: onPersonal,
       show: routes["/personal"],
+      dropdown: personalDropdownItems,
     },
     {
       name: "Gallery",
       href: "/gallery",
-      icon: iconLibrary.gallery,
+      icon: GalleryIcon,
       selected: pathname.startsWith("/gallery"),
       show: routes["/gallery"],
     },
@@ -201,11 +166,15 @@ export const Header = () => {
           {navItems.map((item) => {
             if (!item.show) return null;
             const Icon = item.icon;
+            // On mobile, just show simple icon links - no dropdowns
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={classNames(styles.mobileNavLink, item.selected && styles.mobileNavLinkSelected)}
+                className={classNames(
+                  styles.mobileNavLink,
+                  item.selected && styles.mobileNavLinkSelected
+                )}
                 aria-current={item.selected ? "page" : undefined}
                 title={item.name}
                 aria-label={item.name}
@@ -214,45 +183,55 @@ export const Header = () => {
               </Link>
             );
           })}
-          {display.themeSwitcher && <ThemeToggle />}
+          {display.themeSwitcher && (
+            <ThemeToggle />
+          )}
         </nav>
       </header>
     );
   }
 
   return (
-    <header className={styles.bar}>
-      <MetaRow />
-      <nav className={styles.navItems} aria-label="Main">
-        {routes["/blogs"] && (
-          <NavLink href="/blogs" selected={onHome && !onBlogPost}>
-            Home
+    <>
+      <header className={styles.position}>
+        <nav className={styles.navItems} aria-label="Main">
+          {routes["/blogs"] && (
+            <NavLink
+              href="/blogs"
+              selected={onHome && !onBlogPost}
+            >
+              Home
+            </NavLink>
+          )}
+
+          <NavLink href="/categories" selected={onCategories && !onBlogPost}>
+            Categories
           </NavLink>
-        )}
 
-        <NavLink href="/categories" selected={onCategories && !onBlogPost}>
-          Categories
-        </NavLink>
+          {routes["/personal"] && (
+            <NavDropdown
+              selected={onPersonal}
+              dropdownItems={personalDropdownItems}
+              isIconDropdown={true}
+            >
+              Personal
+            </NavDropdown>
+          )}
 
-        {routes["/personal"] && (
-          <NavDropdown selected={onPersonal} dropdownItems={personalDropdownItems} isIconDropdown={true}>
-            Personal
-          </NavDropdown>
-        )}
+          {routes["/gallery"] && (
+            <NavLink href="/gallery" selected={pathname.startsWith("/gallery")}>
+              Gallery
+            </NavLink>
+          )}
 
-        {routes["/gallery"] && (
-          <NavLink href="/gallery" selected={pathname.startsWith("/gallery")}>
-            Gallery
-          </NavLink>
-        )}
-
-        {display.themeSwitcher && (
-          <>
-            <span className={styles.divider} aria-hidden />
-            <ThemeToggle />
-          </>
-        )}
-      </nav>
-    </header>
+          {display.themeSwitcher && (
+            <>
+              <Line background="neutral-alpha-medium" vert maxHeight="24" />
+              <ThemeToggle />
+            </>
+          )}
+        </nav>
+      </header>
+    </>
   );
 };

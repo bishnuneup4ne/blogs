@@ -13,8 +13,7 @@ import {
 } from "@/types";
 
 // IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
-// Set NEXT_PUBLIC_SITE_URL in .env.local / Vercel env; falls back to the handle domain.
-const baseURL: string = process.env.NEXT_PUBLIC_SITE_URL || "https://bishnuneup4ne.tech";
+const baseURL: string = "https://ynubsec.tech";
 
 const routes: RoutesConfig = {
   "/": true, // redirects to /blogs
@@ -78,7 +77,7 @@ const style: StyleConfig = {
   theme: "dark", // dark | light | system — default pure black glass UI
   neutral: "gray", // sand | gray | slate | mint | rose | dusk | custom
   brand: "cyan",
-  accent: "cyan", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
+  accent: "red", // blue | indigo | violet | magenta | pink | red | orange | yellow | moss | green | emerald | aqua | cyan | custom
   solid: "contrast", // color | contrast
   solidStyle: "flat", // flat | plastic
   border: "playful", // rounded | playful | conservative | sharp
@@ -190,15 +189,15 @@ const mailchimp: MailchimpConfig = {
 const schema: SchemaConfig = {
   logo: "",
   type: "Organization",
-  name: "bishnuneup4ne",
+  name: "YNUBSEC",
   description: "Security newsroom — writeups, research, and analysis",
-  email: "bishnuneup4ne@gmail.com",
+  email: "contact@ynubsec.com",
 };
 
 // social links
 const sameAs: SameAsConfig = {
-  threads: "https://www.threads.com/@bishnuneup4ne",
-  linkedin: "https://www.linkedin.com/in/bishnuneup4ne/",
+  threads: "https://www.threads.com/@once_ui",
+  linkedin: "https://www.linkedin.com/company/once-ui/",
   discord: "https://discord.com/invite/5EyAQ4eNdS",
 };
 

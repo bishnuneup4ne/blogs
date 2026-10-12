@@ -6,8 +6,7 @@
     "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": true,
-    "ignore": [".next/**", "node_modules/**", "public/**"]
+    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
@@ -17,43 +16,7 @@
   },
   "linter": {
     "enabled": true,
-    "rules": {
-      "recommended": true,
-      "a11y": {
-        "useKeyWithClickEvents": "off",
-        "useButtonType": "off",
-        "useFocusableInteractive": "off",
-        "useSemanticElements": "off",
-        "noLabelWithoutControl": "off",
-        "useAltText": "off"
-      },
-      "security": {
-        "noDangerouslySetInnerHtml": "off"
-      },
-      "correctness": {
-        "useExhaustiveDependencies": "off",
-        "useJsxKeyInIterable": "off"
-      },
-      "complexity": {
-        "noUselessFragments": "off",
-        "noBannedTypes": "off"
-      },
-      "performance": {
-        "noDelete": "off",
-        "useTopLevelRegex": "off"
-      },
-      "style": {
-        "useImportType": "off",
-        "useTemplate": "off",
-        "useConst": "off",
-        "noNonNullAssertion": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noImplicitAnyLet": "off",
-        "noArrayIndexKey": "off"
-      }
-    }
+    "rules": { "recommended": true }
   },
   "javascript": {
     "formatter": {

@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { AdminSidebar } from "../../AdminSidebar";
 import { MarkdownEditor, type MarkdownEditorHandle } from "@/components/admin/MarkdownEditor";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { CategoryField } from "@/components/admin/CategoryField";
@@ -126,6 +127,7 @@ function NewWriteupForm() {
 
   return (
     <div className="admin-shell">
+      <AdminSidebar />
       <main className="admin-main">
         <div className="admin-page-header">
           <div>
@@ -246,7 +248,7 @@ function NewWriteupForm() {
                 required={isVideoMode}
               />
               {isVideoMode && (
-                <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px" }}>
+                <p style={{ fontSize: "12px", color: "#64748b", marginTop: "6px" }}>
                   Category is set to Personal so this appears on the Videos tab.
                 </p>
               )}
@@ -321,8 +323,9 @@ export default function NewWriteupPage() {
     <Suspense
       fallback={
         <div className="admin-shell">
+          <AdminSidebar />
           <main className="admin-main">
-            <p style={{ color: "var(--text-muted)" }}>Loading…</p>
+            <p style={{ color: "#64748b" }}>Loading…</p>
           </main>
         </div>
       }
