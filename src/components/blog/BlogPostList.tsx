@@ -55,12 +55,17 @@ export function BlogPostList({ items, showPreview = true }: BlogPostListProps) {
   const hoverEnabled = showPreview && canHoverState;
 
   useEffect(() => {
-    if (!tipRef.current) return;
+    if (!hoverEnabled || !tipRef.current) return;
     xTo.current = gsap.quickTo(tipRef.current, "x", { duration: 0.5, ease: "power3" });
     yTo.current = gsap.quickTo(tipRef.current, "y", { duration: 0.5, ease: "power3" });
     rotTo.current = gsap.quickTo(tipRef.current, "rotation", { duration: 0.7, ease: "power3" });
     gsap.set(tipRef.current, { autoAlpha: 0, scale: 0.94, rotation: 0, transformOrigin: "center left" });
-  }, []);
+    return () => {
+      xTo.current = null;
+      yTo.current = null;
+      rotTo.current = null;
+    };
+  }, [hoverEnabled]);
 
   useEffect(() => {
     const tip = tipRef.current;
