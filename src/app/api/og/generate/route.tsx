@@ -11,18 +11,24 @@ export async function GET(request: Request) {
   let title = url.searchParams.get("title") || "Portfolio";
 
   async function loadGoogleFont(font: string) {
-    const url = `https://fonts.googleapis.com/css2?family=${font}`;
-    const css = await (await fetch(url)).text();
-    const resource = css.match(/src: url\((.+)\) format\('(opentype|truetype)'\)/);
+    const cssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}`;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const css = await (await fetch(cssUrl, { signal: controller.signal })).text();
+      const resource = css.match(/src: url\((.+)\) format\('(opentype|truetype)'\)/);
 
-    if (resource) {
-      const response = await fetch(resource[1]);
-      if (response.status == 200) {
-        return await response.arrayBuffer();
+      if (resource) {
+        const response = await fetch(resource[1], { signal: controller.signal });
+        if (response.status === 200) {
+          return await response.arrayBuffer();
+        }
       }
-    }
 
-    throw new Error("failed to load font data");
+      throw new Error("failed to load font data");
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   return new ImageResponse(
