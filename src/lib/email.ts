@@ -38,7 +38,12 @@ function escapeHtml(value: string): string {
 }
 
 /** Wraps broadcast content in a clean, branded email template (email-client safe, inline styles only). */
-export function buildBroadcastHtml(subject: string, bodyHtml: string, siteName = "Blog"): string {
+export function buildBroadcastHtml(
+  subject: string,
+  bodyHtml: string,
+  siteName = "Blog",
+  unsubscribeUrl = "",
+): string {
   const safeBody = typeof bodyHtml === "string" ? bodyHtml : "";
   return `<!DOCTYPE html>
 <html lang="en">
@@ -58,8 +63,12 @@ export function buildBroadcastHtml(subject: string, bodyHtml: string, siteName =
           </tr>
           <tr>
             <td style="padding:20px 32px;border-top:1px solid #eeeeee;font-size:12px;line-height:1.6;color:#8e8e93;">
-              You're receiving this email because you subscribed to updates from ${escapeHtml(siteName)}.<br/>
-              If you'd like to stop receiving these emails, please unsubscribe from the blog.
+              You're receiving this email because you subscribed to updates from ${escapeHtml(siteName)}.
+              ${
+                unsubscribeUrl
+                  ? `<br/><a href="${escapeHtml(unsubscribeUrl)}" style="color:#0a84ff;text-decoration:underline;">Unsubscribe</a> — takes one click, no reply needed.`
+                  : ""
+              }
             </td>
           </tr>
         </table>

@@ -3,6 +3,10 @@ import { revalidatePath } from "next/cache";
 import supabaseAdmin from "@/lib/supabaseAdmin";
 import { ensureCategoryExists } from "@/lib/ensureCategory";
 import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
+import { revalidateContentCache } from "@/lib/cache";
+import { toSlug } from "@/lib/slug";
+import { pick, WRITEUP_COLUMNS } from "@/lib/writeWhitelist";
+import { sanitizeMdxContent } from "@/lib/mdxSanitize";
 
 export async function GET() {
   if (!(await isAdminAuthenticated())) {
@@ -15,7 +19,10 @@ export async function GET() {
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Writeups list error:", error);
+    return NextResponse.json({ error: "Failed to load writeups" }, { status: 500 });
+  }
   return NextResponse.json(data);
 }
 
@@ -24,17 +31,28 @@ export async function POST(request: NextRequest) {
     return unauthorizedResponse();
   }
 
-  const body = await request.json();
+  const body = await request.json().catch(() => ({}));
 
-  const slug = body.slug || body.title
-    ?.toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim();
+  const fields = pick<Record<string, unknown>>(body, WRITEUP_COLUMNS);
+  if (typeof fields.content === "string") fields.content = sanitizeMdxContent(fields.content);
+  const title = typeof fields.title === "string" ? fields.title.trim() : "";
+
+  if (!title) {
+    return NextResponse.json({ error: "Title is required." }, { status: 400 });
+  }
+
+  const slug = (typeof fields.slug === "string" && fields.slug.trim()) || toSlug(title);
+
+  if (!slug) {
+    return NextResponse.json(
+      { error: "Title must contain at least one letter or number to create a URL." },
+      { status: 400 },
+    );
+  }
 
   const payload = {
-    ...body,
+    ...fields,
+    title,
     slug,
     is_deleted: false,
     created_at: new Date().toISOString(),
@@ -46,10 +64,22 @@ export async function POST(request: NextRequest) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Writeup insert error:", error);
+    return NextResponse.json(
+      {
+        error:
+          error.code === "23505"
+            ? "A post with this URL already exists. Choose a different title or slug."
+            : "Failed to save the post.",
+      },
+      { status: error.code === "23505" ? 409 : 500 },
+    );
+  }
 
-  await ensureCategoryExists(supabaseAdmin, payload.category);
+  await ensureCategoryExists(supabaseAdmin, String(fields.category ?? ""));
   revalidatePath("/", "layout");
+  revalidateContentCache({ writeupSlug: data?.slug });
 
   return NextResponse.json(data, { status: 201 });
 }

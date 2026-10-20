@@ -3,6 +3,7 @@ import supabaseAdmin from "@/lib/supabaseAdmin";
 import { Resend } from "resend";
 import { isAdminAuthenticated, unauthorizedResponse } from "@/lib/adminAuth";
 import { getSenderInfo, buildBroadcastHtml } from "@/lib/email";
+import { baseURL } from "@/resources";
 
 /** Resend caps a single message at 50 recipients (to + cc + bcc) — the
  *  required `to` address counts toward the limit, so batch BCC at 49. */
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     const { from, siteName } = await getSenderInfo();
-    const html = buildBroadcastHtml(subject, message, siteName);
+    const html = buildBroadcastHtml(subject, message, siteName, `${baseURL}/unsubscribe`);
 
     const resend = new Resend(apiKey);
 

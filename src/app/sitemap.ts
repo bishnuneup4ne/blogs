@@ -1,5 +1,4 @@
 import { baseURL, routes as routesConfig } from "@/resources";
-import { getNavCategories } from "@/lib/categories";
 import { getSupabasePosts } from "@/utils/supabasePosts";
 import { getSupabaseProjects } from "@/utils/supabaseProjects";
 
@@ -16,13 +15,10 @@ export default async function sitemap() {
       }))
     : [];
 
-  const categories = (await getNavCategories()).map((cat) => ({
-    url: `${baseURL}/category/${cat.slug}`,
-    lastModified: new Date().toISOString().split("T")[0],
-  }));
-
-  const staticPaths = ["/blogs", "/categories", "/gallery", "/personal", "/work"].filter(
-    (path) => routesConfig[path as keyof typeof routesConfig],
+  // /category/* exists only to 301 into /blogs?category=..., so submitting those
+  // URLs just puts redirect stubs in the index.
+  const staticPaths = ["/", "/blogs", "/categories", "/gallery", "/personal", "/work"].filter(
+    (path) => path === "/" || routesConfig[path as keyof typeof routesConfig],
   );
 
   const routes = staticPaths.map((route) => ({
@@ -30,5 +26,5 @@ export default async function sitemap() {
     lastModified: new Date().toISOString().split("T")[0],
   }));
 
-  return [...routes, ...categories, ...blogs, ...works];
+  return [...routes, ...blogs, ...works];
 }
