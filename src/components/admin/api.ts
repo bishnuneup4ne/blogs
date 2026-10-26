@@ -13,6 +13,7 @@ export interface ApiPost {
   tags: string[];
   cover_url: string | null;
   cover_alt: string | null;
+  cover_height?: number | null;
   date: string;
   reading_minutes: number;
   blocks: unknown[];

@@ -233,3 +233,11 @@
     font-size: 18px;
   }
 }
+
+.figWide { max-width: 86%; margin-inline: auto; }
+.figMedium { max-width: 64%; margin-inline: auto; }
+.figSmall { max-width: 42%; margin-inline: auto; }
+
+@media (max-width: 640px) {
+  .figWide, .figMedium, .figSmall { max-width: 100%; }
+}

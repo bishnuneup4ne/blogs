@@ -15,6 +15,7 @@ export type PostInput = {
   tags?: string[];
   cover_url?: string | null;
   cover_alt?: string;
+  cover_height?: number | null;
   date?: string;
   reading_minutes?: number;
   blocks?: Block[];
@@ -95,6 +96,10 @@ export function parsePostInput(input: unknown, options: { partial: boolean; titl
     }
   }
   if (has("cover_alt")) data.cover_alt = typeof input.cover_alt === "string" ? input.cover_alt.trim().slice(0, 600) : "";
+  if (has("cover_height")) {
+    const h = Number(input.cover_height);
+    data.cover_height = Number.isFinite(h) && h >= 200 && h <= 900 ? Math.round(h) : null;
+  }
   if (has("date")) {
     const date = typeof input.date === "string" ? cleanDate(input.date) : null;
     if (!date) return { ok: false, error: "Date must be a valid YYYY-MM-DD value" };

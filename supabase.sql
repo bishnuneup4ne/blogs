@@ -385,3 +385,6 @@ update public.fn_settings set payload = payload || '{"seeded":"1"}'::jsonb where
 update public.fn_posts
 set cover_url = null, cover_alt = ''
 where cover_url like '/images/cover-%';
+
+-- 2026-10-26: per-post cover image height (px) editable from the editor
+alter table public.fn_posts add column if not exists cover_height integer;

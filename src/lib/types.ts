@@ -26,7 +26,7 @@ export type Block =
   | { type: "callout"; tone: "note" | "tip" | "warning"; title?: string; html: string }
   | { type: "code"; lang: string; filename?: string; code: string }
   | { type: "list"; ordered: boolean; items: string[] }
-  | { type: "image"; src: string; alt: string; caption?: string }
+  | { type: "image"; src: string; alt: string; caption?: string; width?: "full" | "wide" | "medium" | "small" }
   | { type: "table"; head: string[]; rows: string[][] }
   | { type: "chart"; chart: ChartBlock }
   | { type: "divider" };
@@ -106,7 +106,7 @@ export interface Post {
   readingMinutes: number;
   category: CategorySlug;
   tags: TagSlug[];
-  cover?: { src: string; alt: string };
+  cover?: { src: string; alt: string; height?: number };
   featured?: boolean;
   author: Author;
   blocks: Block[];

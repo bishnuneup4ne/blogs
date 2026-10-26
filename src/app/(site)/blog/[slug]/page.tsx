@@ -73,7 +73,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     {settings.toggles.views ? <ViewBeacon slug={post.slug} /> : null}
 
     {post.cover ? (
-      <div className={styles.heroMedia}>
+      <div className={styles.heroMedia} style={post.cover?.height ? ({ "--cover-h": `${post.cover.height}px` } as React.CSSProperties) : undefined}>
         <Image
           src={post.cover.src}
           alt={post.cover.alt || post.title}

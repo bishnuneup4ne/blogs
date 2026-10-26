@@ -1,7 +1,8 @@
-/* Full-bleed cover with the content sheet tucking under its bottom edge */
+/* Full-bleed cover with the content sheet tucking under its bottom edge.
+   Height is per-post editable (--cover-h set inline from post.coverHeight). */
 .heroMedia {
   position: relative;
-  height: clamp(360px, 52vh, 560px);
+  height: var(--cover-h, clamp(420px, 62vh, 660px));
 }
 
 .heroImg {
@@ -290,7 +291,7 @@
 
 @media (max-width: 640px) {
   .heroMedia {
-    height: clamp(240px, 40vh, 340px);
+    height: calc(var(--cover-h, clamp(300px, 46vh, 420px)) * 0.72);
   }
 
   .sheet {

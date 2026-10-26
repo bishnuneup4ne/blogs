@@ -448,7 +448,8 @@ function normaliseBlock(raw: unknown): Block | null {
     case "image": {
       const src = safeUrl(String(source.src ?? ""), true);
       if (!src) return null;
-      return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600) };
+      const width = ["full", "wide", "medium", "small"].includes(String(source.width)) ? (String(source.width) as "full" | "wide" | "medium" | "small") : undefined;
+      return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
     }
     case "table": {
       const head = stringList(source.head, 20, 200);

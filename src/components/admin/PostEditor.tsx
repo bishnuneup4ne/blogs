@@ -26,6 +26,7 @@ export interface EditorDraft {
   tags: string[];
   cover: string | null;
   coverAlt: string;
+  coverHeight: number | null;
   featured: boolean;
   readingMinutes: number;
   blocks: Block[];
@@ -43,6 +44,7 @@ function toDraft(p: ApiPost): EditorDraft {
     tags: p.tags ?? [],
     cover: p.cover_url ?? null,
     coverAlt: p.cover_alt ?? "",
+    coverHeight: p.cover_height ?? null,
     featured: Boolean(p.featured),
     readingMinutes: p.reading_minutes ?? 1,
     blocks: (Array.isArray(p.blocks) ? p.blocks : []) as Block[],
@@ -59,6 +61,7 @@ function toPayload(d: EditorDraft) {
     tags: d.tags,
     cover_url: d.cover,
     cover_alt: d.coverAlt,
+    cover_height: d.coverHeight,
     date: d.date,
     reading_minutes: d.readingMinutes,
     blocks: d.blocks,
@@ -151,6 +154,7 @@ export function PostEditor({ postId }: { postId: string }) {
         tags: [],
         cover: null,
         coverAlt: "",
+        coverHeight: null,
         featured: false,
         readingMinutes: 1,
         blocks: [{ type: "p", html: "" }],
@@ -557,6 +561,26 @@ function SettingsPanel({
             <button type="button" className={styles.linkDanger} onClick={() => patch({ cover: null })}>Remove cover</button>
           ) : null}
           <input placeholder="Alt text for the cover" value={draft.coverAlt} onChange={(e) => patch({ coverAlt: e.target.value })} />
+          {draft.cover ? (
+            <span style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+              <input
+                type="range"
+                min={200}
+                max={900}
+                step={20}
+                aria-label="Cover height in pixels"
+                value={draft.coverHeight ?? 560}
+                onChange={(e) => patch({ coverHeight: Number(e.target.value) })}
+                style={{ flex: 1 }}
+              />
+              <strong style={{ fontVariantNumeric: "tabular-nums", fontSize: 13, minWidth: 52 }}>{draft.coverHeight ?? 560}px</strong>
+              {draft.coverHeight ? (
+                <button type="button" onClick={() => patch({ coverHeight: null })} style={{ border: "none", background: "transparent", color: "#1a73e8", fontSize: 12, cursor: "pointer" }}>
+                  auto
+                </button>
+              ) : null}
+            </span>
+          ) : null}
         </label>
       </div>
       <p className={styles.settingsNote}>
@@ -729,6 +753,24 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
               <option key={g.src} value={g.src}>{g.label}</option>
             ))}
           </select>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "#5f6368" }}>Size</span>
+            {(["full", "wide", "medium", "small"] as const).map((sz) => (
+              <button
+                key={sz}
+                type="button"
+                onClick={() => onChange({ ...block, width: sz })}
+                style={{
+                  fontSize: 12, padding: "4px 10px", borderRadius: 999, textTransform: "capitalize",
+                  border: (block.width ?? "full") === sz ? "1px solid #1a73e8" : "1px solid #dadce0",
+                  background: (block.width ?? "full") === sz ? "#e8f0fe" : "transparent",
+                  color: (block.width ?? "full") === sz ? "#1967d2" : "#3c4043", cursor: "pointer",
+                }}
+              >
+                {sz}
+              </button>
+            ))}
+          </div>
           <label className={styles.uploadBtn}>
             Upload image
             <input

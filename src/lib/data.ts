@@ -28,6 +28,7 @@ interface DbPostRow {
   tags: string[] | null;
   cover_url: string | null;
   cover_alt: string | null;
+  cover_height?: number | null;
   date: string;
   reading_minutes: number;
   blocks: unknown;
@@ -51,7 +52,7 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
     readingMinutes: row.reading_minutes,
     category: (row.topic_slug ?? "engineering") as Post["category"],
     tags: row.tags ?? [],
-    cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "" } : undefined,
+    cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "", height: Number(row.cover_height ?? 0) || undefined } : undefined,
     featured: Boolean(row.featured),
     author: { name: author?.name || authorName, role: author?.role ?? "", avatar: "/avatar.jpg" },
     blocks: normalizeBlocks(row.blocks),

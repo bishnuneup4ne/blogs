@@ -75,7 +75,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               const myIndex = imageIndex;
               const remote = /^https?:\/\//i.test(block.src) && !block.src.includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
               return (
-                <figure key={key} className={styles.figure}>
+                <figure key={key} className={`${styles.figure}${block.width && block.width !== "full" ? ` ${styles[`fig${block.width[0].toUpperCase()}${block.width.slice(1)}`]}` : ""}`}>
                   <button
                     type="button"
                     className={styles.imageWrap}
