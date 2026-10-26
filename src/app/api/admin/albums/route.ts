@@ -5,11 +5,15 @@ export const dynamic = "force-dynamic";
 export const GET = adminRoute(async () => {
   const [{ data: albums, error }, { data: photos }] = await Promise.all([
     db.from("fn_albums").select("*").order("sort_order", { ascending: false }),
-    db.from("fn_photos").select("album_id"),
+    db.from("fn_photos").select("album_id,kind"),
   ]);
   if (error) return json({ error: error.message }, 500);
   const counts = new Map<string, number>();
-  for (const p of photos ?? []) counts.set(p.album_id, (counts.get(p.album_id) ?? 0) + 1);
+  const videos = new Map<string, number>();
+  for (const p of photos ?? []) {
+    counts.set(p.album_id, (counts.get(p.album_id) ?? 0) + 1);
+    if (p.kind === "video") videos.set(p.album_id, (videos.get(p.album_id) ?? 0) + 1);
+  }
   // Pick the first photo of each album as a live cover preview.
   const { data: first } = await db.from("fn_photos").select("album_id,src,kind").order("position");
   const coverOf = new Map<string, string>();
@@ -18,6 +22,7 @@ export const GET = adminRoute(async () => {
     albums: (albums ?? []).map((a: any) => ({
       ...a,
       photo_count: counts.get(a.id) ?? 0,
+      video_count: videos.get(a.id) ?? 0,
       first_photo: coverOf.get(a.id) ?? "",
     })),
   });
