@@ -1,0 +1,247 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  font-family: var(--font-ui);
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  line-height: 44px;
+  text-wrap: balance;
+  color: var(--studio-ink);
+}
+
+.pageDesc {
+  max-width: 70ch;
+  margin-top: 7px;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--gray-600);
+}
+
+.pageActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.card {
+  background: var(--studio-surface);
+  border: 1px solid var(--studio-line);
+  border-radius: var(--studio-radius);
+  overflow: hidden;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.cardTitle {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--gray-900);
+}
+
+.cardAction {
+  font-size: 13px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  th {
+    text-align: left;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: 10.5px;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    padding: 11px 24px;
+    border-bottom: 1px solid var(--gray-100);
+    white-space: nowrap;
+    background: var(--gray-25);
+  }
+
+  td {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-900);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color 120ms ease;
+  }
+
+  tbody tr:hover {
+    background: var(--gray-25);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.statusDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tone-green { background: var(--green-50); color: var(--green-800); }
+.tone-blue { background: var(--blue-50); color: var(--blue-700); }
+.tone-yellow { background: var(--yellow-50); color: var(--yellow-900); }
+.tone-gray { background: var(--gray-100); color: var(--gray-600); }
+.tone-red { background: var(--red-50); color: var(--red-700); }
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.emptyArt {
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.emptyTitle {
+  font-family: var(--font-ui);
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.emptyBody {
+  max-width: 46ch;
+  margin-bottom: 14px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.fieldHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--gray-600);
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--gray-100);
+  flex-wrap: wrap;
+}
+
+.seg,
+.segActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 15px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-600);
+  transition: background-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+.seg:hover {
+  color: var(--gray-900);
+}
+
+.segActive {
+  background: var(--white);
+  color: var(--blue-800);
+  box-shadow: var(--shadow-1);
+}
+
+.segCount {
+  font-size: 11.5px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .pageHeader {
+    margin-bottom: 22px;
+  }
+
+  .pageTitle {
+    font-size: 30px;
+    line-height: 38px;
+  }
+
+  .cardHead {
+    padding: 16px 18px;
+  }
+
+  .table {
+    th,
+    td {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+  }
+}

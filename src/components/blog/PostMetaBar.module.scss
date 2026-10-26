@@ -1,0 +1,30 @@
+.tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--spacer-3);
+}
+
+.listen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.listen:hover,
+.listen:focus-visible {
+  background: var(--gray-50);
+  border-color: var(--gray-500);
+  color: var(--gray-900);
+}

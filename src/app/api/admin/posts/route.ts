@@ -1,0 +1,35 @@
+import { adminRoute, body, db, json } from "@/lib/api-helpers";
+import { parsePostInput } from "@/lib/post-input";
+
+export const dynamic = "force-dynamic";
+
+export const GET = adminRoute(async (req) => {
+  const status = req.nextUrl.searchParams.get("status");
+  let query = db.from("fn_posts").select("*").order("date", { ascending: false });
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) return json({ error: error.message }, 500);
+  return json({ posts: data });
+});
+
+export const POST = adminRoute(async (req) => {
+  const parsed = parsePostInput(await body(req), { partial: false });
+  if (!parsed.ok) return json({ error: parsed.error }, 400);
+  const payload = {
+    summary: "",
+    status: "draft",
+    topic_slug: null,
+    author_id: null,
+    tags: [],
+    cover_url: null,
+    cover_alt: "",
+    date: new Date().toISOString().slice(0, 10),
+    reading_minutes: 1,
+    blocks: [],
+    featured: false,
+    ...parsed.data,
+  };
+  const { data, error } = await db.from("fn_posts").insert(payload).select().single();
+  if (error) return json({ error: error.message }, 400);
+  return json({ post: data }, 201);
+});

@@ -1,0 +1,226 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.full {
+  grid-column: span 2;
+}
+
+.body {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+
+  > span {
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  em {
+    font-size: 11.5px;
+    font-style: normal;
+    line-height: 16px;
+    color: var(--gray-600);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: 13.5px;
+    color: var(--gray-900);
+    background: var(--gray-25);
+    outline: none;
+    resize: vertical;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+
+    &:focus {
+      background: var(--white);
+      border-color: var(--blue-600);
+      box-shadow: 0 0 0 3px var(--blue-50);
+    }
+  }
+
+  input,
+  select {
+    height: 42px;
+    padding: 0 13px;
+  }
+}
+
+.listRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.listRemove {
+  width: 42px;
+  flex: none;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--gray-600);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.listRemove:hover {
+  background: var(--red-50);
+  border-color: var(--red-300);
+  color: var(--red-700);
+}
+
+.listAdd {
+  justify-self: start;
+  margin-top: 4px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue-700);
+  cursor: pointer;
+}
+
+.listAdd:hover {
+  color: var(--blue-900);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-top: 1px solid var(--gray-100);
+  cursor: pointer;
+}
+
+.toggle:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.toggleLabel {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.toggleHint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 17px;
+  color: var(--gray-600);
+}
+
+.switch {
+  appearance: none;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--gray-300);
+  position: relative;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: var(--shadow-1);
+    transition: transform 150ms ease;
+  }
+
+  &:checked {
+    background: var(--blue-600);
+  }
+
+  &:checked::after {
+    transform: translateX(18px);
+  }
+}
+
+.danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 24px 20px;
+}
+
+.intName {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.intDesc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 17px;
+  color: var(--gray-600);
+}
+
+.muted {
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.formError {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--red-50);
+  font-size: 13.5px;
+  color: var(--red-700);
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .body {
+    padding: 18px;
+  }
+
+  .danger {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}

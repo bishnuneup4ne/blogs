@@ -1,0 +1,112 @@
+/* Studio design layer — admin-only overrides on top of the public tokens. */
+
+.studio {
+  --studio-bg: var(--white);
+  --studio-rail: var(--gray-25);
+  --studio-surface: var(--white);
+  --studio-line: var(--border-light);
+  --studio-line-strong: var(--border);
+  --studio-ink: var(--gray-900);
+  --studio-radius: var(--radius-card);
+  --studio-radius-lg: var(--radius-24);
+  background: var(--studio-bg);
+  color: var(--studio-ink);
+}
+
+.studio ::selection {
+  background: var(--blue-100);
+  color: var(--blue-900);
+}
+
+.studio :focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+}
+
+/* Page actions use the public button classes. Keep them studio-sized. */
+.studio .btn {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  letter-spacing: 0.1px;
+}
+
+.studio .btn-primary {
+  background: var(--blue-600);
+  color: var(--white);
+}
+
+.studio .btn-primary:hover,
+.studio .btn-primary:focus {
+  background: var(--blue-900);
+  color: var(--white);
+  box-shadow: var(--shadow-1);
+}
+
+.studio .btn-ghost {
+  border-color: var(--studio-line-strong);
+  color: var(--gray-800);
+  background: var(--studio-surface);
+}
+
+.studio .btn-ghost:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.studio .btn-link {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05px;
+}
+
+.studio .btn-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.studio .pill {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.studio .pill-active {
+  background: var(--blue-50);
+  color: var(--blue-900);
+  font-weight: 600;
+}
+
+/* Consistent, calm scrollbars inside the studio. */
+.studio * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
+}
+
+.studio *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.studio *::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--gray-300);
+  background-clip: content-box;
+}
+
+.studio *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio *,
+  .studio *::before,
+  .studio *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

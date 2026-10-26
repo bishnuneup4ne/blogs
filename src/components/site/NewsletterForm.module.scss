@@ -1,0 +1,124 @@
+/* uni-landing-newsletter-form: split pill (48px/4px corners) + gradient button.
+   .formCard — stacked layout for the /newsletter subscribe card (blog.google style). */
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 560px;
+}
+
+.formCard {
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: none;
+
+  .input,
+  .submit {
+    width: 100%;
+    border-radius: var(--radius-4);
+  }
+
+  .submit {
+    width: auto;
+    min-width: 160px;
+    background-image: none;
+    background-color: var(--blue-600);
+
+    &:hover::before,
+    &:focus-visible::before {
+      opacity: 0;
+    }
+
+    &:hover {
+      background-color: var(--blue-800);
+    }
+  }
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 48px;
+  padding: 12px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-48) var(--radius-4) var(--radius-4) var(--radius-48);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--gray-300, #dadce0);
+  font-size: 14px;
+  color: var(--gray-900);
+  outline: none;
+  transition: box-shadow 200ms ease;
+
+  &::placeholder {
+    color: var(--gray-600);
+  }
+
+  &:focus {
+    box-shadow: inset 0 0 0 2px var(--blue-600);
+  }
+}
+
+.submit {
+  position: relative;
+  height: 48px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-4) var(--radius-48) var(--radius-48) var(--radius-4);
+  background-image: var(--gd-newsletter-button);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  z-index: 1;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--gd-newsletter-button-hover);
+    opacity: 0;
+    transition: opacity 150ms cubic-bezier(0.31, 0.94, 0.34, 1);
+  }
+
+  &:hover::before,
+  &:focus-visible::before {
+    opacity: 1;
+  }
+}
+
+.error {
+  flex-basis: 100%;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--red-600);
+}
+
+.done {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--radius-16);
+  background: var(--green-50);
+  color: var(--green-800);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (max-width: 560px) {
+  .form {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input,
+  .submit {
+    width: 100%;
+    border-radius: var(--radius-pill);
+  }
+}

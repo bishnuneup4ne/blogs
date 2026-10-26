@@ -1,0 +1,135 @@
+.bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+}
+
+.left {
+  display: grid;
+  gap: 18px;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  color: var(--gray-900);
+}
+
+.dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.dd {
+  position: relative;
+}
+
+.ddButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.ddInline {
+  composes: ddButton;
+  font-size: 14px;
+}
+
+.ddButton:hover,
+.ddInline:hover {
+  border-bottom-color: var(--gray-700);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.clear {
+  height: 36px;
+  color: var(--gray-600);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.count {
+  font-size: 15px;
+  color: var(--gray-600);
+}
+
+/* uni-dropdown menu: 16px radius, nav elevation */
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 200px;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  border-radius: var(--radius-16);
+  background: #fff;
+  box-shadow: 0 8px 12px 4px rgba(0, 0, 0, 0.04), var(--shadow-1);
+  animation: menuIn 120ms ease;
+}
+
+.option,
+.optionActive {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: var(--radius-12);
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.option:hover {
+  background: var(--gray-50);
+  color: var(--blue-700);
+}
+
+.optionActive {
+  background: var(--blue-50);
+  color: var(--blue-700);
+  font-weight: 500;
+}
+
+@keyframes menuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}

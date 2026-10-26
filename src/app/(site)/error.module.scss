@@ -1,0 +1,44 @@
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacer-8) var(--container-pad);
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.code {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.title {
+  font-size: clamp(32px, 4.4vw, 48px);
+  line-height: 1.12;
+  letter-spacing: -0.2px;
+}
+
+.body {
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-600);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.digest {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gray-500);
+}

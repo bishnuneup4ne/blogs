@@ -1,0 +1,116 @@
+.page {
+  display: grid;
+  gap: 20px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--gray-900) 42%, transparent);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 70;
+  padding: 24px;
+  animation: studio-fade-in 160ms ease-out both;
+}
+
+.modal {
+  position: relative;
+  z-index: 1;
+  width: min(580px, 100%);
+  background: var(--white);
+  border-radius: var(--studio-radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-3);
+  display: grid;
+  gap: 12px;
+  animation: studio-rise 200ms ease-out both;
+}
+
+.modalTitle {
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  line-height: 28px;
+  color: var(--gray-900);
+}
+
+.modalMeta {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.modalBody {
+  white-space: pre-wrap;
+  font-size: 14.5px;
+  line-height: 24px;
+  color: var(--gray-900);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.modalActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.readRow {
+  opacity: 0.62;
+}
+
+.errorText {
+  font-size: 13.5px;
+  color: var(--red-600);
+}
+
+.mutedCell {
+  color: var(--gray-600);
+}
+
+.subCell {
+  font-size: 12.5px;
+  color: var(--gray-600);
+}
+
+@media (max-width: 560px) {
+  .modal {
+    padding: 22px;
+  }
+}
+
+@keyframes studio-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes studio-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modalBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: default;
+}

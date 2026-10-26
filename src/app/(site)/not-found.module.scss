@@ -1,0 +1,39 @@
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacer-8) var(--container-pad) var(--spacer-8);
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.code {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.title {
+  font-family: var(--font-ui);
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  line-height: 1.12;
+  color: var(--gray-900);
+}
+
+.body {
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--gray-600);
+}
+
+.links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}

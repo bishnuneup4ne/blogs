@@ -1,0 +1,199 @@
+:root {
+  /* Fonts — blog.google stacks */
+  --font-ui: "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
+  --font-body: var(--font-ui);
+  --font-display: var(--font-ui);
+  --font-mono: "Roboto Mono", monospace, Arial, Helvetica, sans-serif;
+
+  /* Greys — blog.google --color-grey-* */
+  --white: #ffffff;
+  --gray-25: #fbfcfe;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f4;
+  --gray-150: #e8eaed;
+  --gray-200: #dadce0;
+  --gray-300: #bdc1c6;
+  --gray-400: #9aa0a6;
+  --gray-500: #80868b;
+  --gray-600: #5f6368;
+  --gray-700: #3c4043;
+  --gray-800: #202124;
+  --gray-900: #202124;
+  --gray-1100: #18191d;
+
+  /* Brand + product colors — blog.google ramps */
+  --brand-ink: #202124;
+  --brand-ink-deep: #174ea6;
+  --brand-accent: #1a73e8;
+
+  --blue-25: #f4faff;
+  --blue-50: #e8f0fe;
+  --blue-100: #d2e3fc;
+  --blue-200: #aecbfa;
+  --blue-300: #8ab4f8;
+  --blue-400: #669df6;
+  --blue-500: #4285f4;
+  --blue: #1a73e8;
+  --blue-600: #1a73e8;
+  --blue-700: #1967d2;
+  --blue-800: #185abc;
+  --blue-dark: #1967d2;
+  --blue-hover: #174ea6;
+  --blue-900: #174ea6;
+
+  --green-50: #e6f4ea;
+  --green-100: #ceead6;
+  --green-200: #a8dab5;
+  --green-300: #81c995;
+  --green-400: #5bb974;
+  --green-500: #34a853;
+  --green-600: #1e8e3e;
+  --green: #188038;
+  --green-700: #188038;
+  --green-text: #137333;
+  --green-800: #137333;
+  --green-900: #0d652d;
+
+  --red-50: #fce8e6;
+  --red-100: #fad2cf;
+  --red-200: #f6aea9;
+  --red-300: #f28b82;
+  --red-400: #ee675c;
+  --red-500: #ea4335;
+  --red: #d93025;
+  --red-600: #d93025;
+  --red-700: #c5221f;
+  --red-800: #b31412;
+  --red-900: #a50e0e;
+
+  --yellow-50: #fef7e0;
+  --yellow-100: #feefc3;
+  --yellow-200: #fde293;
+  --yellow-300: #fdd663;
+  --yellow-400: #fcc934;
+  --yellow-500: #fbbc04;
+  --yellow: #f9ab00;
+  --yellow-600: #f9ab00;
+  --yellow-700: #f29900;
+  --yellow-800: #ea8600;
+  --yellow-900: #e37400;
+
+  /* Aurora ramp (blog.google pastels) */
+  --aurora-blue-plus6: #f4faff;
+  --aurora-blue-plus5: #dcf1ff;
+  --aurora-blue-plus4: #bbe2ff;
+  --aurora-blue-plus3: #9dd2ff;
+  --aurora-blue-plus2: #76bbff;
+  --aurora-blue-plus1: #4fa0ff;
+  --aurora-blue-main: #3186ff;
+  --aurora-blue-minus5: #14204f;
+  --aurora-blue-minus4: #192967;
+  --aurora-green-plus6: #f6fff0;
+  --aurora-green-plus5: #daf9d4;
+  --aurora-green-plus4: #bff3b9;
+  --aurora-green-plus3: #9be69a;
+  --aurora-green-main: #00af57;
+  --aurora-purple-plus6: #f0f3ff;
+  --aurora-purple-plus5: #e0e7ff;
+  --aurora-purple-plus4: #d0d9ff;
+  --aurora-purple-plus3: #b8c0ff;
+  --aurora-purple-minus3: #3d2898;
+  --aurora-soft-purple-plus5: #e3e8ff;
+  --aurora-soft-purple-plus4: #d1d7ff;
+  --aurora-soft-purple-plus3: #b8beff;
+  --aurora-yellow-plus5: #fcffad;
+  --aurora-yellow-main: #fec700;
+  --aurora-red-plus5: #ffeef7;
+  --aurora-pink-plus5: #ffdbf5;
+
+  /* Surfaces & semantic roles */
+  --bg: var(--white);
+  --text: var(--gray-900);
+  --text-secondary: var(--gray-700);
+  --text-meta: var(--gray-600);
+  --border: var(--gray-200);
+  --border-light: var(--gray-100);
+  --surface-secondary: var(--gray-50);
+
+  /* Gradients — blog.google gd-* primaries */
+  --gd-blue: linear-gradient(209deg, var(--blue-50) 4.48%, var(--aurora-blue-plus4) 101.72%);
+  --gd-green: linear-gradient(0deg, var(--aurora-green-plus5) 0%, var(--green-50) 60%);
+  --gd-aquamarine: linear-gradient(354deg, var(--aurora-blue-plus5) 4.7%, var(--green-50) 95.09%);
+  --gd-purple: linear-gradient(227deg, var(--aurora-purple-plus6) 16.73%, var(--aurora-purple-plus4) 98.44%);
+  --gd-yellow: linear-gradient(209deg, var(--yellow-50) 0.87%, var(--yellow-100) 100%);
+  --gd-red: linear-gradient(209deg, var(--red-50) 0.87%, var(--aurora-red-plus5) 100%);
+  --gd-gray: linear-gradient(180deg, var(--gray-100) 0%, var(--gray-100) 100%);
+  --gd-newsletter-button: linear-gradient(var(--blue-700), var(--blue-600));
+  --gd-newsletter-button-hover: linear-gradient(var(--blue-600), var(--blue-700));
+
+  /* Legacy aliases used by cards */
+  --grad-blue: var(--gd-blue);
+  --grad-blue-deep: linear-gradient(180deg, var(--blue-100) 0%, var(--aurora-blue-plus3) 100%);
+  --grad-green: var(--gd-green);
+  --grad-green-soft: linear-gradient(180deg, var(--aurora-green-plus4) -38.82%, var(--green-100) 100.11%);
+  --grad-mint: var(--gd-aquamarine);
+  --grad-mint-soft: var(--gd-aquamarine);
+  --grad-collection: linear-gradient(62deg, var(--aurora-blue-plus6) -3.1%, var(--aurora-green-plus6) 109.85%), var(--white);
+  --grad-pink: var(--gd-red);
+  --grad-lavender: var(--gd-purple);
+  --grad-gray: linear-gradient(180deg, var(--gray-100) 0%, var(--gray-200) 100%);
+
+  /* Radii — blog.google shape scale */
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+  --radius-24: 24px;
+  --radius-48: 48px;
+  --radius-circle: 120px;
+  --radius-pill: 999px;
+  --radius-card: 16px;
+  --radius-xl: 24px;
+  --radius-md: 12px;
+
+  /* Spacing — blog.google spacer scale */
+  --spacer-1: 8px;
+  --spacer-2: 16px;
+  --spacer-3: 24px;
+  --spacer-4: 36px;
+  --spacer-5: 48px;
+  --spacer-6: 60px;
+  --spacer-7: 92px;
+  --spacer-8: 136px;
+
+  /* Layout */
+  --container: 1440px;
+  --container-pad: 32px;
+  --header-h: 76px;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  --shadow-2: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  --shadow-3: 0 4px 8px 3px rgba(60, 64, 67, 0.15), 0 1px 3px 0 rgba(60, 64, 67, 0.3);
+
+  color-scheme: light;
+}
+
+/* Card themes — one accent per category, Google aurora pastels */
+.pastel-blue { --card-bg: var(--gd-blue); --card-accent: var(--aurora-blue-minus4); --shape-bg: var(--grad-blue-deep); --hero-ink: #192967; }
+.pastel-green { --card-bg: var(--gd-green); --card-accent: var(--green-900); --shape-bg: var(--grad-green-soft); }
+.pastel-mint { --card-bg: var(--gd-aquamarine); --card-accent: var(--blue-900); --shape-bg: var(--gd-aquamarine); }
+.pastel-yellow { --card-bg: var(--gd-yellow); --card-accent: var(--yellow-900); --shape-bg: var(--gd-yellow); }
+.pastel-red { --card-bg: var(--gd-red); --card-accent: var(--red-700); --shape-bg: var(--gd-red); }
+.pastel-purple { --card-bg: var(--gd-purple); --card-accent: var(--aurora-purple-minus3); --shape-bg: var(--gd-purple); }
+.pastel-gray { --card-bg: var(--gd-gray); --card-accent: var(--gray-700); --shape-bg: var(--gd-gray); }
+
+.shape-blob {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --container-pad: 16px;
+    --header-h: 64px;
+    --spacer-7: 60px;
+    --spacer-8: 80px;
+  }
+}

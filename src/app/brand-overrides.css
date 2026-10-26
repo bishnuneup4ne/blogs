@@ -1,0 +1,47 @@
+/* Brand layer — small deltas on top of google-theme.css. */
+
+/* Headline links stay dark (blog.google look) instead of the global blue.
+   The <a> is inside the heading, so target descendants too. */
+[class*="updateTitle"],
+[class*="collectionTitle"],
+[class*="latestTitle"],
+[class*="feedTitle"],
+[class*="albumTitle"],
+[class*="waveTitle"],
+[class*="featuredTitle"],
+[class*="gridTitle"],
+[class*="seriesHeading"],
+[class*="__title"],
+[class*="updateTitle"] a,
+[class*="collectionTitle"] a,
+[class*="latestTitle"] a,
+[class*="feedTitle"] a,
+[class*="albumTitle"] a,
+[class*="featuredTitle"] a,
+[class*="__title"] a {
+  color: #202124;
+}
+
+[class*="updateTitle"]:hover,
+[class*="collectionTitle"]:hover,
+[class*="latestTitle"]:hover,
+[class*="feedTitle"]:hover,
+[class*="albumTitle"]:hover,
+[class*="updateTitle"] a:hover,
+[class*="collectionTitle"] a:hover,
+[class*="latestTitle"] a:hover,
+[class*="feedTitle"] a:hover,
+[class*="albumTitle"] a:hover,
+[class*="__title"] a:hover {
+  color: #5f6368;
+}
+
+/* Hero card text must NOT inherit the theme ink through the anchor —
+   blog.google keeps headlines at the ink color explicitly. */
+[class*="pastelCard"] [class*="title"] a {
+  color: var(--hero-ink, #202124);
+}
+
+[class*="pastelCard"]:hover [class*="title"] a {
+  color: var(--hero-ink-hover, #5f6368);
+}

@@ -1,0 +1,37 @@
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--spacer-8) var(--container-pad);
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.kicker {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.title {
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.2px;
+  color: var(--gray-900);
+}
+
+.body {
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-600);
+}
+
+.body a {
+  color: var(--blue-700);
+  text-decoration: underline;
+}

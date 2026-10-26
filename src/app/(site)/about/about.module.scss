@@ -1,0 +1,256 @@
+/* About — quiet editorial layout: masthead, two-column body, hairline lists. */
+
+.inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+}
+
+/* Masthead */
+.masthead {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.masthead .inner {
+  padding-top: var(--spacer-3);
+  padding-bottom: var(--spacer-6);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-600);
+
+  a {
+    color: var(--blue-700);
+
+    &:hover {
+      color: var(--blue-900);
+    }
+  }
+
+  span[aria-hidden] {
+    color: var(--gray-500);
+  }
+}
+
+.kicker {
+  margin-top: var(--spacer-4);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.title {
+  margin-top: 10px;
+  max-width: 22ch;
+  font-family: var(--font-ui);
+  font-size: clamp(36px, 4.6vw, 56px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  color: var(--gray-900);
+  text-wrap: balance;
+}
+
+.lede {
+  margin-top: 16px;
+  max-width: 62ch;
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--gray-700);
+}
+
+.focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 7px 11px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-pill);
+    background: var(--white);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--gray-600);
+  }
+}
+
+.quote {
+  margin: var(--spacer-4) 0 0;
+  padding: 4px 0 4px 20px;
+  border-left: 3px solid var(--blue-600);
+  max-width: 58ch;
+  font-family: var(--font-ui);
+  font-size: 19px;
+  line-height: 30px;
+  letter-spacing: -0.1px;
+  color: var(--gray-900);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: var(--spacer-4);
+}
+
+/* Body */
+.layout {
+  padding: var(--spacer-7) 0 var(--spacer-8);
+}
+
+.main {
+  min-width: 0;
+}
+
+.section {
+  margin-top: var(--spacer-7);
+}
+
+.section:first-child {
+  margin-top: 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-ui);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.25px;
+  line-height: 36px;
+  color: var(--gray-900);
+  margin-bottom: 20px;
+}
+
+.prose {
+  display: grid;
+  gap: 16px;
+  max-width: 68ch;
+
+  p {
+    font-size: 17px;
+    line-height: 28px;
+    color: var(--gray-700);
+  }
+}
+
+/* Now — hairline rows */
+.now {
+  margin: 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.nowRow {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.nowLabel {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  padding-top: 3px;
+}
+
+.nowValue {
+  margin: 0;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-900);
+}
+
+.foot {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+/* Timeline */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 24px;
+    padding: 22px 0;
+    border-top: 1px solid var(--border-light);
+
+    &:last-child {
+      border-bottom: 1px solid var(--border-light);
+    }
+  }
+}
+
+.year {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  color: var(--gray-500);
+  padding-top: 4px;
+}
+
+.timelineBody {
+  h3 {
+    font-family: var(--font-ui);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 26px;
+    color: var(--gray-900);
+  }
+
+  p {
+    margin-top: 4px;
+    font-size: 16px;
+    line-height: 26px;
+    color: var(--gray-600);
+    max-width: 62ch;
+  }
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 32px;
+  }
+
+  .lede {
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .nowRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .timeline li {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .sectionTitle {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}

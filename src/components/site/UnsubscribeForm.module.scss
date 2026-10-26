@@ -1,0 +1,18 @@
+.form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.done {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--gray-700);
+}
+
+.error {
+  font-size: 13px;
+  color: var(--red-700, #b42318);
+}

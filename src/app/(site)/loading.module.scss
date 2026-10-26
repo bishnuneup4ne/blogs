@@ -1,0 +1,95 @@
+.page {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--spacer-4) var(--container-pad) var(--spacer-8);
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.media {
+  min-height: 340px;
+  border-radius: var(--radius-card);
+  background: var(--gray-100);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.copy {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.line {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: var(--gray-100);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.short {
+  width: 32%;
+}
+
+.heading {
+  height: 26px;
+}
+
+.body {
+  width: 86%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: var(--spacer-6);
+}
+
+.card {
+  height: 180px;
+  border-radius: var(--radius-16);
+  background: var(--gray-100);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .media {
+    min-height: 220px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media,
+  .line,
+  .card {
+    animation: none;
+  }
+}

@@ -1,0 +1,141 @@
+/* blog.google .uni-footer: grey-50 band, one row of text CTAs,
+   quiet legal line in the middle, social icons right. Flush at page end. */
+
+.footer {
+  margin-top: var(--spacer-6);
+  background: var(--gray-50);
+}
+
+.inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 4px var(--container-pad);
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mainLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: none;
+}
+
+.socials {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  list-style: none;
+  margin: 0 0 0 auto;
+  padding: 0;
+  flex: none;
+}
+
+.linksItem > a {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: 0.25px;
+  color: var(--gray-900);
+  border-radius: var(--radius-12);
+  transition: background-color 150ms ease;
+}
+
+.linksItem > a:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+/* Legal strip below the divider line (divider spans ~80% of the width).
+   Transparent so the whole footer stays one continuous grey band. */
+.legalBar {
+  position: relative;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+  background: transparent;
+}
+
+.legalBar::before {
+  content: "";
+  display: block;
+  width: 80%;
+  margin: 0 auto;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Legal strip — one plain readable sentence */
+.legal {
+  margin: 0 auto;
+  padding: 16px 0 20px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 22px;
+  color: var(--gray-600);
+
+  a {
+    color: var(--gray-900);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--blue-700);
+    }
+  }
+}
+
+.socials a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--gray-700);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.socials a:hover {
+  background: var(--gray-100);
+  color: var(--gray-900);
+}
+
+@media (max-width: 900px) {
+  .inner {
+    padding-block: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer {
+    margin-top: var(--spacer-5);
+  }
+
+  .mainLinks {
+    gap: 0;
+  }
+
+  .linksItem > a {
+    height: 36px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
+/* Append target check */
+.legalBar,
+.legal,
+.legal a {
+  background-image: none;
+}

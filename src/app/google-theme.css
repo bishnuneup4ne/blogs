@@ -1,0 +1,121 @@
+/* ============================================================================
+   blog.google theme layer — verified tokens + hero patterns ported from the
+   live site (blog.google). Loads after tokens.css/base.css; overrides win.
+   Component styles stay in the SCSS modules and read these variables.
+   ========================================================================== */
+
+:root {
+  /* Fonts — blog.google stacks */
+  --font-ui: "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
+  --font-body: var(--font-ui);
+  --font-display: var(--font-ui);
+
+  /* Aurora ramps (exact blog.google values) */
+  --aurora-blue-minus6: #0f173a;
+  --aurora-blue-minus5: #14204f;
+  --aurora-blue-minus4: #192967;
+  --aurora-blue-minus3: #1f3b9b;
+  --aurora-blue-minus2: #2051da;
+  --aurora-blue-minus1: #336ef3;
+  --aurora-green-minus5: #003936;
+  --aurora-green-minus4: #005143;
+  --aurora-purple-minus5: #1c1357;
+  --aurora-purple-minus4: #2d1e73;
+
+  /* Hero surface gradients */
+  --gd-blue-primary: linear-gradient(209deg, var(--blue-50) 4.48%, var(--aurora-blue-plus4) 101.72%);
+  --gd-green-primary: linear-gradient(0deg, var(--aurora-green-plus5) 0%, var(--green-50) 60%);
+  --gd-aquamarine-primary: linear-gradient(354deg, var(--aurora-blue-plus5) 4.7%, var(--green-50) 95.09%);
+  --gd-purple-primary: linear-gradient(227deg, var(--aurora-purple-plus6) 16.73%, var(--aurora-purple-plus4) 98.44%);
+  --gd-grey-primary: linear-gradient(180deg, var(--gray-100), var(--gray-100));
+
+  /* Responsive display scale (blog.google h1/h2/h3 tokens) */
+  --h1-size: 36px;
+  --h1-lh: 44px;
+  --h2-size: 28px;
+  --h2-lh: 34px;
+  --h3-size: 24px;
+  --h3-lh: 32px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --h1-size: 48px;
+    --h1-lh: 56px;
+    --h2-size: 36px;
+    --h2-lh: 46px;
+    --h3-size: 32px;
+    --h3-lh: 40px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --h1-size: 60px;
+    --h1-lh: 72px;
+    --h2-size: 48px;
+    --h2-lh: 56px;
+    --h3-size: 36px;
+    --h3-lh: 44px;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Card themes — one pastel per category, each with its own ink color, exactly
+   like .uni-hero-carousel__slide[data-theme=…] on blog.google.
+   -------------------------------------------------------------------------- */
+.pastel-blue {
+  --card-bg: var(--gd-blue-primary);
+  --card-accent: var(--aurora-blue-minus4);
+  --hero-ink: var(--aurora-blue-minus4);
+  --hero-ink-hover: var(--aurora-blue-minus3);
+  --shape-bg: var(--grad-blue-deep);
+}
+
+.pastel-green {
+  --card-bg: var(--gd-green-primary);
+  --card-accent: var(--aurora-green-minus5);
+  --hero-ink: var(--aurora-green-minus5);
+  --hero-ink-hover: var(--aurora-green-minus4);
+  --shape-bg: var(--grad-green-soft);
+}
+
+.pastel-mint {
+  --card-bg: var(--gd-aquamarine-primary);
+  --card-accent: var(--aurora-blue-minus5);
+  --hero-ink: var(--aurora-blue-minus5);
+  --hero-ink-hover: var(--aurora-blue-minus4);
+  --shape-bg: var(--gd-aquamarine-primary);
+}
+
+.pastel-yellow {
+  --card-bg: var(--gd-yellow);
+  --card-accent: var(--yellow-900);
+  --hero-ink: var(--yellow-900);
+  --hero-ink-hover: var(--yellow-800);
+  --shape-bg: var(--gd-yellow);
+}
+
+.pastel-red {
+  --card-bg: var(--gd-red);
+  --card-accent: var(--red-700);
+  --hero-ink: var(--red-700);
+  --hero-ink-hover: var(--red-600);
+  --shape-bg: var(--gd-red);
+}
+
+.pastel-purple {
+  --card-bg: var(--gd-purple-primary);
+  --card-accent: var(--aurora-purple-minus5);
+  --hero-ink: var(--aurora-purple-minus5);
+  --hero-ink-hover: var(--aurora-purple-minus4);
+  --shape-bg: var(--gd-purple-primary);
+}
+
+.pastel-gray {
+  --card-bg: var(--gd-grey-primary);
+  --card-accent: var(--gray-700);
+  --hero-ink: var(--gray-900);
+  --hero-ink-hover: var(--gray-700);
+  --shape-bg: var(--gd-grey-primary);
+}

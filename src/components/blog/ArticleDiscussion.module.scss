@@ -1,0 +1,167 @@
+/* Reactions bar under articles + right-side comments drawer. */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--spacer-5);
+  padding-top: var(--spacer-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.commentBtn {
+  margin-left: auto;
+}
+
+.pill,
+.commentBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+
+  span {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.pill {
+  position: relative;
+  gap: 9px;
+}
+
+/* Blue ring that puffs out when a like lands. */
+.burst {
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--blue-600);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.activeLike svg,
+.activeDislike svg {
+  fill: currentColor;
+}
+
+.count {
+  display: inline-block;
+}
+
+.pill:hover,
+.commentBtn:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+.activeLike {
+  border-color: var(--blue-600);
+  background: rgba(26, 115, 232, 0.08);
+  color: var(--blue-700);
+}
+
+.activeDislike {
+  border-color: #c5221f;
+  background: rgba(234, 67, 53, 0.07);
+  color: #c5221f;
+}
+
+/* Drawer — portalled to <body>, so it clears the sticky header (z 60). */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(32, 33, 36, 0.45);
+  cursor: default;
+}
+
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #fff);
+  box-shadow: -24px 0 64px rgba(32, 33, 36, 0.28);
+  /* GSAP slides this in; without JS the drawer still opens normally. */
+  transform: translateX(0);
+}
+
+.panelHead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.panelTitle {
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+  color: var(--gray-900);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.close:hover {
+  background: var(--gray-100);
+}
+
+.panelNote {
+  flex: none;
+  padding: 12px 28px 0;
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px 48px;
+}
+
+/* The drawer header owns the title and note — hide the inner duplicates. */
+.panelBody :global(section[class*="section"]) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.panelBody :global(div[class*="head"]),
+.panelBody :global(p[class*="note"]) {
+  display: none;
+}
