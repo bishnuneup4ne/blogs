@@ -117,6 +117,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.coverHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray-600, #5f6368);
+
+  em {
+    font-style: normal;
+    color: var(--gray-500, #80868b);
+  }
+}
+
+.coverChip {
+  width: 40px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300, #dadce0);
 }
 
 .filters {
@@ -254,6 +278,13 @@
   padding: 4px 6px;
 
   &:hover { text-decoration: underline; }
+}
+
+.coverBtnActive {
+  color: #188038;
+  font-weight: 600;
+
+  &:hover { text-decoration: none; }
 }
 
 .removeBtn {

@@ -281,7 +281,8 @@ export default function AdminFolderPage() {
               </div>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       {linkOpen ? <VideoLinkDialog albumId={id} onClose={() => setLinkOpen(false)} onAdded={() => { photosC.reload(); albumsC.reload(); }} /> : null}
