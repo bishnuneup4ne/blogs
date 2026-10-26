@@ -121,11 +121,14 @@ export function Lightbox({
     document.body.style.overflow = "hidden";
 
     const outside = [
+      document.querySelector("header"),
       document.querySelector("main"),
       document.querySelector("footer"),
     ].filter((el): el is HTMLElement => Boolean(el));
     for (const el of outside) el.setAttribute("inert", "");
 
+    const header = document.querySelector("header");
+    header?.setAttribute("data-lightbox-hide", "");
     const frame = requestAnimationFrame(() => closeRef.current?.focus());
 
     function onKey(event: KeyboardEvent) {
@@ -182,6 +185,7 @@ export function Lightbox({
       cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
+      header?.removeAttribute("data-lightbox-hide");
       for (const el of outside) el.removeAttribute("inert");
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };

@@ -177,6 +177,10 @@ video.media {
 
 /* The sticky header wrapper (z-index 60) would otherwise paint over the
    backdrop; the header dims itself via its [data-overlay] attribute. */
+:global(header[data-lightbox-hide]),
+:global(header[data-lightbox-hide] *) {
+  visibility: hidden !important;
+}
 
 .caption {
   position: absolute;
