@@ -39,16 +39,17 @@ export default async function AlbumPage({ params }: { params: Promise<{ slug: st
   const idx = albums.findIndex((a) => a.slug === album.slug);
   const prev = idx > 0 ? albums[idx - 1] : null;
   const next = idx >= 0 && idx < albums.length - 1 ? albums[idx + 1] : null;
+  const backdrop = album.photos.find((p) => p.kind !== "video")?.src || album.cover || null;
 
   return (
     <div className={styles.page}>
-      <div className={styles.hero}>
+      <div className={styles.hero} style={backdrop ? { backgroundImage: `url(${JSON.stringify(backdrop)})` } : undefined}>
         <div className={styles.heroInner}>
           <h1 className={styles.title}>{album.title}</h1>
           <p className={styles.subtitle}>{album.subtitle}</p>
           {album.description ? <p className={styles.description} dangerouslySetInnerHTML={{ __html: sanitizeRichText(album.description) }} /> : null}
           <p className={styles.count}>
-            {album.photos.length} {album.photos.length === 1 ? "photo" : "photos"} · click any frame to enlarge
+            {album.photos.length} {album.photos.length === 1 ? "photo" : "photos"} · {album.year}
           </p>
         </div>
       </div>

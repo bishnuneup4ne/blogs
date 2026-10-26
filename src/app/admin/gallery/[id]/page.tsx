@@ -212,6 +212,15 @@ export default function AdminFolderPage() {
             </button>
           ))}
         </div>
+        <p className={styles.coverHint}>
+          Folder cover:{" "}
+          {album.cover_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={album.cover_url} alt="Current cover" className={styles.coverChip} />
+          ) : (
+            <em>none yet — tap “Cover” on any photo</em>
+          )}
+        </p>
       </div>
 
       {photosC.loading ? <p className={styles.muted}>Loading items…</p> : null}
@@ -220,7 +229,9 @@ export default function AdminFolderPage() {
       ) : null}
 
       <ul className={styles.grid}>
-        {shown.map((ph, i) => (
+        {shown.map((ph, i) => {
+          const isCover = ph.kind !== "video" && Boolean(album.cover_url) && album.cover_url === ph.src;
+          return (
           <li key={ph.id} className={styles.item}>
             <div className={styles.thumbWrap}>
               {ph.kind === "video" ? (
@@ -257,8 +268,13 @@ export default function AdminFolderPage() {
                 <button type="button" className={styles.iconBtn} aria-label="Move up" disabled={i === 0} onClick={() => void move(ph, -1)}>↑</button>
                 <button type="button" className={styles.iconBtn} aria-label="Move down" disabled={i === shown.length - 1} onClick={() => void move(ph, 1)}>↓</button>
                 {ph.kind !== "video" ? (
-                  <button type="button" className={styles.coverBtn} onClick={() => void patchPhoto(ph.id, { cover: true }).then(() => toast("Cover updated", "success"))}>
-                    Cover
+                  <button
+                    type="button"
+                    className={isCover ? `${styles.coverBtn} ${styles.coverBtnActive}` : styles.coverBtn}
+                    aria-pressed={isCover}
+                    onClick={() => void patchPhoto(ph.id, { cover: true }).then(() => toast("Cover updated", "success"))}
+                  >
+                    {isCover ? "✓ Cover" : "Cover"}
                   </button>
                 ) : null}
                 <button type="button" className={styles.removeBtn} aria-label="Remove item" onClick={() => void removePhoto(ph)}>×</button>

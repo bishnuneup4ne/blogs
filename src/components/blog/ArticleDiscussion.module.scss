@@ -3,6 +3,7 @@
 .bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: var(--spacer-5);
   padding-top: var(--spacer-3);
@@ -18,7 +19,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 42px;
+  height: 44px;
   padding: 0 16px;
   border: 1px solid var(--gray-300);
   border-radius: var(--radius-pill);
@@ -28,6 +29,8 @@
   font-weight: 500;
   color: var(--gray-700);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 
   span {
@@ -65,21 +68,30 @@
   border-color: var(--gray-400);
 }
 
-/* Selected state stays neutral — grey fill + dark icon, no blue/red paint. */.activeLike,
-  .activeDislike {
+/* Selected state stays neutral — grey fill + dark icon, no blue/red paint. */
+.activeLike,
+.activeDislike {
   border-color: var(--gray-500);
   background: var(--gray-200);
   color: var(--gray-900);
 }
 
-.pill:active,
-.pill:focus-visible {
+/* Keyboard focus only — a tapped button must not stay ringed in blue. */
+.pill:focus-visible,
+.commentBtn:focus-visible {
   outline: 2px solid var(--blue-600);
   outline-offset: 2px;
 }
 
-.pill:focus-visible {
-  border-color: var(--blue-600);
+@media (max-width: 480px) {
+  .bar {
+    gap: 8px;
+  }
+
+  .pill,
+  .commentBtn {
+    padding: 0 12px;
+  }
 }
 
 /* Drawer — portalled to <body>, so it clears the sticky header (z 60). */

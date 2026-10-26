@@ -24,6 +24,13 @@ export const PATCH = adminRoute(async (req, ctx) => {
   const { data, error } = await db.from("fn_photos").update(patch).eq("id", id).select().maybeSingle();
   if (error) return json({ error: error.message }, 400);
   if (!data) return json({ error: "Not found" }, 404);
+  if (typeof b.swap_with === "string") {
+    const { data: other } = await db.from("fn_photos").select("id,position").eq("id", b.swap_with).maybeSingle();
+    if (other && data) {
+      await db.from("fn_photos").update({ position: other.position }).eq("id", data.id);
+      await db.from("fn_photos").update({ position: data.position }).eq("id", other.id);
+    }
+  }
   if (b.cover === true && data.album_id && data.src) {
     await db.from("fn_albums").update({ cover_url: data.src }).eq("id", data.album_id);
   }

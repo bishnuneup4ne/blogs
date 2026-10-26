@@ -30,6 +30,11 @@ export const POST = adminRoute(async (req) => {
     ...parsed.data,
   };
   let { data, error } = await db.from("fn_posts").insert(payload).select().single();
+  // Older schemas lack cover_height — drop it and retry instead of failing the save.
+  if (error && /cover_height/.test(error.message)) {
+    delete payload.cover_height;
+    ({ data, error } = await db.from("fn_posts").insert(payload).select().single());
+  }
   // On a slug clash, retry once with a unique suffix so "New post" never fails.
   if (error && /duplicate key value violates unique constraint "fn_posts_slug_key"/i.test(error.message)) {
     payload.slug = `${payload.slug}-${Date.now().toString(36)}`;

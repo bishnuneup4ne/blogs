@@ -290,8 +290,29 @@
 }
 
 @media (max-width: 640px) {
+  .title {
+    font-size: clamp(28px, 7.6vw, 38px);
+    line-height: 1.16;
+  }
+
+  .summaryRow {
+    gap: 4px;
+  }
+
+  .dateBlock {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 13px;
+  }
+
+  .bylineRow {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
   .heroMedia {
-    height: calc(var(--cover-h, clamp(300px, 46vh, 420px)) * 0.72);
+    height: calc(var(--cover-h, clamp(300px, 46vh, 420px)) * 0.9);
   }
 
   .sheet {
@@ -320,16 +341,18 @@
     padding-right: 0;
   }
 
+  /* Keep a real inset on phones — zero padding let the article touch the
+     screen edges, which read as broken layout rather than edge-to-edge. */
   .grid {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: var(--container-pad);
+    padding-right: var(--container-pad);
   }
 }
 
 @media (max-width: 440px) {
   .grid {
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: var(--container-pad);
+    padding-right: var(--container-pad);
   }
 }
 

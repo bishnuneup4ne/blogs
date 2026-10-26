@@ -45,6 +45,17 @@ function cleanDate(value: string): string | null {
   return value;
 }
 
+
+let coverHeightOk: boolean | null = null;
+function hasCoverHeight(): boolean {
+  // Cheap capability probe cached per process; updated by posts route on first write.
+  if (coverHeightOk === null) coverHeightOk = process.env.FN_POSTS_HAS_COVER_HEIGHT !== "0";
+  return coverHeightOk;
+}
+export function setCoverHeightCapability(ok: boolean) {
+  coverHeightOk = ok;
+}
+
 export function parsePostInput(input: unknown, options: { partial: boolean; title?: string }): Result {
   if (!isRecord(input)) return { ok: false, error: "Invalid request body" };
   const data: PostInput = {};
@@ -98,7 +109,12 @@ export function parsePostInput(input: unknown, options: { partial: boolean; titl
   if (has("cover_alt")) data.cover_alt = typeof input.cover_alt === "string" ? input.cover_alt.trim().slice(0, 600) : "";
   if (has("cover_height")) {
     const h = Number(input.cover_height);
-    data.cover_height = Number.isFinite(h) && h >= 200 && h <= 900 ? Math.round(h) : null;
+    // Only send the column when it exists — older schemas reject unknown columns.
+    if (Number.isFinite(h) && h >= 200 && h <= 900 && hasCoverHeight()) {
+      data.cover_height = Math.round(h);
+    } else if (!hasCoverHeight()) {
+      // silently drop; editor falls back to auto sizing
+    }
   }
   if (has("date")) {
     const date = typeof input.date === "string" ? cleanDate(input.date) : null;

@@ -35,7 +35,10 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       const dialogs = [...document.querySelectorAll('[role="dialog"][aria-modal="true"]')];
       const foreign = dialogs.some((d) => !headerRef.current?.contains(d));
       overlayOpen.current = foreign;
-      setHidden(foreign);
+      // Hiding the whole shell would take the close/zoom controls of the
+      // lightbox with it, so overlays only dim the bar behind their scrim.
+      headerRef.current?.toggleAttribute("data-overlay", foreign);
+      if (!foreign) setHidden(false);
     }
     check();
     const observer = new MutationObserver(check);
@@ -279,6 +282,16 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
       {drawer ? (
         <div ref={drawerRef} className={styles.drawer} role="dialog" aria-modal="true" aria-label="Site menu">
+          <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">
+            <SearchIcon width={20} height={20} className={styles.searchGlyph} />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search writing, topics, albums…"
+              aria-label="Search"
+            />
+          </form>
           {nav.map((item) => (
             <Link key={item.href} href={item.href} className={styles.drawerLink}>
               {item.label}
@@ -287,8 +300,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           <div className={styles.drawerSection}>
             <p className={styles.drawerTitle}>More</p>
             <Link href="/search" className={styles.drawerLink}>Search</Link>
-            <Link href="/newsletter" className={styles.drawerLink}>Newsletter</Link>
-            <Link href="/gallery" className={styles.drawerLink}>Gallery</Link>
             <Link href="/privacy" className={styles.drawerLink}>Privacy</Link>
           </div>
           <a href={`mailto:${settings.identity.email}`} className={`${styles.drawerCta} btn btn-primary`}>

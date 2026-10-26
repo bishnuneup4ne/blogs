@@ -9,6 +9,13 @@
   transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* A full-screen overlay (lightbox, comments) is open above us — taps must not
+   reach anything in the bar, but the bar itself stays mounted so its own
+   controls remain reachable when an overlay only covers part of the screen. */
+.shell[data-overlay] .headerInner > * {
+  pointer-events: none;
+}
+
 .shellHidden {
   composes: shell;
   transform: translateY(-100%);
@@ -167,7 +174,7 @@
 }
 
 .burger {
-  display: grid;
+  display: none;
   place-items: center;
   width: 48px;
   height: 48px;
@@ -255,12 +262,34 @@
 /* Mobile drawer */
 .drawer {
   position: fixed;
-  inset: 76px 0 0;
+  inset: var(--header-h, 76px) 0 0;
   z-index: 70;
   background: var(--white);
   padding: 8px var(--container-pad) 48px;
   overflow-y: auto;
   animation: drawerIn 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.drawerSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  margin: 8px 0 4px;
+  padding: 0 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-pill);
+  background: var(--gray-50);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--gray-900);
+  }
 }
 
 .drawerLink {
@@ -313,17 +342,21 @@
   .burger { display: grid; }
 }
 
+/* Phones: the actions cluster is tight — search + burger only. The expandable
+   search layer used to overlap the Gallery button, making taps land on the
+   wrong control; hiding the extras removes the collision entirely. */
+@media (max-width: 640px) {
+  .galleryButton,
+  .cta { display: none; }
+  .headerInner { gap: 12px; }
+}
+
 @media (max-width: 440px) {
   .burger { padding: 6px; }
 }
 
 @media (max-width: 560px) {
   .wordmark { font-size: 18px; }
-  .cta { height: 42px; padding: 0 18px; font-size: 15px; }
-}
-
-@media (max-width: 440px) {
-  .cta { display: none; }
 }
 
 /* Images button — icon only, reveals its label on hover */

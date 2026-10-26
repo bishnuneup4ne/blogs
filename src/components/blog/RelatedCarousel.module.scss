@@ -198,8 +198,15 @@
 }
 
 @media (max-width: 640px) {
+  /* Proximity peek (~82vw cards) so the row visibly continues off-screen —
+     mandatory snap on 100% cards felt welded in place. */
+  .track {
+    scroll-snap-type: x proximity;
+  }
+
   .item {
-    flex-basis: 100%;
+    flex-basis: 82vw;
+    scroll-snap-align: center;
   }
 }
 
@@ -227,7 +234,16 @@
   transform: none;
 }
 
-.card:hover .img {
-  transform: scale(1.04);
+/* Hover-only affordances: never sticky on touch. */
+@media (hover: hover) {
+  .card:hover .img {
+    transform: scale(1.04);
+  }
+}
+
+@media (hover: none) {
+  .card:hover .title {
+    text-decoration: none;
+  }
 }
 

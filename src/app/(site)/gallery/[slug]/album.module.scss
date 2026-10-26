@@ -4,11 +4,24 @@
   min-height: calc(100dvh - var(--header-h));
 }
 
+/* Personal album header — the folder's own frame sits behind the words,
+   like a print taped to the wall with the caption written under it. */
 .hero {
+  position: relative;
   background: var(--grad-collection);
+  background-size: cover;
+  background-position: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.92));
+  }
 }
 
 .heroInner {
+  position: relative;
   max-width: var(--container);
   margin: 0 auto;
   padding: var(--spacer-5) var(--container-pad) 40px;
@@ -27,14 +40,15 @@
   font-size: 18px;
   line-height: 28px;
   color: var(--gray-700);
+  font-style: italic;
 }
 
 .description {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 16px;
-  line-height: 24px;
-  color: var(--gray-600);
-  max-width: 64ch;
+  line-height: 26px;
+  color: var(--gray-700);
+  max-width: 60ch;
 
   a {
     color: var(--blue-700);
@@ -47,8 +61,10 @@
 }
 
 .count {
-  margin-top: 16px;
-  font-size: 14px;
+  margin-top: 18px;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   color: var(--gray-600);
 }
 

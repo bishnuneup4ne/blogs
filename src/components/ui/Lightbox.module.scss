@@ -19,7 +19,7 @@
   cursor: zoom-out;
 }
 
-/* Top bar: counter left, close right */
+/* Top bar: counter + zoom left, close right */
 .topBar {
   position: absolute;
   top: 0;
@@ -27,7 +27,6 @@
   right: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   height: 60px;
   padding: 0 20px;
   color: #e8eaed;
@@ -60,6 +59,8 @@
   place-items: center;
   width: 44px;
   height: 44px;
+  margin-left: auto;
+  flex: none;
   border-radius: 50%;
   color: #e8eaed;
   background: rgba(255, 255, 255, 0.06);
@@ -84,6 +85,54 @@
   justify-content: center;
   max-width: min(100%, 92vw);
   z-index: 1;
+  cursor: zoom-in;
+}
+
+.frameZoomed {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* Zoom controls in the top bar */
+.zoomControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  margin-left: 16px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.zoomBtn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #e8eaed;
+  background: transparent;
+  transition: background-color 150ms ease;
+}
+
+.zoomBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.zoomBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoomPct {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
 }
 
 .media {
@@ -97,6 +146,17 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
   opacity: 0;
   transition: opacity 200ms ease;
+  transform-origin: center center;
+  will-change: transform;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Native pinch must not fight our own gesture handling on images. */
+video.media {
+  touch-action: auto;
 }
 
 /* Fade in only once the bytes are decoded (JS toggles data-loaded), so the
@@ -116,11 +176,7 @@
 }
 
 /* The sticky header wrapper (z-index 60) would otherwise paint over the
-   backdrop; Lightbox tags it while open. */
-:global(header[data-lightbox-hide]),
-:global(header[data-lightbox-hide] *) {
-  visibility: hidden !important;
-}
+   backdrop; the header dims itself via its [data-overlay] attribute. */
 
 .caption {
   position: absolute;
@@ -242,5 +298,19 @@
 
   .media {
     max-height: calc(100dvh - 240px);
+  }
+
+  /* The strip reads as a second "gallery" on a phone — swipe instead. */
+  .strip {
+    display: none;
+  }
+
+  .zoomControls {
+    margin-left: 8px;
+  }
+
+  .zoomBtn {
+    width: 36px;
+    height: 36px;
   }
 }

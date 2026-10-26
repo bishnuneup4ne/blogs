@@ -20,7 +20,12 @@ export const PATCH = adminRoute(async (req, ctx) => {
   const patch: Record<string, unknown> = { ...parsed.data };
   if (Object.keys(patch).length === 0) return json({ error: "no fields" }, 400);
   patch.updated_at = new Date().toISOString();
-  const { data, error } = await db.from("fn_posts").update(patch).eq(col, id).select().maybeSingle();
+  let { data, error } = await db.from("fn_posts").update(patch).eq(col, id).select().maybeSingle();
+  // Older schemas lack cover_height — drop it and retry instead of failing the save.
+  if (error && /cover_height/.test(error.message) && "cover_height" in patch) {
+    delete patch.cover_height;
+    ({ data, error } = await db.from("fn_posts").update(patch).eq(col, id).select().maybeSingle());
+  }
   if (error) return json({ error: error.message }, 400);
   if (!data) return json({ error: "Not found" }, 404);
   return json({ post: data });
