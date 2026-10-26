@@ -10,3 +10,6 @@ next-env.d.ts
 # local scratch & env backups
 *.bak
 avatar.jpg
+
+# local tool caches
+.21st/
