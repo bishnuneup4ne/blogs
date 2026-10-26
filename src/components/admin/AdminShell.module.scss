@@ -313,7 +313,9 @@
   margin: 0 auto;
   padding: 32px 32px 88px;
   min-width: 0;
-  animation: studio-rise 260ms ease-out both;
+  /* Opacity only: a transform here would make position:fixed popups
+     resolve against the page instead of the browser viewport. */
+  animation: studio-fade-in 240ms ease-out both;
 }
 
 @media (max-width: 1100px) {
@@ -383,16 +385,6 @@
   }
 }
 
-@keyframes studio-rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 @keyframes studio-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }

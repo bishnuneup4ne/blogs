@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, useApiCollection, type ApiPost, type ApiTopic } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
+import { AdminDialog } from "@/components/admin/Dialog";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { PageHeader } from "@/components/admin/kit";
 import styles from "./topics.module.scss";
 
@@ -22,6 +24,8 @@ interface TopicDraft {
 
 export default function AdminTopicsPage() {
   const router = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
   const topicsC = useApiCollection<ApiTopic>("/api/admin/topics", "topics");
   const postsC = useApiCollection<ApiPost>("/api/admin/posts", "posts");
   const [editing, setEditing] = useState<TopicDraft | null>(null);
@@ -43,6 +47,7 @@ export default function AdminTopicsPage() {
       if (editing.id) await api.patch(`/api/admin/topics/${editing.id}`, payload);
       else await api.post("/api/admin/topics", payload);
       setEditing(null);
+      toast("Topic saved", "success");
       topicsC.reload();
       router.refresh();
     } catch (e) {
@@ -52,11 +57,38 @@ export default function AdminTopicsPage() {
     }
   }
 
-  async function remove(id: string, name: string) {
-    if (!window.confirm(`Delete ${name}? Posts in this topic will fall back to uncategorised.`)) return;
+  async function remove(topic: TopicDraft) {
+    if (!topic.id) return;
+    const ok = await confirm({
+      title: "Delete topic",
+      body: `Delete “${topic.name}”? Posts in this topic will fall back to uncategorised.`,
+      confirmLabel: "Delete topic",
+    });
+    if (!ok) return;
     setBusy(true);
     try {
-      await api.del(`/api/admin/topics/${id}`);
+      await api.del(`/api/admin/topics/${topic.id}`);
+      setEditing(null);
+      toast("Topic deleted", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/topics", {
+              name: topic.name,
+              slug: topic.slug,
+              description: topic.description,
+              pastel: topic.pastel,
+              color: topic.color,
+              sort_order: topic.sort_order,
+            });
+            await topicsC.reload();
+            router.refresh();
+            toast("Topic restored", "success");
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore topic");
+          }
+        },
+      });
       topicsC.reload();
       router.refresh();
     } catch (e) {
@@ -110,10 +142,26 @@ export default function AdminTopicsPage() {
       </button>
 
       {editing ? (
-        <div className={styles.drawerWrap} role="dialog" aria-modal="true" aria-label="Edit topic">
-          <div className={styles.drawer}>
-            <h2 className={styles.drawerTitle}>{editing.id ? "Edit topic" : "New topic"}</h2>
-            <label className={styles.field}>
+        <AdminDialog
+          title={editing.id ? "Edit topic" : "New topic"}
+          onClose={() => setEditing(null)}
+          footerStart={
+            editing.id ? (
+              <Button variant="text" tone="danger" disabled={busy} onClick={() => remove(editing)}>
+                Delete
+              </Button>
+            ) : null
+          }
+          footer={
+            <>
+              <Button variant="outlined" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button disabled={!editing.name.trim() || busy} onClick={save}>
+                {busy ? "Saving…" : "Save topic"}
+              </Button>
+            </>
+          }
+        >
+            <label>
               <span>Name</span>
               <input
                 value={editing.name}
@@ -122,15 +170,15 @@ export default function AdminTopicsPage() {
                     ...editing,
                     name: e.target.value,
                     slug: editing.slug || e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-                  })
-                }
+                  }                )}
               />
+              {!editing.name.trim() ? <span className={styles.fieldError}>A name is required.</span> : null}
             </label>
-            <label className={styles.field}>
+            <label>
               <span>Slug</span>
               <input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} />
             </label>
-            <label className={styles.field}>
+            <label>
               <span>Description</span>
               <textarea rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
             </label>
@@ -148,20 +196,7 @@ export default function AdminTopicsPage() {
                 ))}
               </div>
             </div>
-            <div className={styles.drawerFoot}>
-              {editing.id ? (
-                <Button variant="text" tone="danger" disabled={busy} onClick={() => remove(editing.id!, editing.name)}>
-                  Delete
-                </Button>
-              ) : null}
-              <span className={styles.spacer} />
-              <Button variant="outlined" onClick={() => setEditing(null)}>Cancel</Button>
-              <Button disabled={!editing.name.trim() || busy} onClick={save}>
-                {busy ? "Saving…" : "Save topic"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        </AdminDialog>
       ) : null}
     </div>
   );

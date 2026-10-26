@@ -3,13 +3,15 @@
 import { useMemo, useState } from "react";
 import { api, useApiCollection, type ApiSubscriber } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
-import { PageHeader, Segmented, StatusChip, statusTone, Table } from "@/components/admin/kit";
-import { formatDate } from "@/lib/dates";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
+import { PageHeader, Segmented, StatusChip, statusTone, Table, DateCell } from "@/components/admin/kit";
 import styles from "./subscribers.module.scss";
 
 type Tab = "all" | "subscribed" | "pending" | "unsubscribed";
 
 export default function AdminSubscribersPage() {
+  const confirm = useConfirm();
+  const toast = useToast();
   const subsC = useApiCollection<ApiSubscriber>("/api/admin/subscribers", "subscribers");
   const state = { subscribers: subsC.items.map((s) => ({ id: s.id, email: s.email, name: s.name || s.email.split("@")[0], status: s.status, source: s.source, joined: String(s.joined_at).slice(0, 10), opens: 0 })) };
   const [tab, setTab] = useState<Tab>("all");
@@ -47,12 +49,30 @@ export default function AdminSubscribersPage() {
     }
   }
 
-  async function remove(subscriber: { id: string; email: string }) {
-    if (!window.confirm(`Remove ${subscriber.email}?`)) return;
+  async function remove(subscriber: { id: string; email: string; name: string; status: string; source: string }) {
+    const ok = await confirm({ title: "Remove subscriber", body: `Remove ${subscriber.email}?`, confirmLabel: "Remove subscriber" });
+    if (!ok) return;
     setBusy(subscriber.id);
     setError("");
     try {
       await api.del(`/api/admin/subscribers?email=${encodeURIComponent(subscriber.email)}`);
+      toast("Subscriber removed", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/subscribers", {
+              email: subscriber.email,
+              name: subscriber.name,
+              status: subscriber.status,
+              source: subscriber.source,
+            });
+            await subsC.reload();
+            toast("Subscriber restored", "success");
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore subscriber");
+          }
+        },
+      });
       await subsC.reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not remove subscriber");
@@ -100,7 +120,7 @@ export default function AdminSubscribersPage() {
                   setSent(true);
                   setTimeout(() => setSent(false), 2200);
                 } catch (e) {
-                  window.alert(e instanceof Error ? e.message : "Send failed");
+                  toast(e instanceof Error ? e.message : "Send failed");
                 } finally {
                   setSending(false);
                 }
@@ -154,7 +174,7 @@ export default function AdminSubscribersPage() {
           <tbody>
             {rows.map((s) => (
               <tr key={s.id}>
-                <td>
+                <td data-label="Subscriber" data-card="title">
                   <div className={styles.person}>
                     <span className={styles.avatar}>{s.name.split(" ").map((x) => x[0]).join("")}</span>
                     <div>
@@ -163,10 +183,10 @@ export default function AdminSubscribersPage() {
                     </div>
                   </div>
                 </td>
-                <td><StatusChip status={s.status} tone={statusTone(s.status)} /></td>
-                <td>{s.source}</td>
-                <td className={styles.muted}>{formatDate(s.joined)}</td>
-                <td>
+                <td data-label="Status"><StatusChip status={s.status} tone={statusTone(s.status)} /></td>
+                <td data-label="Source">{s.source}</td>
+                <DateCell iso={s.joined} />
+                <td data-label="Actions" data-card="actions">
                   <div className={styles.actions}>
                     <button
                       type="button"

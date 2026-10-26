@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { db } from "@/lib/supabase/server";
-import { env } from "@/lib/env";
+import { env, hasSupabase } from "@/lib/env";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
 import { site } from "@/lib/site";
 import { unsubscribeToken } from "@/lib/unsubscribe";
@@ -9,20 +9,54 @@ import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-/** Google-newsletter-style wrapper: grey canvas, white rounded card, brand
- *  header, kicker rule under the subject, quiet footer with one-click opt-out. */
-function wrapEmail({ body, subject, siteUrl, unsubscribeUrl }: { body: string; subject: string; siteUrl: string; unsubscribeUrl: string }) {
+/** Shared sender so the newsletter blast and transactional notices (e.g. the
+ *  red-strip confirmation after an unsubscribe) reuse one code path. */
+export async function sendSiteEmail({ to, subject, html, tone = "blue" }: { to: string; subject: string; html: string; tone?: "blue" | "red" | "green" }) {
+  if (!env.resendApiKey) return false;
+  const token = await unsubscribeToken(to);
+  const params = `e=${encodeURIComponent(to)}&t=${token}`;
+  const unsubscribeUrl = `${site.url}/unsubscribe?${params}`;
+  const oneClickUrl = `${site.url}/api/unsubscribe?${params}`;
+  const from = env.resendFrom || "onboarding@resend.dev";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.resendApiKey}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      from,
+      to: [to],
+      reply_to: from.match(/<([^>]+)>/)?.[1] ?? from,
+      subject,
+      html: wrapEmail({ body: html, subject, siteUrl: site.url, unsubscribeUrl, tone }),
+      headers: {
+        "List-Unsubscribe": `<${oneClickUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    }),
+  });
+  return res.ok;
+}
+
+/** blog.google-style wrapper: grey canvas, white rounded card with a bold
+ *  coloured header strip (blue = newsletter issue, red = alert, green = ok). */
+function wrapEmail({ body, subject, siteUrl, unsubscribeUrl, tone = "blue" }: { body: string; subject: string; siteUrl: string; unsubscribeUrl: string; tone?: string }) {
   const year = new Date().getFullYear();
+  const strip = tone === "red" ? "#d93025" : tone === "green" ? "#188038" : "#1a73e8";
+  const domain = siteUrl.replace(/^https?:\/\//, "");
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${subject}</title></head>
 <body style="margin:0;padding:0;background:#f1f3f4;font-family:'Google Sans','Roboto',Arial,sans-serif;color:#202124;-webkit-font-smoothing:antialiased">
 <div style="max-width:640px;margin:0 auto;padding:32px 16px">
   <div style="padding:20px 28px 0">
-    <a href="${siteUrl}" style="font-size:15px;font-weight:700;color:#5f6368;text-decoration:none;letter-spacing:.2px">News from Bishnu Neupane</a>
+    <a href="${siteUrl}" style="font-size:15px;font-weight:700;color:#5f6368;text-decoration:none;letter-spacing:.2px">News from ${domain}</a>
   </div>
-  <div style="background:#ffffff;border-radius:16px;padding:32px 32px 8px;box-shadow:0 1px 2px rgba(60,64,67,.15)">
-    <h1 style="margin:0 0 4px;font-size:22px;line-height:28px;font-weight:400;color:#202124">${subject}</h1>
-    <div style="height:3px;width:44px;background:#1a73e8;border-radius:2px;margin:14px 0 22px"></div>
-    <div style="font-size:15px;line-height:26px;color:#3c4043">${body}</div>
+  <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(60,64,67,.15)">
+    <div style="background:${strip};padding:30px 32px">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.78)">Newsletter &middot; ${domain}</p>
+      <h1 style="margin:0;font-size:24px;line-height:32px;font-weight:700;color:#ffffff">${subject}</h1>
+    </div>
+    <div style="padding:28px 32px 8px">
+      <div style="font-size:15px;line-height:26px;color:#3c4043">${body}</div>
+    </div>
+    <div style="margin:24px 32px 0;border-top:1px solid #e8eaed"></div>
   </div>
   <div style="padding:22px 28px;color:#5f6368;font-size:12px;line-height:20px">
     You're receiving this because you subscribed at
@@ -48,6 +82,7 @@ export async function POST(request: Request) {
   const b = (await request.json().catch(() => null)) ?? {};
   const subject = typeof b.subject === "string" ? b.subject.trim().slice(0, 200) : "";
   const html = typeof b.html === "string" ? b.html.slice(0, 500_000) : "";
+  const tone = b.tone === "red" || b.tone === "green" ? b.tone : "blue";
   if (!subject || !html) return NextResponse.json({ error: "subject and html are required" }, { status: 400 });
 
   let emails: string[];
@@ -86,7 +121,7 @@ export async function POST(request: Request) {
           to: [email],
           reply_to: replyTo,
           subject,
-          html: wrapEmail({ body: html, subject, siteUrl: site.url, unsubscribeUrl }),
+          html: wrapEmail({ body: html, subject, siteUrl: site.url, unsubscribeUrl, tone }),
           headers: {
             "List-Unsubscribe": `<${oneClickUrl}>`,
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",

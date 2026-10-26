@@ -1,32 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
+import { useToast } from "@/components/admin/Feedback";
 import { Card, CardHead, PageHeader } from "@/components/admin/kit";
+import { SocialIcon } from "@/components/icons/Icons";
 import styles from "./settings.module.scss";
 
+const SOCIAL_ICONS = ["github", "linkedin", "x", "instagram", "youtube", "facebook", "threads", "email"] as const;
+
+interface AboutEntry { label?: string; value?: string; year?: string; title?: string; body?: string }
+
 interface SettingsForm {
-  identity: { wordmark: string; siteName: string; tagline: string; email: string; location: string; avatarUrl: string };
+  identity: { wordmark: string; siteName: string; tagline: string; email: string; location: string; avatarUrl: string; authorName: string };
   hero: { title: string; standfirst: string };
-  socials: { label: string; href: string }[];
+  socials: { label: string; href: string; icon?: string }[];
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean };
   nav: { label: string; href: string }[];
   footerLinks: { label: string; href: string }[];
+  about: { kicker: string; title: string; lede: string; quote: string; focus: string[]; story: string[]; now: AboutEntry[]; timeline: AboutEntry[]; updated: string };
 }
 
 const BLANK: SettingsForm = {
-  identity: { wordmark: "", siteName: "", tagline: "", email: "", location: "", avatarUrl: "" },
+  identity: { wordmark: "", siteName: "", tagline: "", email: "", location: "", avatarUrl: "", authorName: "" },
   hero: { title: "", standfirst: "" },
   socials: [],
   toggles: { newsletter: true, comments: true, views: true, contactForm: true },
   nav: [],
   footerLinks: [],
+  about: { kicker: "About", title: "", lede: "", quote: "", focus: [], story: [], now: [], timeline: [], updated: "" },
 };
 
 export default function AdminSettingsPage() {
   const router = useRouter();
+  const toast = useToast();
   const [form, setForm] = useState<SettingsForm>(BLANK);
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -37,7 +46,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     api.get<{ payload: SettingsForm }>("/api/admin/settings")
-      .then((d) => setForm({ ...BLANK, ...d.payload, identity: { ...BLANK.identity, ...d.payload?.identity }, toggles: { ...BLANK.toggles, ...d.payload?.toggles } }))
+      .then((d) => setForm({ ...BLANK, ...d.payload, identity: { ...BLANK.identity, ...d.payload?.identity }, toggles: { ...BLANK.toggles, ...d.payload?.toggles }, about: { ...BLANK.about, ...d.payload?.about } }))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load settings"))
       .finally(() => setLoaded(true));
   }, []);
@@ -47,6 +56,7 @@ export default function AdminSettingsPage() {
     setError("");
     try {
       await api.put("/api/admin/settings", next);
+      toast("Settings saved", "success");
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
       router.refresh();
@@ -126,6 +136,7 @@ export default function AdminSettingsPage() {
               <input value={form.identity.avatarUrl} onChange={(e) => patch("identity", { avatarUrl: e.target.value })} />
               <em>Used in the header, footer and article bylines.</em>
             </label>
+            <UploadField label="Upload profile picture" accept="image/*" onUploaded={(src) => patch("identity", { avatarUrl: src })} />
             <label className={styles.field}>
               <span>Tagline</span>
               <input value={form.identity.tagline} onChange={(e) => patch("identity", { tagline: e.target.value })} />
@@ -135,9 +146,54 @@ export default function AdminSettingsPage() {
               <input type="email" value={form.identity.email} onChange={(e) => patch("identity", { email: e.target.value })} />
             </label>
             <label className={styles.field}>
+              <span>Author name</span>
+              <input value={form.identity.authorName} onChange={(e) => patch("identity", { authorName: e.target.value })} />
+              <em>Your display name across the site (About greeting, bylines).</em>
+            </label>
+            <label className={styles.field}>
               <span>Location</span>
               <input value={form.identity.location} onChange={(e) => patch("identity", { location: e.target.value })} />
             </label>
+          </div>
+        </Card>
+
+        <Card className={styles.full}>
+          <CardHead title="About page" />
+          <div className={styles.body}>
+            <div className={styles.twoCol}>
+              <label className={styles.field}>
+                <span>Kicker</span>
+                <input value={form.about.kicker} onChange={(e) => patch("about", { kicker: e.target.value })} />
+              </label>
+              <label className={styles.field}>
+                <span>Updated note</span>
+                <input placeholder="October 2026" value={form.about.updated} onChange={(e) => patch("about", { updated: e.target.value })} />
+              </label>
+            </div>
+            <label className={styles.field}>
+              <span>Title</span>
+              <input value={form.about.title} onChange={(e) => patch("about", { title: e.target.value })} />
+            </label>
+            <label className={styles.field}>
+              <span>Lede</span>
+              <textarea rows={4} value={form.about.lede} onChange={(e) => patch("about", { lede: e.target.value })} />
+            </label>
+            <label className={styles.field}>
+              <span>Quote</span>
+              <input value={form.about.quote} onChange={(e) => patch("about", { quote: e.target.value })} />
+            </label>
+            <label className={styles.field}>
+              <span>Focus pills</span>
+              <em>One per line — Malware analysis, Reverse engineering…</em>
+              <textarea rows={4} value={form.about.focus.join("\n")} onChange={(e) => patch("about", { focus: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })} />
+            </label>
+            <label className={styles.field}>
+              <span>Story paragraphs</span>
+              <em>One paragraph per blank line.</em>
+              <textarea rows={5} value={form.about.story.join("\n\n")} onChange={(e) => patch("about", { story: e.target.value.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean) })} />
+            </label>
+            <EntryEditor label="Now list" hint="Label + value rows under “Now”." items={form.about.now} keys={[["label", "Label"], ["value", "Value"]]} onChange={(now) => patch("about", { now })} />
+            <EntryEditor label="Timeline" hint="Year, title and body for each milestone." items={form.about.timeline} keys={[["year", "Year"], ["title", "Title"], ["body", "Body"]]} onChange={(timeline) => patch("about", { timeline })} />
           </div>
         </Card>
 
@@ -189,9 +245,9 @@ export default function AdminSettingsPage() {
         <Card className={styles.full}>
           <CardHead title="Top bar & navigation" />
           <div className={styles.body}>
-            <ListEditor label="Nav items" hint="Top-bar links (Blog, Topics, Gallery, About…)" items={form.nav} onChange={(nav) => { setForm((f) => ({ ...f, nav })); setSaved(false); }} />
-            <ListEditor label="Footer links" hint="Small links row at the bottom of every page" items={form.footerLinks} onChange={(footerLinks) => { setForm((f) => ({ ...f, footerLinks })); setSaved(false); }} />
-            <ListEditor label="Social links" hint="Icons in the footer" items={form.socials} onChange={(socials) => { setForm((f) => ({ ...f, socials })); setSaved(false); }} />
+            <LinkEditor label="Nav items" hint="Top-bar links (Blog, Topics, Gallery, About…) — optional leading icon" items={form.nav} onChange={(nav) => { setForm((f) => ({ ...f, nav })); setSaved(false); }} />
+            <LinkEditor label="Footer links" hint="Text links in the footer — pick an icon or leave it as a plain link" items={form.footerLinks} onChange={(footerLinks) => { setForm((f) => ({ ...f, footerLinks })); setSaved(false); }} />
+            <SocialEditor items={form.socials} onChange={(socials) => { setForm((f) => ({ ...f, socials })); setSaved(false); }} />
           </div>
         </Card>
 
@@ -237,6 +293,54 @@ function Toggle({
   );
 }
 
+type LinkItem = { label: string; href: string; icon?: string };
+
+function LinkEditor({
+  label,
+  hint,
+  items,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  items: LinkItem[];
+  onChange: (items: LinkItem[]) => void;
+}) {
+  return (
+    <div className={styles.field}>
+      <span>{label}</span>
+      <em>{hint}</em>
+      {items.map((item, i) => (
+        <div key={i} className={styles.listRow}>
+          <select
+            value={item.icon || ""}
+            aria-label={`Icon for ${item.label || "link"} ${i + 1}`}
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))}
+          >
+            <option value="">no icon</option>
+            {SOCIAL_ICONS.map((k) => <option key={k} value={k}>{k}</option>)}
+          </select>
+          <input
+            value={item.label}
+            placeholder="Label"
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+          />
+          <input
+            value={item.href}
+            placeholder="/href or https://…"
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))}
+          />
+          {item.icon ? <SocialIcon name={item.icon} width={18} height={18} /> : null}
+          <button type="button" className={styles.listRemove} aria-label={`Remove ${item.label}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className={styles.listAdd} onClick={() => onChange([...items, { label: "", href: "" }])}>+ Add</button>
+    </div>
+  );
+}
+
 function ListEditor({
   label,
   hint,
@@ -265,6 +369,130 @@ function ListEditor({
             onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))}
           />
           <button type="button" className={styles.listRemove} aria-label={`Remove ${item.label}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className={styles.listAdd} onClick={() => onChange([...items, { label: "", href: "" }])}>+ Add</button>
+    </div>
+  );
+}
+
+function EntryEditor({
+  label,
+  hint,
+  items,
+  keys,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  items: AboutEntry[];
+  keys: [keyof AboutEntry, string][];
+  onChange: (items: AboutEntry[]) => void;
+}) {
+  return (
+    <div className={styles.field}>
+      <span>{label}</span>
+      <em>{hint}</em>
+      {items.map((item, i) => (
+        <div key={i} className={styles.listRow}>
+          {keys.map(([k, ph]) => (
+            <input
+              key={k}
+              value={(item[k] as string) ?? ""}
+              placeholder={ph}
+              onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))}
+            />
+          ))}
+          <button type="button" className={styles.listRemove} aria-label={`Remove ${String(item[keys[0][0]] ?? label)}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className={styles.listAdd} onClick={() => onChange([...items, {}])}>+ Add</button>
+    </div>
+  );
+}
+
+function UploadField({ label, accept, onUploaded }: { label: string; accept: string; onUploaded: (src: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <div className={styles.field}>
+      <span>{label}</span>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <Button variant="outlined" disabled={busy} onClick={() => inputRef.current?.click()}>
+          {busy ? "Uploading…" : "Choose file…"}
+        </Button>
+        {error ? <em style={{ color: "#d93025" }}>{error}</em> : null}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        hidden
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          setBusy(true);
+          setError("");
+          try {
+            const r = await api.upload(f);
+            onUploaded(r.src);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Upload failed");
+          } finally {
+            setBusy(false);
+            if (inputRef.current) inputRef.current.value = "";
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+function guessIcon(label: string, href: string): string {
+  const l = `${label} ${href}`.toLowerCase();
+  if (l.includes("git")) return "github";
+  if (l.includes("thread")) return "threads";
+  if (l.includes("linked")) return "linkedin";
+  if (l.includes("insta")) return "instagram";
+  if (l.includes("youtube") || l.includes("youtu.be")) return "youtube";
+  if (l.includes("face")) return "facebook";
+  if (l.includes("mail")) return "email";
+  if (/(^|\W)x(\W|$)/.test(l) || l.includes("twitter")) return "x";
+  return "email";
+}
+
+function SocialEditor({ items, onChange }: { items: SettingsForm["socials"]; onChange: (items: SettingsForm["socials"]) => void }) {
+  return (
+    <div className={styles.field}>
+      <span>Social links</span>
+      <em>Pick the icon yourself — it no longer guesses from the label.</em>
+      {items.map((item, i) => (
+        <div key={i} className={styles.listRow}>
+          <select
+            value={item.icon || ""}
+            aria-label={`Icon for ${item.label || "link"} ${i + 1}`}
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, icon: e.target.value } : x)))}
+          >
+            <option value="">auto</option>
+            {SOCIAL_ICONS.map((k) => <option key={k} value={k}>{k}</option>)}
+          </select>
+          <input
+            value={item.label}
+            placeholder="Label"
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+          />
+          <input
+            value={item.href}
+            placeholder="https://… or mailto:…"
+            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))}
+          />
+          <SocialIcon name={item.icon || guessIcon(item.label, item.href)} width={18} height={18} />
+          <button type="button" className={styles.listRemove} aria-label={`Remove ${item.label || "link"}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
             ×
           </button>
         </div>

@@ -18,6 +18,8 @@ export async function POST(request: Request) {
     );
   }
   const b = await request.json().catch(() => null);
+  // Honeypot: bots fill everything, humans never see the field. Pretend success.
+  if (typeof b?.website === "string" && b.website.trim()) return NextResponse.json({ ok: true });
   const email = typeof b?.email === "string" ? b.email.trim().toLowerCase().slice(0, 200) : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ ok: false, error: "Enter a valid email address." }, { status: 400 });

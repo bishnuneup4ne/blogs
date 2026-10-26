@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApiCollection, type ApiPost } from "./api";
+import { FeedbackProvider } from "./Feedback";
 import { SearchIcon } from "@/components/icons/Icons";
 import { site } from "@/lib/site";
 import styles from "./AdminShell.module.scss";
@@ -33,8 +34,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Library",
     items: [
       { href: "/admin/topics", label: "Topics", icon: "tag" },
-      { href: "/admin/series", label: "Series", icon: "layers" },
-      { href: "/admin/authors", label: "Authors", icon: "user" },
     ],
   },
   {
@@ -59,8 +58,6 @@ const TITLES: Record<string, string> = {
   "/admin/comments": "Comments",
   "/admin/messages": "Inbox",
   "/admin/topics": "Topics",
-  "/admin/series": "Series",
-  "/admin/authors": "Authors",
   "/admin/subscribers": "Subscribers",
   "/admin/settings": "Settings",
 };
@@ -68,7 +65,11 @@ const TITLES: Record<string, string> = {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   if (pathname === "/admin/login") return <>{children}</>;
-  return <AdminChrome>{children}</AdminChrome>;
+  return (
+    <FeedbackProvider>
+      <AdminChrome>{children}</AdminChrome>
+    </FeedbackProvider>
+  );
 }
 
 function AdminChrome({ children }: { children: React.ReactNode }) {

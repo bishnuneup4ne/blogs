@@ -18,13 +18,13 @@ export const metadata: Metadata = {
     description: site.description,
     type: "website",
     siteName: site.name,
-    images: [{ url: "/images/cover-desk.jpg", width: 1600, height: 1065, alt: site.title }],
+    images: [{ url: "/images/og.jpg", width: 1200, height: 630, alt: site.title }],
   },
   twitter: {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
-    images: ["/images/cover-desk.jpg"],
+    images: ["/images/og.jpg"],
   },
 };
 

@@ -51,6 +51,7 @@ export interface ApiAlbum {
   cover_url: string;
   sort_order: number;
   photo_count?: number;
+  first_photo?: string;
 }
 
 export interface ApiPhoto {

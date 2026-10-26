@@ -139,3 +139,9 @@
 .legal a {
   background-image: none;
 }
+
+.avatar img {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}

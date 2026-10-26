@@ -1,5 +1,39 @@
 import Link from "next/link";
+import { formatDate, relativeDate } from "@/lib/dates";
 import styles from "./kit.module.scss";
+
+function shortRelative(iso: string): string {
+  const relative = relativeDate(iso);
+  if (!relative) return "–";
+  if (relative.includes(" minutes ago") || relative.includes(" hours ago")) return relative;
+  if (relative === "just now" || relative === "yesterday" || relative.endsWith(" days ago")) return relative;
+  return "–";
+}
+
+export function DateCell({ iso, size = "normal" }: { iso: string; size?: "small" | "normal" }) {
+  const display = size === "small" ? shortRelative(iso) : relativeDate(iso) || formatDate(iso);
+  return (
+    <td className={size === "small" ? `${styles.dateCell} ${styles.dateSmall}` : styles.dateCell}>
+      <time dateTime={iso}>
+        <span>{display}</span>
+      </time>
+    </td>
+  );
+}
+
+const Switch = ({ checked, onChange, "aria-label": ariaLabel }: { checked: boolean; onChange: (v: boolean) => void; "aria-label": string }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-label={ariaLabel}
+    className={styles.switch}
+    onClick={() => onChange(!checked)}
+  />
+);
+
+export { Switch };
+
 
 export function PageHeader({
   title,
@@ -69,10 +103,16 @@ export function CardHead({
   );
 }
 
-export function Table({ children }: { children: React.ReactNode }) {
+export function Table({
+  children,
+  compact = false,
+}: {
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
   return (
-    <div className={styles.tableWrap}>
-      <table className={styles.table}>{children}</table>
+    <div className={styles.tableWrap} tabIndex={0}>
+      <table className={`${styles.table}${compact ? " " + styles.compact : ""}`}>{children}</table>
     </div>
   );
 }
@@ -155,3 +195,4 @@ export function Segmented<T extends string>({
     </div>
   );
 }
+

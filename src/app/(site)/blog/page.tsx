@@ -45,7 +45,7 @@ export default async function BlogPage() {
         </div>
       </div>
 
-      <LatestSection posts={posts} topics={topics} variant="grid" />
+      <LatestSection posts={posts} topics={topics} variant="grid" hideTitle markFirst />
     </>
   );
 }

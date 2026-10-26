@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import type { SiteSettings } from "@/lib/settings";
-import { CloseIcon, MenuIcon, SearchIcon } from "@/components/icons/Icons";
+import { CloseIcon, MenuIcon, SearchIcon, SocialIcon } from "@/components/icons/Icons";
 import styles from "./SiteHeader.module.scss";
 
 export function SiteHeader({ settings }: { settings: SiteSettings }) {
@@ -60,7 +60,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         return;
       }
       // On article pages the reading-progress strip takes over the top edge:
-      // hide the main header as soon as you start scrolling.
+      // hide the main header as soon as you start scrolling. The strip itself
+      // is sticky at y=0, so it covers the gap the hidden header leaves.
       if (document.querySelector('[class*="ArticleProgress"]')) {
         setHidden(y >= 120);
         lastY = y;
@@ -206,6 +207,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                   className={active ? `${styles.feedLink} ${styles.feedLinkActive}` : styles.feedLink}
                   aria-current={active ? "page" : undefined}
                 >
+                  {item.icon ? <SocialIcon name={item.icon} width={16} height={16} /> : null}
                   {item.label}
                 </Link>
               );

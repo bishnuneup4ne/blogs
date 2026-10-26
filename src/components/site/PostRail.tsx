@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { relativeDate } from "@/lib/dates";
 import Link from "next/link";
 import Image from "next/image";
 import { getCategory } from "@/lib/categories";
@@ -55,8 +56,7 @@ export function PostRail({ posts }: { posts: Post[] }) {
               </span>
               <span className={styles.body}>
                 <span className={styles.kicker}>{getCategory(post.category).name}</span>
-                <span className={styles.title}>{post.title}</span>
-                <span className={styles.byline}>{post.readingMinutes} min read</span>
+                <span className={styles.title}>{post.title}</span>                 <span className={styles.byline}>{post.readingMinutes} min read · {relativeDate(post.date)}</span>
               </span>
             </Link>
           </li>

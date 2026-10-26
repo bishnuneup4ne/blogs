@@ -15,7 +15,6 @@ export const posts: Post[] = [
     readingMinutes: 9,
     category: "engineering",
     tags: ["Observability", "OpenTelemetry", "Performance", "Postgres"],
-    cover: { src: "/images/cover-observability.jpg", alt: "Server racks with glowing status LEDs" },
     featured: true,
     author,
     blocks: [
@@ -158,7 +157,6 @@ span.setAttribute("user.id_bucket", hashToBucket(userId, 32));
     readingMinutes: 8,
     category: "security",
     tags: ["Incident Response", "Networking", "SRE"],
-    cover: { src: "/images/cover-incident.jpg", alt: "Ethernet cables plugged into a network switch" },
     author,
     blocks: [
       p("At 02:14 the alert fired: error rate above 5% for the checkout route. By 02:20 the graph looked like a DDoS. By 03:00 it looked like a database outage. It was neither."),
@@ -249,7 +247,6 @@ export class Breaker {
     readingMinutes: 6,
     category: "photography",
     tags: ["Photography", "Himalaya", "Story"],
-    cover: { src: "/images/cover-himalaya.jpg", alt: "Layered Himalayan ridges in morning fog" },
     author,
     blocks: [
       p("Colour is generous. It forgives a flat sky and a busy frame. Black and white does not. This year I walked a section of the Ganesh Himal with one rule: convert every frame to monochrome before deciding whether it worked."),
@@ -276,7 +273,6 @@ export class Breaker {
     readingMinutes: 7,
     category: "engineering",
     tags: ["Design", "Typography", "Frontend"],
-    cover: { src: "/images/cover-typography.jpg", alt: "A notebook with handwritten notes and a pen" },
     author,
     blocks: [
       p("I am not a designer, but I can tell when a page is uncomfortable. Here are the handful of typographic decisions I apply to every reading page, with the before and after."),
@@ -340,7 +336,6 @@ export class Breaker {
     readingMinutes: 8,
     category: "engineering",
     tags: ["Deploy", "CI/CD", "Postgres"],
-    cover: { src: "/images/cover-deploy.jpg", alt: "A developer's desk with a laptop showing code" },
     author: guestAuthors.anika,
     blocks: [
       p("Two years ago our deploys were an event. Someone would send a message, everyone would hold their breath, and if it went wrong we would revert and try again on Monday. Now we ship several times a day and nobody notices."),
@@ -393,7 +388,6 @@ gh workflow run deploy.yml \\
     readingMinutes: 4,
     category: "life",
     tags: ["Habits", "Focus", "Story"],
-    cover: { src: "/images/cover-morning.jpg", alt: "A sunrise over hills with soft light" },
     author,
     blocks: [
       p("I do not usually write about routines. But the quiet morning has changed how I work more than any tool I have adopted in the last five years."),
@@ -420,7 +414,6 @@ gh workflow run deploy.yml \\
     readingMinutes: 5,
     category: "life",
     tags: ["Trail", "Nepal", "Story"],
-    cover: { src: "/images/cover-trail.jpg", alt: "A ridge line covered in forest and cloud" },
     author,
     blocks: [
       p("Monsoon trekking is not brave. It is just wet. Three days on the ridge, two views, one very good tea stop."),
@@ -451,7 +444,6 @@ gh workflow run deploy.yml \\
     readingMinutes: 5,
     category: "field-notes",
     tags: ["Field Notes", "CSS", "Postgres"],
-    cover: { src: "/images/cover-desk.jpg", alt: "A laptop with a code editor on a desk" },
     author,
     blocks: [
       p("Unpolished notes from the week. No narrative, just the things I would want to remember."),
@@ -488,7 +480,6 @@ RETURNING views;
     readingMinutes: 7,
     category: "security",
     tags: ["Incident Response", "Culture"],
-    cover: { src: "/images/cover-forensics.jpg", alt: "An engineer reviewing data on a laptop" },
     author,
     blocks: [
       p("Postmortems are often written as narrative. They should be written as instruments — something you can read at 3am next year and still learn from."),
@@ -525,7 +516,6 @@ RETURNING views;
     readingMinutes: 6,
     category: "essays",
     tags: ["Craft", "Software Design", "Essay"],
-    cover: { src: "/images/cover-terminal.jpg", alt: "A close-up of a terminal with code" },
     author,
     blocks: [
       p("I keep meeting codebases that can do anything and enjoy nothing. Every decision is deferred to configuration, every behaviour is a plugin, and nobody can say what the system is <em>for</em>."),

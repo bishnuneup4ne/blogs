@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
 import Link from "next/link";
+import { ShareMenu } from "./ShareMenu";
 import styles from "./ArticleProgress.module.scss";
 
-/* blog.google-style reading progress: a slim bar pinned under the site header
-   that fills as the article scrolls, with the post title beside it. */
-export function ArticleProgress({ title }: { title: string }) {
+/* blog.google-style reading progress: a slim bar pinned to the top that fills
+   as the article scrolls. It reveals itself (with a slide-down) once the
+   headline has scrolled past; until then it stays invisible. */
+export function ArticleProgress({ title, shareUrl }: { title: string; shareUrl: string }) {
   const fillRef = useRef<HTMLSpanElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const shownRef = useRef(false);
 
   useEffect(() => {
     let frame = 0;
@@ -18,11 +23,28 @@ export function ArticleProgress({ title }: { title: string }) {
       const total = el.offsetHeight - window.innerHeight;
       const done = total > 0 ? Math.min(Math.max(window.scrollY / total, 0), 1) : 1;
       fillRef.current.style.transform = `scaleX(${done})`;
+      const h1 = document.querySelector("h1");
+      const bar = barRef.current;
+      if (!bar) return;
+      const passed = h1 ? h1.getBoundingClientRect().top < 0 : window.scrollY > 200;
+      if (passed && !shownRef.current) {
+        shownRef.current = true;
+        bar.removeAttribute("data-visible");
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          gsap.fromTo(bar, { y: "-100%" }, { y: 0, duration: 0.35, ease: "power3.out" });
+        }
+      } else if (!passed && shownRef.current) {
+        shownRef.current = false;
+        bar.setAttribute("data-visible", "off");
+        gsap.killTweensOf(bar);
+        gsap.set(bar, { y: 0 });
+      }
     }
     function onScroll() {
       if (!frame) frame = requestAnimationFrame(update);
     }
     update();
+    requestAnimationFrame(update);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {
@@ -33,17 +55,14 @@ export function ArticleProgress({ title }: { title: string }) {
   }, []);
 
   return (
-    <div className={styles.bar} aria-hidden="true">
-      <span className={styles.track}>
+    <div ref={barRef} className={styles.bar} data-visible="off">
+      <span className={styles.track} aria-hidden="true">
         <span ref={fillRef} className={styles.fill} />
       </span>
-      <Link href="/blog" className={styles.home} aria-label="Back to all posts">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m15 18-6-6 6-6" />
-        </svg>
-      </Link>
-      <p className={styles.title}>{title}</p>
-      <span className={styles.shareSlot} />
+      <div className={styles.inner}>
+        <Link href="/blog" className={styles.title}>{title}</Link>
+        <ShareMenu title={title} url={shareUrl} compact />
+      </div>
     </div>
   );
 }

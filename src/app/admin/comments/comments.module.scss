@@ -7,6 +7,16 @@
   color: var(--gray-600);
 }
 
+@media (max-width: 900px) {
+  /* Long comments used to make rows metres tall on narrow screens. */
+  .subCell {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 .emptyNote {
   padding: 56px 24px;
   font-size: 13.5px;

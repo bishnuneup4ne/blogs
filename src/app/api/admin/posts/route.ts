@@ -29,7 +29,12 @@ export const POST = adminRoute(async (req) => {
     featured: false,
     ...parsed.data,
   };
-  const { data, error } = await db.from("fn_posts").insert(payload).select().single();
+  let { data, error } = await db.from("fn_posts").insert(payload).select().single();
+  // On a slug clash, retry once with a unique suffix so "New post" never fails.
+  if (error && /duplicate key value violates unique constraint "fn_posts_slug_key"/i.test(error.message)) {
+    payload.slug = `${payload.slug}-${Date.now().toString(36)}`;
+    ({ data, error } = await db.from("fn_posts").insert(payload).select().single());
+  }
   if (error) return json({ error: error.message }, 400);
   return json({ post: data }, 201);
 });

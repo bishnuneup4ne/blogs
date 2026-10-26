@@ -3,14 +3,17 @@
 import { useMemo, useState } from "react";
 import { api, useApiCollection, type ApiComment } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { Card, PageHeader, Segmented, StatusChip, Table } from "@/components/admin/kit";
 import kit from "@/components/admin/kit.module.scss";
-import { formatDate } from "@/lib/dates";
 import styles from "./comments.module.scss";
+import { DateCell } from "@/components/admin/kit";
 
 type Tab = "all" | ApiComment["status"];
 
 export default function AdminCommentsPage() {
+  const confirm = useConfirm();
+  const toast = useToast();
   const commentsC = useApiCollection<ApiComment>("/api/admin/comments", "comments");
   const [tab, setTab] = useState<Tab>("all");
   const [busy, setBusy] = useState("");
@@ -39,12 +42,35 @@ export default function AdminCommentsPage() {
     }
   }
 
-  async function remove(id: string) {
-    if (!window.confirm("Delete this comment permanently?")) return;
-    setBusy(id);
+  async function remove(comment: ApiComment) {
+    const ok = await confirm({
+      title: "Delete comment",
+      body: "Delete this comment? You can undo this from the toast.",
+      confirmLabel: "Delete comment",
+    });
+    if (!ok) return;
+    setBusy(comment.id);
     setError("");
     try {
-      await api.del(`/api/admin/comments/${id}`);
+      await api.del(`/api/admin/comments/${comment.id}`);
+      toast("Comment deleted", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/comments", {
+              post_slug: comment.post_slug,
+              name: comment.name,
+              email: comment.email,
+              body: comment.body,
+              status: comment.status,
+            });
+            await commentsC.reload();
+            toast("Comment restored", "success");
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore comment");
+          }
+        },
+      });
       await commentsC.reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not delete comment");
@@ -95,14 +121,14 @@ export default function AdminCommentsPage() {
                 <tbody>
                   {rows.map((c) => (
                     <tr key={c.id}>
-                      <td>
+                      <td data-label="Comment" data-card="title">
                         <p><strong>{c.name}</strong></p>
                         <p className={styles.subCell}>{c.body}</p>
                       </td>
-                      <td>{c.post_slug ?? "—"}</td>
-                      <td><StatusChip status={c.status} tone={c.status === "approved" ? "green" : c.status === "spam" ? "red" : "yellow"} /></td>
-                      <td className={styles.mutedCell}>{formatDate(String(c.created_at).slice(0, 10))}</td>
-                      <td>
+                      <td data-label="Post">{c.post_slug ?? "—"}</td>
+                      <td data-label="Status"><StatusChip status={c.status} tone={c.status === "approved" ? "green" : c.status === "spam" ? "red" : "yellow"} /></td>
+                      <DateCell iso={String(c.created_at)} size="small" />
+                      <td data-label="Actions" data-card="actions">
                         <div className={kit.rowActions}>
                           {c.status !== "approved" ? (
                             <Button size="sm" disabled={busy === c.id} onClick={() => void setStatus(c.id, "approved")}>Approve</Button>
@@ -113,7 +139,7 @@ export default function AdminCommentsPage() {
                           {c.status !== "spam" ? (
                             <Button size="sm" variant="outlined" disabled={busy === c.id} onClick={() => void setStatus(c.id, "spam")}>Spam</Button>
                           ) : null}
-                          <Button size="sm" variant="text" tone="danger" disabled={busy === c.id} onClick={() => void remove(c.id)}>Delete</Button>
+                          <Button size="sm" variant="text" tone="danger" disabled={busy === c.id} onClick={() => void remove(c)}>Delete</Button>
                         </div>
                       </td>
                     </tr>

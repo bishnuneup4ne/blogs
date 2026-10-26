@@ -10,7 +10,17 @@ export const GET = adminRoute(async () => {
   if (error) return json({ error: error.message }, 500);
   const counts = new Map<string, number>();
   for (const p of photos ?? []) counts.set(p.album_id, (counts.get(p.album_id) ?? 0) + 1);
-  return json({ albums: (albums ?? []).map((a: any) => ({ ...a, photo_count: counts.get(a.id) ?? 0 })) });
+  // Pick the first photo of each album as a live cover preview.
+  const { data: first } = await db.from("fn_photos").select("album_id,src,kind").order("position");
+  const coverOf = new Map<string, string>();
+  for (const p of first ?? []) if (!coverOf.has(p.album_id) && p.kind !== "video") coverOf.set(p.album_id, p.src);
+  return json({
+    albums: (albums ?? []).map((a: any) => ({
+      ...a,
+      photo_count: counts.get(a.id) ?? 0,
+      first_photo: coverOf.get(a.id) ?? "",
+    })),
+  });
 });
 
 export const POST = adminRoute(async (req) => {

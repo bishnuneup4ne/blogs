@@ -30,7 +30,7 @@ create table if not exists public.fn_authors (
   name text not null,                                   -- public name
   role text not null default '',                        -- short role label
   email text not null default '',                       -- contact email
-  avatar_url text not null default '/images/avatar.svg',-- profile image path
+  avatar_url text not null default '/avatar.jpg',-- profile image path
   short_bio text not null default '',                   -- one-line bio
   bio text not null default '',                         -- long biography
   sort_order int not null default 0,                    -- manual ordering

@@ -2,23 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { api, useApiCollection, type ApiPhoto, type ApiPost, type ApiUpload } from "@/components/admin/api";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { PageHeader, Segmented } from "@/components/admin/kit";
 import styles from "./media.module.scss";
 
-const COVERS = [
-  ["/images/cover-observability.jpg", "cover-observability.jpg", "image/jpeg", "184 KB", "21 Oct 2026"],
-  ["/images/cover-incident.jpg", "cover-incident.jpg", "image/jpeg", "162 KB", "14 Oct 2026"],
-  ["/images/cover-himalaya.jpg", "cover-himalaya.jpg", "image/jpeg", "210 KB", "03 Oct 2026"],
-  ["/images/cover-typography.jpg", "cover-typography.jpg", "image/jpeg", "148 KB", "24 Sep 2026"],
-  ["/images/cover-deploy.jpg", "cover-deploy.jpg", "image/jpeg", "176 KB", "12 Sep 2026"],
-  ["/images/cover-desk.jpg", "cover-desk.jpg", "image/jpeg", "132 KB", "01 Sep 2026"],
-  ["/images/cover-morning.jpg", "cover-morning.jpg", "image/jpeg", "150 KB", "01 Sep 2026"],
-  ["/images/cover-trail.jpg", "cover-trail.jpg", "image/jpeg", "188 KB", "18 Aug 2026"],
-  ["/images/cover-forensics.jpg", "cover-forensics.jpg", "image/jpeg", "165 KB", "02 Aug 2026"],
-  ["/images/cover-terminal.jpg", "cover-terminal.jpg", "image/jpeg", "120 KB", "27 Jul 2026"],
-] as const;
-
 export default function AdminMediaPage() {
+  const confirm = useConfirm();
+  const toast = useToast();
   const photosC = useApiCollection<ApiPhoto>("/api/admin/photos", "photos");
   const postsC = useApiCollection<ApiPost>("/api/admin/posts", "posts");
   const uploadsC = useApiCollection<ApiUpload>("/api/admin/upload", "files");
@@ -26,16 +16,22 @@ export default function AdminMediaPage() {
   const [uploadError, setUploadError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const state = { posts: postsC.items.map((p) => ({ cover: p.cover_url })) };
-  const [tab, setTab] = useState<"all" | "covers" | "gallery" | "uploads">("all");
+  const [tab, setTab] = useState<"all" | "gallery" | "uploads">("all");
   const [query, setQuery] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
 
   async function removeUpload(name: string) {
-    if (!window.confirm(`Delete “${name}” from storage? Existing post references will break.`)) return;
+    const ok = await confirm({
+      title: "Delete file",
+      body: `Delete “${name}” from storage? Existing post references will break.`,
+      confirmLabel: "Delete file",
+    });
+    if (!ok) return;
     setDeleting(name);
     setUploadError("");
     try {
       await api.del(`/api/admin/upload?name=${encodeURIComponent(name)}`);
+      toast("File deleted", "success");
       await uploadsC.reload();
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "Delete failed");
@@ -45,15 +41,6 @@ export default function AdminMediaPage() {
   }
 
   const items = useMemo(() => {
-    const covers = COVERS.map(([src, name, type, size, added]) => ({
-      src,
-      name,
-      type,
-      size,
-      added,
-      kind: "covers" as const,
-      usedBy: state.posts.filter((p) => p.cover === src).length,
-    }));
     const gallery = photosC.items.map((ph) => ({
       src: ph.src,
       name: ph.src.split("/").pop() ?? ph.src,
@@ -72,7 +59,7 @@ export default function AdminMediaPage() {
       kind: "uploads" as const,
       usedBy: state.posts.filter((p) => p.cover === file.src).length,
     }));
-    const all = [...covers, ...gallery, ...uploads];
+    const all = [...gallery, ...uploads];
     const q = query.trim().toLowerCase();
     return all
       .filter((i) => (tab === "all" ? true : i.kind === tab))
@@ -83,7 +70,7 @@ export default function AdminMediaPage() {
     <div>
       <PageHeader
         title="Media"
-        description="Every image the blog can use. Covers are shared across posts; gallery photos come from the albums."
+        description="Every image the blog can use. Gallery photos come from albums; uploads are files you have added here."
         actions={
           <label className={styles.upload}>
             {uploading ? "Uploading…" : "Upload"}
@@ -126,7 +113,6 @@ export default function AdminMediaPage() {
           onChange={setTab}
           options={[
             { value: "all", label: "All" },
-            { value: "covers", label: "Covers" },
             { value: "gallery", label: "Gallery" },
             { value: "uploads", label: "Uploads" },
           ]}

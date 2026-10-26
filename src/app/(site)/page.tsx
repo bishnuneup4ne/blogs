@@ -5,7 +5,7 @@ import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/site/sections";
 import { allCategories, getAllPosts, getAlbums, getCategory } from "@/lib/data";
-import { shortDate } from "@/lib/dates";
+import { relativeDate, shortDate } from "@/lib/dates";
 import { getSettings } from "@/lib/settings";
 import styles from "./home.module.scss";
 
@@ -16,8 +16,7 @@ export default async function HomePage() {
     getSettings(),
     getAlbums(),
   ]);
-  const section = (id: string) => settings.homeSections.find((x) => x.id === id);
-  const enabled = (id: string) => (section(id) ?? { enabled: true }).enabled;
+  const enabled = (id: string) => (settings.homeSections.find((x) => x.id === id) ?? { enabled: true }).enabled;
   const topics = cats.map((c) => ({ slug: c.slug, name: c.name }));
 
   const [lead, ...rest] = posts;
@@ -42,15 +41,6 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {enabled("latest") ? (
-        <LatestSection
-          posts={rest.slice(2)}
-          topics={topics}
-          title={section("latest")?.title ?? "The latest"}
-          variant="grid"
-        />
-      ) : null}
-
       {lead ? (
         <section className={styles.hero}>
           <div className={styles.heroInner}>
@@ -71,8 +61,7 @@ export default async function HomePage() {
                 <span className={styles.kicker}>{leadCategory?.name}</span>
                 <h1 className={styles.leadTitle}>{lead.title}</h1>
                 <span className={styles.leadDesc}>{lead.description}</span>
-                <span className={styles.leadMeta}>
-                  {shortDate(lead.date)} · {lead.readingMinutes} min read
+                <span className={styles.leadMeta}>                   {relativeDate(lead.date)} · {lead.readingMinutes} min read
                 </span>
                 <span className={styles.leadCta}>
                   Read more <span aria-hidden="true">→</span>
@@ -98,8 +87,7 @@ export default async function HomePage() {
                       </span>
                       <span className={styles.sideText}>
                         <span className={styles.kicker}>{getCategory(post.category).name}</span>
-                        <span className={styles.sideTitle}>{post.title}</span>
-                        <span className={styles.sideMeta}>{shortDate(post.date)}</span>
+                        <span className={styles.sideTitle}>{post.title}</span>                         <span className={styles.sideMeta}>{relativeDate(post.date)}</span>
                       </span>
                     </Link>
                   </Reveal>
@@ -109,6 +97,11 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      {enabled("latest") && rest.slice(2).length > 0 ? (
+        <LatestSection posts={rest.slice(2)} topics={topics} hideTitle variant="grid" />
+      ) : null}
+
 
       {albums.length > 0 ? (
         <section className={styles.section}>

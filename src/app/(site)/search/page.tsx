@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { relativeDate } from "@/lib/dates";
 import Link from "next/link";
 import Image from "next/image";
 import { SearchFilters } from "@/components/site/SearchFilters";
@@ -101,8 +102,7 @@ export default async function SearchPage({
                     </p>
                     <h2 className={styles.resultTitle}>
                       <Link href={`/blog/${post.slug}`}>{highlight(post.title, terms)}</Link>
-                    </h2>
-                    <p className={styles.byline}>{post.readingMinutes} min read</p>
+                    </h2>                     <p className={styles.byline}>{post.readingMinutes} min read · {relativeDate(post.date)}</p>
                   </div>
                   {post.cover ? (
                     <Link href={`/blog/${post.slug}`} className={styles.thumb} tabIndex={-1} aria-hidden="true">

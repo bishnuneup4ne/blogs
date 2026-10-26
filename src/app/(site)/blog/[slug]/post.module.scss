@@ -130,12 +130,47 @@
 .bylineRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
-  max-width: 720px;
-  margin: var(--spacer-3) auto 0;
+  margin-top: var(--spacer-3);
   padding-bottom: var(--spacer-3);
   border-bottom: 1px solid var(--gray-200);
+}
+
+.bylineRow .byline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.authorAvatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--gray-100);
+}
+
+.bylineRow .byline > div {
+  min-width: 0;
+}
+
+.authorName,
+.authorRole {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Share sits flush right on the byline row. */
+.bylineRow > :last-child {
+  margin-left: auto;
+}
+
+/* Breadcrumb rides above the title, like blog.google's article header. */
+.mainCol .breadcrumb {
+  margin-bottom: 18px;
 }
 
 .seriesBox {
@@ -276,24 +311,5 @@
 
   .relatedInner {
     padding-top: var(--spacer-4);
-  }
-}
-
-/* Breadcrumb sits at the end of the byline row, before Share. */
-.bylineRow .breadcrumb {
-  margin-left: auto;
-  font-size: 13px;
-}
-
-@media (max-width: 640px) {
-  .bylineRow {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .bylineRow .breadcrumb {
-    margin-left: 0;
-    width: 100%;
-    order: 3;
   }
 }

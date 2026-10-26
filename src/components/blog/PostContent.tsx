@@ -73,6 +73,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "image": {
               imageIndex += 1;
               const myIndex = imageIndex;
+              const remote = /^https?:\/\//i.test(block.src) && !block.src.includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
               return (
                 <figure key={key} className={styles.figure}>
                   <button
@@ -81,14 +82,19 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                     onClick={() => setZoom(myIndex)}
                     aria-label={`Zoom image: ${block.alt}`}
                   >
-                    <Image
-                      src={block.src}
-                      alt={block.alt}
-                      width={1400}
-                      height={933}
-                      sizes="(max-width: 760px) 100vw, 860px"
-                      className={styles.image}
-                    />
+                    {remote ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={block.src} alt={block.alt} loading="lazy" className={styles.image} />
+                    ) : (
+                      <Image
+                        src={block.src}
+                        alt={block.alt}
+                        width={1400}
+                        height={933}
+                        sizes="(max-width: 760px) 100vw, 860px"
+                        className={styles.image}
+                      />
+                    )}
                     <span className={styles.zoomHint} aria-hidden="true">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="7" />

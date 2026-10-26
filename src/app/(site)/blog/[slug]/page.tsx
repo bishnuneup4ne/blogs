@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { relativeDate } from "@/lib/dates";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -10,7 +11,7 @@ import { ArticleProgress } from "@/components/blog/ArticleProgress";
 import { ShareMenu } from "@/components/blog/ShareMenu";
 import { InThisArticle } from "@/components/blog/InThisArticle";
 import { ViewBeacon } from "@/components/blog/ViewBeacon";
-import { formatDate, getAllPosts, getCategory, getHeadings, getPost, getRelatedPostsDetailed, getSeriesForPost, tagSlug } from "@/lib/data";
+import { formatDate, getAllPosts, getCategory, getHeadings, getPost, getRelatedPostsDetailed, tagSlug } from "@/lib/data";
 import { blocksToSpeech } from "@/lib/summarize";
 import { getSettings } from "@/lib/settings";
 import { site } from "@/lib/site";
@@ -64,7 +65,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const category = getCategory(post.category);
   const related = await getRelatedPostsDetailed(post, 6);
   const headings = getHeadings(post.blocks);
-  const [settings, series] = await Promise.all([getSettings(), getSeriesForPost(post.slug)]);
+  const settings = await getSettings();
   const url = `${site.url}/blog/${post.slug}`;
 
   return (
@@ -86,7 +87,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     ) : null}
 
     <article className={post.cover ? styles.sheet : undefined}>
-      <ArticleProgress title={post.title} />
+      <ArticleProgress title={post.title} shareUrl={url} />
       <div className={styles.page}>
         <div className={styles.grid}>
           <div className={styles.aside}>
@@ -95,32 +96,35 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
           <div className={styles.articleFlow}>
             <div className={styles.mainCol}>
+              <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+                <Link href="/">Home</Link>
+                <span aria-hidden="true">›</span>
+                <Link href="/categories">Topics</Link>
+                <span aria-hidden="true">›</span>
+                <Link href={`/blog/category/${category.slug}`}>{category.name}</Link>
+              </nav>
+
               <h1 className={styles.title}>{post.title}</h1>
 
               <div className={styles.summaryRow}>
                 <div className={styles.dateBlock}>
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
-                  <span>{post.readingMinutes} min read</span>
+                  <span>{post.readingMinutes} min read · {relativeDate(post.date)}</span>
                 </div>
                 <p className={styles.summary}>{post.description}</p>
               </div>
 
               <div className={styles.bylineRow}>
                 <div className={styles.byline}>
-                  <p className={styles.authorName}>{post.author.name}</p>
-                  <p className={styles.authorRole}>{post.author.role}, {settings.identity.location}</p>
-                </div>
-                <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-                  <Link href="/">Home</Link>
-                  <span aria-hidden="true">›</span>
-                  <Link href="/tags">Tags</Link>
-                  {post.tags[0] ? (
-                    <>
-                      <span aria-hidden="true">›</span>
-                      <Link href={`/blog/tag/${tagSlug(post.tags[0])}`}>{post.tags[0]}</Link>
-                    </>
+                  {settings.identity.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={settings.identity.avatarUrl} alt="" className={styles.authorAvatar} width={40} height={40} />
                   ) : null}
-                </nav>
+                  <div>
+                    <p className={styles.authorName}>{post.author.name}</p>
+                    <p className={styles.authorRole}>{[post.author.role, settings.identity.location].filter(Boolean).join(", ")}</p>
+                  </div>
+                </div>
                 <ShareMenu title={post.title} url={url} />
               </div>
             </div>
@@ -130,28 +134,6 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <ArticleTools title={post.title} body={blocksToSpeech(post.blocks)} />
 
                 <PostContent blocks={post.blocks} />
-
-                {series ? (
-                  <section className={styles.seriesBox} aria-labelledby="series-heading">
-                    <p className={styles.seriesEyebrow}>Part of a series</p>
-                    <h2 id="series-heading" className={styles.seriesTitle}>
-                      <Link href={`/series/${series.slug}`}>{series.title}</Link>
-                    </h2>
-                    {series.description ? <p className={styles.seriesDescription}>{series.description}</p> : null}
-                    <ol className={styles.seriesList}>
-                      {series.posts.map((item, index) => (
-                        <li key={item.slug} aria-current={item.slug === post.slug ? "page" : undefined}>
-                          <span className={styles.seriesNumber}>{String(index + 1).padStart(2, "0")}</span>
-                          {item.slug === post.slug ? (
-                            <span>{item.title}</span>
-                          ) : (
-                            <Link href={`/blog/${item.slug}`}>{item.title}</Link>
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  </section>
-                ) : null}
 
                 <section className={styles.postedIn} aria-labelledby="posted-in">
                   <h2 id="posted-in" className={styles.postedTitle}>Posted in:</h2>

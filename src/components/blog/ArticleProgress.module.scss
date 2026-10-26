@@ -4,13 +4,31 @@
   position: sticky;
   top: 0;
   z-index: 55;
+  height: 60px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* Hidden until the article title has scrolled past (blog.google behaviour).
+   opacity + pointer-events, not visibility — so it never flashes on load. */
+.bar[data-visible="off"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bar {
+  transition: opacity 200ms ease;
+}
+
+/* Same column as the article body: grid col 2, centered 720px. */
+.inner {
   display: flex;
   align-items: center;
   gap: 14px;
-  height: 60px;
-  padding: 0 var(--container-pad);
-  background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
+  height: 100%;
+  max-width: calc(720px + var(--container-pad) * 2);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
 }
 
 .track {
@@ -19,7 +37,6 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: transparent;
 }
 
 .fill {
@@ -29,22 +46,6 @@
   transform-origin: left center;
   transform: scaleX(0);
   will-change: transform;
-}
-
-.home {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: 50%;
-  color: var(--gray-700);
-  transition: background-color 150ms ease;
-}
-
-.home:hover {
-  background: var(--gray-100);
-  color: var(--gray-900);
 }
 
 .title {
@@ -58,10 +59,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.shareSlot {
-  flex: none;
 }
 
 @media (max-width: 640px) {

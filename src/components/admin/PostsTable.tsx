@@ -3,30 +3,32 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { api, useApiCollection, type ApiAuthor, type ApiPost, type ApiTopic } from "./api";
+import { api, useApiCollection, type ApiPost, type ApiTopic } from "./api";
 import { Button } from "@/components/admin/Button";
-import { EmptyState, Field, Segmented, StatusChip, statusTone, Table } from "@/components/admin/kit";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
+import { EmptyState, Segmented, StatusChip, statusTone, Switch, Table } from "@/components/admin/kit";
+import { DateCell } from "@/components/admin/kit";
 import { formatDate } from "@/lib/dates";
-import styles from "./PostsTable.module.scss";
 
-type Tab = "all" | ApiPost["status"];
-
+import styles from "./PostsTable.module.scss";type Tab = "all" | ApiPost["status"];
 export function PostsTable() {
   const router = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
   const params = useSearchParams();
   const urlQuery = params.get("q") ?? "";
   const postsC = useApiCollection<ApiPost>("/api/admin/posts", "posts");
   const topicsC = useApiCollection<ApiTopic>("/api/admin/topics", "topics");
-  const authorsC = useApiCollection<ApiAuthor>("/api/admin/authors", "authors");
+  const compact = params.get("compact") === "1";
   const state = {
     posts: postsC.items.map((p) => ({
       id: p.id, title: p.title, slug: p.slug, status: p.status, date: p.date,
       cover: p.cover_url, tags: p.tags ?? [], category: p.topic_slug ?? "", authorId: p.author_id ?? "",
     })),
     topics: topicsC.items.map((t) => ({ slug: t.slug, name: t.name })),
-    authors: authorsC.items.map((a) => ({ id: a.id, name: a.name })),
   };
   const [tab, setTab] = useState<Tab>("all");
+  const [compactH, setCompactH] = useState(compact);
   const [query, setQuery] = useState(urlQuery);
   const [category, setCategory] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -56,7 +58,7 @@ export function PostsTable() {
       .sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [state.posts, tab, category, query]);
 
-  const authorName = (id: string) => state.authors.find((a) => a.id === id)?.name ?? "Unknown";
+  const authorName = (_id?: string) => "Bishnu Neupane";
   const categoryName = (slug: string) => state.topics.find((t) => t.slug === slug)?.name ?? slug;
 
   function toggle(id: string) {
@@ -74,7 +76,7 @@ export function PostsTable() {
     try {
       await Promise.all(ids.map((id) => api.patch(`/api/admin/posts/${id}`, { status })));
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Bulk update failed");
+      toast(error instanceof Error ? error.message : "Bulk update failed");
     } finally {
       await postsC.reload();
       router.refresh();
@@ -106,14 +108,12 @@ export function PostsTable() {
             </svg>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search posts" />
           </label>
-          <Field label="">
-            <select className={styles.select} value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter by topic">
-              <option value="all">All topics</option>
-              {state.topics.map((t) => (
-                <option key={t.slug} value={t.slug}>{t.name}</option>
-              ))}
-            </select>
-          </Field>
+          <select className={styles.select} value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter by topic">
+            <option value="all">All topics</option>
+            {state.topics.map((t) => (
+              <option key={t.slug} value={t.slug}>{t.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -125,6 +125,15 @@ export function PostsTable() {
           <Button size="sm" variant="text" onClick={() => setSelected(new Set())}>Clear</Button>
         </div>
       ) : null}
+
+      <label className={styles.density}>
+        <span>Compact</span>
+        <Switch
+          checked={compactH}
+          onChange={(v) => setCompactH(v)}
+          aria-label="Switch table density"
+        />
+      </label>
 
       {postsC.loading ? (
         <p className={styles.muted}>Loading posts…</p>
@@ -140,7 +149,7 @@ export function PostsTable() {
           />
         </div>
       ) : (
-        <Table>
+        <Table compact={compactH}>
           <thead>
             <tr>
               <th className={styles.checkCol}>
@@ -164,7 +173,7 @@ export function PostsTable() {
           <tbody>
             {rows.map((post) => (
               <tr key={post.id}>
-                <td className={styles.checkCol}>
+                <td className={styles.checkCol} data-label="Select">
                   <input
                     type="checkbox"
                     aria-label={`Select ${post.title || "untitled"}`}
@@ -172,7 +181,7 @@ export function PostsTable() {
                     onChange={() => toggle(post.id)}
                   />
                 </td>
-                <td>
+                <td data-label="Post" data-card="title">
                   <div className={styles.postCell}>
                     <span className={styles.thumb}>
                       {post.cover ? (
@@ -188,11 +197,11 @@ export function PostsTable() {
                     </div>
                   </div>
                 </td>
-                <td><StatusChip status={post.status} tone={statusTone(post.status)} /></td>
-                <td>{categoryName(post.category)}</td>
-                <td>{authorName(post.authorId)}</td>
-                <td className={styles.muted}>{formatDate(post.date)}</td>
-                <td>
+                <td data-label="Status"><StatusChip status={post.status} tone={statusTone(post.status)} /></td>
+                <td data-label="Topic">{categoryName(post.category)}</td>
+                <td data-label="Author">{authorName(post.authorId)}</td>
+              <DateCell iso={post.date} />
+              <td data-label="Actions" data-card="actions">
                   <div className={styles.rowActions}>
                     <Link href={`/admin/posts/${post.id}/edit`} className={styles.iconAction} aria-label={`Edit ${post.title}`}>
                       <PencilIcon />
@@ -205,13 +214,32 @@ export function PostsTable() {
                       className={styles.iconAction}
                       aria-label={`Delete ${post.title}`}
                       onClick={async () => {
-                        if (!window.confirm(`Delete “${post.title}”?`)) return;
+                        const ok = await confirm({
+                          title: "Delete post",
+                          body: `Delete “${post.title}”? You can undo this from the toast.`,
+                          confirmLabel: "Delete post",
+                        });
+                        if (!ok) return;
                         try {
+                          const snapshot = await api.get<{ post: unknown }>(`/api/admin/posts/${post.id}`);
                           await api.del(`/api/admin/posts/${post.id}?hard=1`);
+                          toast("Post deleted", "success", {
+                            label: "Undo",
+                            onClick: async () => {
+                              try {
+                                await api.post("/api/admin/posts", snapshot.post);
+                                await postsC.reload();
+                                router.refresh();
+                                toast("Post restored", "success");
+                              } catch (error) {
+                                toast(error instanceof Error ? error.message : "Could not restore post");
+                              }
+                            },
+                          });
                           await postsC.reload();
                           router.refresh();
                         } catch (error) {
-                          window.alert(error instanceof Error ? error.message : "Delete failed");
+                          toast(error instanceof Error ? error.message : "Delete failed");
                         }
                       }}
                     >

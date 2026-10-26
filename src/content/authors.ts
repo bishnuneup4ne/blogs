@@ -3,18 +3,18 @@ import type { Author } from "@/lib/types";
 export const author: Author = {
   name: "Bishnu Neupane",
   role: "Security engineer",
-  avatar: "/images/avatar.svg",
+  avatar: "/avatar.jpg",
 };
 
 export const guestAuthors = {
   anika: {
     name: "Anika Shrestha",
     role: "Platform engineer",
-    avatar: "/images/avatar-anika.svg",
+    avatar: "/avatar.jpg",
   },
   rabin: {
     name: "Rabin Gurung",
     role: "Product designer",
-    avatar: "/images/avatar-rabin.svg",
+    avatar: "/avatar.jpg",
   },
 } satisfies Record<string, Author>;

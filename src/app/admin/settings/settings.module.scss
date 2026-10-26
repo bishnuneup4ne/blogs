@@ -223,4 +223,17 @@
     padding-left: 18px;
     padding-right: 18px;
   }
+
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 560px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
 }

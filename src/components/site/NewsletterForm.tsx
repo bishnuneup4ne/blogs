@@ -5,6 +5,7 @@ import styles from "./NewsletterForm.module.scss";
 
 export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "card" }) {
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -15,7 +16,7 @@ export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "c
     const res = await fetch("/api/subscribers", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, website }),
     }).catch(() => null);
     if (res?.ok) {
       setState("done");
@@ -52,6 +53,17 @@ export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "c
       <button type="submit" className={styles.submit} disabled={state === "sending"}>
         {state === "sending" ? "Subscribing…" : "Subscribe"}
       </button>
+      {/* honeypot — humans never see or fill this */}
+      <input
+        type="text"
+        value={website}
+        onChange={(e) => setWebsite(e.target.value)}
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       {state === "error" ? <p role="alert" className={styles.error}>{message}</p> : null}
     </form>
   );

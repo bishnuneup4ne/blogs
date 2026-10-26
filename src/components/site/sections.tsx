@@ -3,7 +3,7 @@ import Image from "next/image";
 import { ArrowRight } from "@/components/icons/Icons";
 import type { Post } from "@/lib/types";
 import { getCategory } from "@/lib/categories";
-import { shortDate } from "@/lib/dates";
+import { relativeDate, shortDate } from "@/lib/dates";
 import styles from "./sections.module.scss";
 
 export function UpdateCard({ post }: { post: Post }) {
@@ -34,26 +34,28 @@ export function UpdateCard({ post }: { post: Post }) {
   );
 }
 
-export function LatestCard({ post }: { post: Post }) {
+export function LatestCard({ post, first }: { post: Post; first?: boolean }) {
   const category = getCategory(post.category);
   return (
     <article className={styles.latestCard}>
       <p className={styles.latestKicker}>
-        <span className={styles.latestDate}>{shortDate(post.date).toUpperCase()}</span>
+        {first ? <span className={styles.latestBadge}>Latest</span> : null}         <span className={styles.latestDate}>{relativeDate(post.date).toUpperCase()}</span>
         <span aria-hidden="true"> · </span>
         <Link href={`/blog/category/${category.slug}`} className={styles.latestCat}>
           {category.name}
         </Link>
       </p>
       <div className={styles.latestRow}>
-        <h3 className={styles.latestTitle}>
+        <h3 className={`${styles.latestTitle}${first ? " " + styles.latestTitleFirst : ""}`}>
           <Link href={`/blog/${post.slug}`}>{post.title}</Link>
         </h3>
-        {post.cover ? (
-          <Link href={`/blog/${post.slug}`} className={styles.latestThumb} tabIndex={-1} aria-hidden="true">
+        <Link href={`/blog/${post.slug}`} className={styles.latestThumb} tabIndex={-1} aria-hidden="true">
+          {post.cover ? (
             <Image src={post.cover.src} alt="" fill sizes="130px" className={styles.mediaImg} />
-          </Link>
-        ) : null}
+          ) : (
+            <span className={styles.latestThumbFallback}>{post.title.trim().slice(0, 1).toUpperCase()}</span>
+          )}
+        </Link>
       </div>
     </article>
   );

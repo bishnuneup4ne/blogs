@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { db } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/env";
 import { normalizeBlocks } from "@/lib/sanitize-rich";
+import { getSettings } from "@/lib/settings";
 import { posts as filePosts } from "@/content/posts";
 import { albums as fileAlbums } from "@/content/gallery";
 import { categories as fileCategories, getCategory } from "@/lib/categories";
@@ -40,8 +41,8 @@ interface DbAuthorRow {
   avatar_url: string;
 }
 
-function mapPost(row: DbPostRow, authors: DbAuthorRow[]): Post {
-  const author = authors.find((a) => a.id === row.author_id) ?? authors[0];
+function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
+  const author = null as null | { name?: string; role?: string };
   return {
     slug: row.slug,
     title: row.title,
@@ -52,17 +53,17 @@ function mapPost(row: DbPostRow, authors: DbAuthorRow[]): Post {
     tags: row.tags ?? [],
     cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "" } : undefined,
     featured: Boolean(row.featured),
-    author: { name: author?.name ?? "Bishnu Neupane", role: author?.role ?? "", avatar: author?.avatar_url ?? "/images/avatar.svg" },
+    author: { name: author?.name || authorName, role: author?.role ?? "", avatar: "/avatar.jpg" },
     blocks: normalizeBlocks(row.blocks),
   };
 }
 
 async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Album[]; series: Series[] } | null> {
   if (!hasSupabase()) return null;
+  const authorName = (await getSettings()).identity.authorName;
   try {
-    const [postsRes, authorsRes, topicsRes, albumsRes, photosRes, seriesRes, seriesLinksRes] = await Promise.all([
+    const [postsRes, topicsRes, albumsRes, photosRes, seriesRes, seriesLinksRes] = await Promise.all([
       db.from("fn_posts").select("*").eq("status", "published").order("date", { ascending: false }),
-      db.from("fn_authors").select("*").order("sort_order"),
       db.from("fn_topics").select("*").order("sort_order"),
       db.from("fn_albums").select("*").order("sort_order", { ascending: false }),
       db.from("fn_photos").select("*").order("position"),
@@ -70,10 +71,10 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
       db.from("fn_series_posts").select("series_id, post_id, position").order("position"),
     ]);
     if (postsRes.error || topicsRes.error || albumsRes.error) throw postsRes.error ?? topicsRes.error ?? albumsRes.error;
-    const authors = (authorsRes.data ?? []) as DbAuthorRow[];
     const published = (postsRes.data ?? []) as DbPostRow[];
-    if (published.length === 0 && filePosts.length > 0 && !hasSupabase()) return null; // no DB at all → demo files
-    const posts = published.map((r) => mapPost(r, authors));
+    // Empty DB means empty site — never fall back to the bundled demo posts.
+    if (published.length === 0) return { posts: [], topics: [], albums: [], series: [] };
+    const posts = published.map((r) => mapPost(r, authorName));
     const topics: Category[] = (topicsRes.data ?? []).map((t: any) => ({
       slug: t.slug,
       name: t.name,
@@ -136,7 +137,7 @@ function fileData() {
 /** Cached snapshot of all DB content (or files when DB is unavailable/unseeded). */
 export const getContent = unstable_cache(
   async () => (await loadDb()) ?? fileData(),
-  ["fn-content"],
+  ["fn-content-v3"],
   { revalidate: 60, tags: ["content"] },
 );
 
@@ -181,7 +182,7 @@ export function getHeadings(blocks: Block[]): Heading[] {
   return headings;
 }
 
-export { formatDate } from "@/lib/dates";
+export { formatDate, relativeDate } from "@/lib/dates";
 
 export interface TagSummary {
   slug: string;
@@ -227,9 +228,6 @@ export async function getSeries(slug: string): Promise<Series | undefined> {
   return (await getAllSeries()).find((series) => series.slug === slug);
 }
 
-export async function getSeriesForPost(postSlug: string): Promise<Series | undefined> {
-  return (await getAllSeries()).find((series) => series.posts.some((post) => post.slug === postSlug));
-}
 
 export async function getAlbums(): Promise<Album[]> {
   return (await getContent()).albums;

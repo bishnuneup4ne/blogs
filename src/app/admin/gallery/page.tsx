@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, useApiCollection, type ApiAlbum, type ApiPhoto } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
+import { AdminDialog } from "@/components/admin/Dialog";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { PageHeader } from "@/components/admin/kit";
 import styles from "./gallery.module.scss";
 
@@ -21,6 +23,8 @@ interface AlbumDraft {
 
 export default function AdminGalleryPage() {
   const router = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
   const albumsC = useApiCollection<ApiAlbum>("/api/admin/albums", "albums");
   const [editing, setEditing] = useState<AlbumDraft | null>(null);
   const [openAlbum, setOpenAlbum] = useState<string | null>(null);
@@ -36,6 +40,7 @@ export default function AdminGalleryPage() {
       if (editing.id) await api.patch(`/api/admin/albums/${editing.id}`, payload);
       else await api.post("/api/admin/albums", payload);
       setEditing(null);
+      toast("Folder saved", "success");
       albumsC.reload();
       router.refresh();
     } catch (e) {
@@ -45,10 +50,28 @@ export default function AdminGalleryPage() {
     }
   }
 
-  async function deleteAlbum(id: string, name: string) {
-    if (!window.confirm(`Delete folder “${name}” and all its photos?`)) return;
+  async function deleteAlbum(id: string, snapshot: Required<Pick<AlbumDraft, "title" | "slug" | "subtitle" | "description" | "year" | "cover_url" | "sort_order">>) {
+    const ok = await confirm({
+      title: "Delete folder",
+      body: `Delete folder “${snapshot.title}” and all its photos?`,
+      confirmLabel: "Delete folder",
+    });
+    if (!ok) return;
     try {
       await api.del(`/api/admin/albums/${id}`);
+      toast("Folder deleted", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/albums", snapshot);
+            albumsC.reload();
+            router.refresh();
+            toast("Folder restored", "success");
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore folder");
+          }
+        },
+      });
       albumsC.reload();
       router.refresh();
     } catch (e) {
@@ -78,9 +101,14 @@ export default function AdminGalleryPage() {
         {albumsC.items.map((album) => (
           <article key={album.id} className={styles.card}>
             <button type="button" className={styles.folderHead} onClick={() => setOpenAlbum(openAlbum === album.id ? null : album.id)}>
-              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
-              </svg>
+              {album.first_photo || album.cover_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={album.cover_url || album.first_photo} alt="" className={styles.folderCover} width={52} height={52} />
+              ) : (
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                  <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
+                </svg>
+              )}
               <span>
                 <strong>{album.title}</strong>
                 <em>{album.photo_count ?? 0} photos · {album.year}</em>
@@ -92,7 +120,7 @@ export default function AdminGalleryPage() {
                 Edit details
               </Button>
               <Link href={`/gallery/${album.slug}`} target="_blank" rel="noreferrer noopener" className="btn btn-ghost">View</Link>
-              <Button size="sm" variant="text" tone="danger" onClick={() => deleteAlbum(album.id, album.title)}>Delete</Button>
+              <Button size="sm" variant="text" tone="danger" onClick={() => deleteAlbum(album.id, { title: album.title, slug: album.slug, subtitle: album.subtitle, description: album.description, year: album.year, cover_url: album.cover_url, sort_order: album.sort_order })}>Delete</Button>
             </div>
             {openAlbum === album.id ? <PhotosPanel albumId={album.id} onChanged={albumsC.reload} /> : null}
           </article>
@@ -100,28 +128,35 @@ export default function AdminGalleryPage() {
       </div>
 
       {editing ? (
-        <div className={styles.drawerWrap} role="dialog" aria-modal="true" aria-label="Edit folder">
-          <div className={styles.drawer}>
-            <h2>{editing.id ? "Edit folder" : "New folder"}</h2>
-            <label><span>Name</span><input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} /></label>
-            <label><span>Slug</span><input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></label>
-            <label><span>Subtitle</span><input value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></label>
-            <label><span>Description</span><textarea rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></label>
-            <label><span>Date / year</span><input type="number" value={editing.year} onChange={(e) => setEditing({ ...editing, year: Number(e.target.value) })} /></label>
-            <label><span>Cover URL (optional)</span><input value={editing.cover_url} onChange={(e) => setEditing({ ...editing, cover_url: e.target.value })} /></label>
-            <div className={styles.drawerFoot}>
-              <span className={styles.spacer} />
+        <AdminDialog
+          variant="modal"
+          title={editing.id ? "Edit folder" : "New folder"}
+          onClose={() => setEditing(null)}
+          footer={
+            <>
               <Button variant="outlined" onClick={() => setEditing(null)}>Cancel</Button>
               <Button disabled={!editing.title.trim() || busy} onClick={saveAlbum}>{busy ? "Saving…" : "Save folder"}</Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <label>
+            <span>Name</span>
+            <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            {!editing.title.trim() ? <span className={styles.fieldError}>A name is required.</span> : null}
+          </label>
+          <label><span>Slug</span><input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></label>
+          <label><span>Subtitle</span><input value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></label>
+          <label><span>Description</span><textarea rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></label>
+          <label><span>Date / year</span><input type="number" value={editing.year} onChange={(e) => setEditing({ ...editing, year: Number(e.target.value) })} /></label>
+          <label><span>Cover URL (optional)</span><input value={editing.cover_url} onChange={(e) => setEditing({ ...editing, cover_url: e.target.value })} /></label>
+        </AdminDialog>
       ) : null}
     </div>
   );
 }
 
 function PhotosPanel({ albumId, onChanged }: { albumId: string; onChanged: () => void }) {
+  const toast = useToast();
   const photosC = useApiCollection<ApiPhoto>(`/api/admin/photos?album=${albumId}`, "photos");
   const [uploading, setUploading] = useState(false);
   const [meta, setMeta] = useState<{ caption: string; taken_at: string }>({ caption: "", taken_at: "" });
@@ -144,7 +179,7 @@ function PhotosPanel({ albumId, onChanged }: { albumId: string; onChanged: () =>
       photosC.reload();
       onChanged();
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "Upload failed");
+      toast(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -155,7 +190,7 @@ function PhotosPanel({ albumId, onChanged }: { albumId: string; onChanged: () =>
       await api.patch(`/api/admin/photos/${id}`, patch);
       photosC.reload();
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : "Could not save photo");
+      toast(e instanceof Error ? e.message : "Could not save photo");
     }
   }
 
@@ -192,20 +227,61 @@ function PhotosPanel({ albumId, onChanged }: { albumId: string; onChanged: () =>
       ) : null}
       <ul className={styles.photoList}>
         {photosC.items.map((ph) => (
-          <PhotoRow key={ph.id} photo={ph} onPatch={patchPhoto} onDelete={async () => {
-            await api.del(`/api/admin/photos/${ph.id}`);
-            photosC.reload();
-            onChanged();
-          }} />
+          <PhotoRow
+            key={ph.id}
+            photo={ph}
+            onPatch={patchPhoto}
+            onChanged={onChanged}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function PhotoRow({ photo, onPatch, onDelete }: { photo: ApiPhoto; onPatch: (id: string, patch: Partial<ApiPhoto>) => void; onDelete: () => Promise<void> }) {
+function PhotoRow({ photo, onPatch, onChanged }: { photo: ApiPhoto; onPatch: (id: string, patch: Partial<ApiPhoto>) => Promise<void>; onChanged: () => void }) {
+  const confirm = useConfirm();
+  const toast = useToast();
   const [caption, setCaption] = useState(photo.caption);
   const [takenAt, setTakenAt] = useState(photo.taken_at ?? "");
+
+  async function remove() {
+    const ok = await confirm({ title: "Remove photo", body: "Remove this photo from the folder? It can be restored from the toast.", confirmLabel: "Remove photo" });
+    if (!ok) return;
+    const snap = { ...photo };
+    try {
+      await api.del(`/api/admin/photos/${photo.id}`);
+      toast("Photo removed", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/photos", {
+              album_id: snap.album_id,
+              src: snap.src,
+              kind: snap.kind ?? "image",
+              poster_url: snap.poster_url ?? "",
+              caption: snap.caption,
+              alt: snap.alt,
+              taken_at: snap.taken_at,
+              width: snap.width,
+              height: snap.height,
+              camera: snap.camera,
+              position: snap.position,
+              cover_too: true,
+            });
+            toast("Photo restored", "success");
+            onChanged();
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore photo");
+          }
+        },
+      });
+      onChanged();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not remove photo");
+    }
+  }
+
   return (
     <li>
       {photo.kind === "video" ? (
@@ -232,20 +308,7 @@ function PhotoRow({ photo, onPatch, onDelete }: { photo: ApiPhoto; onPatch: (id:
           onPatch(photo.id, { taken_at: e.target.value });
         }}
       />
-      <button
-        type="button"
-        aria-label="Remove photo"
-        onClick={async () => {
-          if (!window.confirm("Remove this photo?")) return;
-          try {
-            await onDelete();
-          } catch (e) {
-            window.alert(e instanceof Error ? e.message : "Could not remove photo");
-          }
-        }}
-      >
-        ×
-      </button>
+      <button type="button" aria-label="Remove photo" onClick={remove}>×</button>
     </li>
   );
 }

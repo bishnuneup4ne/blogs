@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, useApiCollection, type ApiAlbum, type ApiAuthor, type ApiPost, ApiTopic } from "./api";
+import { api, useApiCollection, type ApiAlbum, type ApiPost, type ApiUpload, ApiTopic } from "./api";
 import { Button } from "@/components/admin/Button";
+import { useToast } from "@/components/admin/Feedback";
 import { StatusChip, statusTone } from "@/components/admin/kit";
 import type { Block, ChartBlock as ChartBlockType, FlowEdge, FlowNode, FlowNodeShape } from "@/lib/types";
 import { ChartBlockView, FLOW_SHAPE_OPTIONS } from "@/components/blog/ChartBlock";
@@ -21,7 +22,6 @@ export interface EditorDraft {
   summary: string;
   status: ApiPost["status"];
   date: string;
-  authorId: string;
   category: string;
   tags: string[];
   cover: string | null;
@@ -39,7 +39,6 @@ function toDraft(p: ApiPost): EditorDraft {
     summary: p.summary ?? "",
     status: p.status,
     date: String(p.date).slice(0, 10),
-    authorId: p.author_id ?? "",
     category: p.topic_slug ?? "",
     tags: p.tags ?? [],
     cover: p.cover_url ?? null,
@@ -57,7 +56,6 @@ function toPayload(d: EditorDraft) {
     summary: d.summary,
     status: d.status,
     topic_slug: d.category || null,
-    author_id: d.authorId || null,
     tags: d.tags,
     cover_url: d.cover,
     cover_alt: d.coverAlt,
@@ -108,36 +106,27 @@ function newBlock(type: Block["type"]): Block {
   }
 }
 
-const COVERS = [
-  "/images/cover-observability.jpg",
-  "/images/cover-incident.jpg",
-  "/images/cover-himalaya.jpg",
-  "/images/cover-typography.jpg",
-  "/images/cover-deploy.jpg",
-  "/images/cover-desk.jpg",
-  "/images/cover-trail.jpg",
-  "/images/cover-morning.jpg",
-  "/images/cover-forensics.jpg",
-  "/images/cover-terminal.jpg",
-  "/images/gallery/ktm-1.jpg",
-  "/images/gallery/trail-2.jpg",
-];
-
 export function PostEditor({ postId }: { postId: string }) {
   const router = useRouter();
+  const toast = useToast();
   const topicsC = useApiCollection<ApiTopic>("/api/admin/topics", "topics");
-  const authorsC = useApiCollection<ApiAuthor>("/api/admin/authors", "authors");
   const albumsC = useApiCollection<ApiAlbum>("/api/admin/albums", "albums");
+  const uploadsC = useApiCollection<ApiUpload>("/api/admin/upload", "files");
+  const [authorName, setAuthorName] = useState("Bishnu Neupane");
+  useEffect(() => {
+    api.get<{ payload?: { identity?: { authorName?: string } } }>("/api/admin/settings")
+      .then((d) => d.payload?.identity?.authorName && setAuthorName(d.payload.identity.authorName))
+      .catch(() => {});
+  }, []);
   const imageOptions = useMemo(() => {
     const seen = new Set<string>();
     const opts: { src: string; label: string }[] = [];
-    for (const c of COVERS) if (!seen.has(c)) { seen.add(c); opts.push({ src: c, label: `Library — ${c.split("/").pop()}` }); }
+    for (const u of uploadsC.items) if (u.type.startsWith("image/") && !seen.has(u.src)) { seen.add(u.src); opts.push({ src: u.src, label: `Media — ${u.name}` }); }
     for (const a of albumsC.items) if (a.cover_url && !seen.has(a.cover_url)) { seen.add(a.cover_url); opts.push({ src: a.cover_url, label: `${a.title} — cover` }); }
     return opts;
-  }, [albumsC.items]);
+  }, [uploadsC.items, albumsC.items]);
   const state = {
     topics: topicsC.items.map((t) => ({ slug: t.slug, name: t.name })),
-    authors: authorsC.items.map((a) => ({ id: a.id, name: a.name })),
   };
   const [existing, setExisting] = useState<ApiPost | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -150,7 +139,24 @@ export function PostEditor({ postId }: { postId: string }) {
 
   useEffect(() => {
     let alive = true;
-    if (!postId) return;
+    if (!postId || postId === "new") {
+      setDraft({
+        id: "new",
+        title: "",
+        slug: "",
+        summary: "",
+        status: "draft",
+        date: new Date().toISOString().slice(0, 10),
+        category: "",
+        tags: [],
+        cover: null,
+        coverAlt: "",
+        featured: false,
+        readingMinutes: 1,
+        blocks: [{ type: "p", html: "" }],
+      });
+      return;
+    }
     api.get<{ post: ApiPost }>(`/api/admin/posts/${postId}`)
       .then((data) => { if (alive) { setExisting(data.post); setDraft(toDraft(data.post)); } })
       .catch((e) => alive && setLoadError(e instanceof Error ? e.message : "Failed to load"));
@@ -234,6 +240,7 @@ export function PostEditor({ postId }: { postId: string }) {
       setExisting(data.post);
       setDraft({ ...toDraft(data.post) });
       setSaved(next.status === "published" ? "Published" : "Saved");
+      toast(next.status === "published" ? "Post published" : "Post saved", "success");
       setTimeout(() => setSaved(null), 1800);
       router.refresh();
       if (isNew) router.push(`/admin/posts/${data.post.id}/edit`);
@@ -249,7 +256,7 @@ export function PostEditor({ postId }: { postId: string }) {
   const topicName = state.topics.find((t) => t.slug === draft.category)?.name ?? draft.category;
 
   return (
-    <div className={styles.layout}>
+    <div className={styles.fullWidth}>
       <div className={styles.main}>
         <div className={styles.toolbar}>
           <Link href="/admin/posts" className={styles.back} aria-label="Back to posts">
@@ -284,10 +291,40 @@ export function PostEditor({ postId }: { postId: string }) {
           <StatusChip status={draft.status} tone={statusTone(draft.status)} />
           <Button variant="outlined" onClick={() => save("draft")}>Save draft</Button>
           <Button onClick={() => save("published")}>Publish</Button>
+          {existing ? (
+            <Button
+              variant="text"
+              tone="danger"
+              onClick={async () => {
+                if (!window.confirm(`Delete “${draft.title || "this post"}”? This cannot be undone.`)) return;
+                try {
+                  await api.del(`/api/admin/posts/${draft.id}?hard=1`);
+                  router.push("/admin/posts");
+                  router.refresh();
+                } catch (e) {
+                  window.alert(e instanceof Error ? e.message : "Delete failed");
+                }
+              }}
+            >
+              Delete
+            </Button>
+          ) : null}
         </div>
 
         {tab === "settings" ? (
-          <SettingsPanel draft={draft} patch={patch} slugTouched={slugTouched} />
+          <SettingsPanel
+            draft={draft}
+            patch={patch}
+            slugTouched={slugTouched}
+            topics={state.topics}
+            authorName={authorName}
+            coverOptions={(uploadsC.items ?? []).filter((u) => u.type.startsWith("image/"))}
+            onUploadCover={async (file: File) => {
+              const r = await api.upload(file);
+              uploadsC.reload();
+              return r.src;
+            }}
+          />
         ) : (
           <div className={styles.doc}>
             <input
@@ -307,7 +344,7 @@ export function PostEditor({ postId }: { postId: string }) {
               onChange={(e) => patch({ summary: e.target.value })}
             />
             <p className={styles.byline}>
-              By {state.authors.find((a) => a.id === draft.authorId)?.name ?? "Unknown"} · {topicName} ·{" "}
+              {authorName} · {topicName} ·{" "}
               {words} words · ~{Math.max(1, Math.round(words / 220))} min read
             </p>
 
@@ -320,14 +357,31 @@ export function PostEditor({ postId }: { postId: string }) {
                 </button>
               </div>
             ) : (
-              <button type="button" className={styles.addCover} onClick={() => patch({ cover: COVERS[0], coverAlt: "Cover image" })}>
+              <label className={styles.addCover} style={{ cursor: "pointer" }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    try {
+                      const r = await api.upload(f);
+                      patch({ cover: r.src, coverAlt: draft.coverAlt || "Cover image" });
+                      uploadsC.reload();
+                    } catch (err) {
+                      window.alert(err instanceof Error ? err.message : "Upload failed");
+                    }
+                    e.target.value = "";
+                  }}
+                />
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
                   <circle cx="9" cy="10" r="1.6" />
                   <path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" />
                 </svg>
-                Add a cover image
-              </button>
+                Upload a cover image
+              </label>
             )}
 
             {tab === "preview" ? (
@@ -374,107 +428,6 @@ export function PostEditor({ postId }: { postId: string }) {
         )}
       </div>
 
-      <aside className={styles.side}>
-        <div className={styles.sideCard}>
-          <p className={styles.sideTitle}>Publish</p>
-          <dl className={styles.meta}>
-            <div>
-              <dt>Status</dt>
-              <dd>
-                <select value={draft.status} onChange={(e) => patch({ status: e.target.value as EditorDraft["status"] })}>
-                  <option value="draft">Draft</option>
-                  <option value="review">In review</option>
-                  <option value="scheduled">Scheduled</option>
-                  <option value="published">Published</option>
-                </select>
-              </dd>
-            </div>
-            <div>
-              <dt>Date</dt>
-              <dd>
-                <input type="date" value={draft.date} onChange={(e) => patch({ date: e.target.value })} />
-              </dd>
-            </div>
-            <div>
-              <dt>Author</dt>
-              <dd>
-                <select value={draft.authorId} onChange={(e) => patch({ authorId: e.target.value })}>
-                  {state.authors.map((a) => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
-              </dd>
-            </div>
-            <div>
-              <dt>Topic</dt>
-              <dd>
-                <select value={draft.category} onChange={(e) => patch({ category: e.target.value })}>
-                  {state.topics.map((t) => (
-                    <option key={t.slug} value={t.slug}>{t.name}</option>
-                  ))}
-                </select>
-              </dd>
-            </div>
-          </dl>
-          <label className={styles.toggleRow}>
-            <input
-              type="checkbox"
-              checked={draft.featured}
-              onChange={(e) => patch({ featured: e.target.checked })}
-            />
-            Feature on the homepage
-          </label>
-        </div>
-
-        <div className={styles.sideCard}>
-          <p className={styles.sideTitle}>Tags</p>
-          <TagEditor tags={draft.tags} onChange={(tags) => patch({ tags })} />
-        </div>
-
-        <div className={styles.sideCard}>
-          <p className={styles.sideTitle}>Cover</p>
-          <div className={styles.coverGrid}>
-            {COVERS.map((src) => (
-              <button
-                key={src}
-                type="button"
-                className={draft.cover === src ? styles.coverActive : styles.coverItem}
-                onClick={() => patch({ cover: src, coverAlt: draft.coverAlt || "Cover image" })}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" />
-              </button>
-            ))}
-          </div>
-          <input
-            className={styles.input}
-            value={draft.coverAlt}
-            placeholder="Alt text for the cover"
-            onChange={(e) => patch({ coverAlt: e.target.value })}
-          />
-        </div>
-
-        <div className={styles.sideCard}>
-          <p className={styles.sideTitle}>Link</p>
-          <div className={styles.slugRow}>
-            <span>/blog/</span>
-            <input
-              value={draft.slug}
-              onChange={(e) => {
-                slugTouched.current = true;
-                patch({ slug: slugifyTitle(e.target.value) });
-              }}
-            />
-          </div>
-          <p className={styles.sideHint}>Derived from the title until you edit it.</p>
-        </div>
-
-        {draft.status === "published" ? (
-          <div className={styles.sideCard}>
-            <Button variant="text" onClick={() => save("draft")}>Unpublish</Button>
-          </div>
-        ) : null}
-      </aside>
     </div>
   );
 }
@@ -483,22 +436,49 @@ function SettingsPanel({
   draft,
   patch,
   slugTouched,
+  topics,
+  authorName,
+  coverOptions,
+  onUploadCover,
 }: {
   draft: EditorDraft;
   patch: (p: Partial<EditorDraft>) => void;
   slugTouched: React.MutableRefObject<boolean>;
+  topics: { slug: string; name: string }[];
+  authorName: string;
+  coverOptions: { src: string; name?: string }[];
+  onUploadCover: (file: File) => Promise<string>;
 }) {
+  const [uploading, setUploading] = useState(false);
   return (
     <div className={styles.doc}>
       <h2 className={styles.settingsHead}>Post settings</h2>
-      <div className={styles.formGrid}>
+
+      <div className={styles.settingsForm}>
         <label className={styles.formField}>
-          <span>SEO title</span>
-          <input value={draft.title} onChange={(e) => patch({ title: e.target.value })} />
+          <span>Status</span>
+          <select value={draft.status} onChange={(e) => patch({ status: e.target.value as EditorDraft["status"] })}>
+            <option value="draft">Draft</option>
+            <option value="review">In review</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="published">Published</option>
+          </select>
         </label>
         <label className={styles.formField}>
-          <span>Meta description</span>
-          <textarea rows={3} value={draft.summary} onChange={(e) => patch({ summary: e.target.value })} />
+          <span>Date</span>
+          <input type="date" value={draft.date} onChange={(e) => patch({ date: e.target.value })} />
+        </label>
+        <label className={styles.formField}>
+          <span>Author</span>
+          <input value={authorName} readOnly />
+        </label>
+        <label className={styles.formField}>
+          <span>Topic</span>
+          <select value={draft.category} onChange={(e) => patch({ category: e.target.value })}>
+            {topics.map((t) => (
+              <option key={t.slug} value={t.slug}>{t.name}</option>
+            ))}
+          </select>
         </label>
         <label className={styles.formField}>
           <span>URL slug</span>
@@ -515,6 +495,64 @@ function SettingsPanel({
           <input value={`${draft.readingMinutes} min`} readOnly />
         </label>
       </div>
+
+      <label className={styles.toggleRow}>
+        <input type="checkbox" checked={draft.featured} onChange={(e) => patch({ featured: e.target.checked })} />
+        Feature on the homepage
+      </label>
+
+      <div className={styles.formGrid}>
+        <label className={styles.formField}>
+          <span>Tags</span>
+          <TagEditor tags={draft.tags} onChange={(tags) => patch({ tags })} />
+        </label>
+      </div>
+
+      <div className={styles.formGrid}>
+        <label className={styles.formField}>
+          <span>Cover image</span>
+          <div className={styles.coverGrid}>
+            {coverOptions.map(({ src }) => (
+              <button
+                key={src}
+                type="button"
+                className={draft.cover === src ? styles.coverActive : styles.coverItem}
+                onClick={() => patch({ cover: src, coverAlt: draft.coverAlt || "Cover image" })}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" />
+              </button>
+            ))}
+            <label className={styles.coverUpload}>
+              {uploading ? "Uploading…" : "+ Upload"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                hidden
+                disabled={uploading}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setUploading(true);
+                  try {
+                    const src = await onUploadCover(f);
+                    patch({ cover: src, coverAlt: draft.coverAlt || "Cover image" });
+                  } catch (err) {
+                    window.alert(err instanceof Error ? err.message : "Upload failed");
+                  } finally {
+                    setUploading(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+          </div>
+          {draft.cover ? (
+            <button type="button" className={styles.linkDanger} onClick={() => patch({ cover: null })}>Remove cover</button>
+          ) : null}
+          <input placeholder="Alt text for the cover" value={draft.coverAlt} onChange={(e) => patch({ coverAlt: e.target.value })} />
+        </label>
+      </div>
       <p className={styles.settingsNote}>
         Structured data and the RSS entry are generated from these fields when the post is published.
       </p>
@@ -524,6 +562,18 @@ function SettingsPanel({
 
 function TagEditor({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
   const [value, setValue] = useState("");
+
+  function commit(raw: string) {
+    // Accepts "a, b, c" — splits on commas, trims, dedupes, caps length.
+    const next = [...tags];
+    for (const part of raw.split(",")) {
+      const t = part.trim().slice(0, 40);
+      if (t && !next.some((x) => x.toLowerCase() === t.toLowerCase())) next.push(t);
+    }
+    if (next.length !== tags.length) onChange(next);
+    setValue("");
+  }
+
   return (
     <div className={styles.tagWrap}>
       {tags.map((t) => (
@@ -535,21 +585,27 @@ function TagEditor({ tags, onChange }: { tags: string[]; onChange: (tags: string
       <input
         className={styles.tagInput}
         value={value}
-        placeholder="Add tag…"
-        onChange={(e) => setValue(e.target.value)}
+        placeholder={tags.length ? "Add tag, or paste a,b,c…" : "Add tags — separate with commas…"}
+        onChange={(e) => {
+          if (e.target.value.includes(",")) commit(e.target.value);
+          else setValue(e.target.value);
+        }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && value.trim()) {
+          if ((e.key === "Enter" || e.key === ",") && value.trim()) {
             e.preventDefault();
-            if (!tags.includes(value.trim())) onChange([...tags, value.trim()]);
-            setValue("");
+            commit(value);
+          } else if (e.key === "Backspace" && !value && tags.length) {
+            onChange(tags.slice(0, -1));
           }
         }}
+        onBlur={() => value.trim() && commit(value)}
       />
     </div>
   );
 }
 
 function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[] }) {
+  const toast = useToast();
   switch (block.type) {
     case "h2":
     case "h3":
@@ -680,7 +736,7 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
                   const { src } = await api.upload(file);
                   onChange({ ...block, src });
                 } catch (err) {
-                  window.alert(err instanceof Error ? err.message : "Upload failed");
+                  toast(err instanceof Error ? err.message : "Upload failed");
                 }
                 e.target.value = "";
               }}

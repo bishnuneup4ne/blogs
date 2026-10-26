@@ -3,13 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, useApiCollection, type ApiMessage } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
-import { Card, PageHeader, Segmented, Table } from "@/components/admin/kit";
-import { formatDate } from "@/lib/dates";
+import { AdminDialog } from "@/components/admin/Dialog";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
+import { Card, PageHeader, Segmented, Table, DateCell } from "@/components/admin/kit";
 import styles from "./messages.module.scss";
 
 type Tab = "all" | "unread" | "read";
 
 export default function AdminMessagesPage() {
+  const confirm = useConfirm();
+  const toast = useToast();
   const messagesC = useApiCollection<ApiMessage>("/api/admin/messages", "messages");
   const [open, setOpen] = useState<ApiMessage | null>(null);
   const [tab, setTab] = useState<Tab>("all");
@@ -56,11 +59,34 @@ export default function AdminMessagesPage() {
   }
 
   async function remove(message: ApiMessage) {
-    if (!window.confirm("Delete this message permanently?")) return;
+    const ok = await confirm({
+      title: "Delete message",
+      body: "Delete this message? You can undo this from the toast.",
+      confirmLabel: "Delete message",
+    });
+    if (!ok) return;
     setBusy(message.id);
     setError("");
     try {
       await api.del(`/api/admin/messages/${message.id}`);
+      toast("Message deleted", "success", {
+        label: "Undo",
+        onClick: async () => {
+          try {
+            await api.post("/api/admin/messages", {
+              name: message.name,
+              email: message.email,
+              subject: message.subject,
+              message: message.message,
+              is_read: message.is_read,
+            });
+            await messagesC.reload();
+            toast("Message restored", "success");
+          } catch (e) {
+            toast(e instanceof Error ? e.message : "Could not restore message");
+          }
+        },
+      });
       if (open?.id === message.id) setOpen(null);
       await messagesC.reload();
     } catch (e) {
@@ -114,13 +140,12 @@ export default function AdminMessagesPage() {
                 <tbody>
                   {rows.map((m) => (
                     <tr key={m.id} className={m.is_read ? styles.readRow : undefined}>
-                      <td>
+                      <td data-label="From" data-card="title">
                         <p><strong>{m.name}</strong></p>
                         <p className={styles.subCell}>{m.email}</p>
                       </td>
-                      <td>{m.subject || "(no subject)"}</td>
-                      <td className={styles.mutedCell}>{formatDate(String(m.created_at).slice(0, 10))}</td>
-                      <td>
+                      <td data-label="Subject">{m.subject || "(no subject)"}</td>                        <DateCell iso={String(m.created_at)} />
+                        <td data-label="Actions" data-card="actions">
                         <div className={styles.rowActions}>
                           <Button size="sm" variant="outlined" disabled={busy === m.id} onClick={() => openMessage(m)}>Open</Button>
                           <Button
@@ -144,28 +169,25 @@ export default function AdminMessagesPage() {
       )}
 
       {open ? (
-        <div className={styles.modalOverlay}>
-          <button
-            type="button"
-            className={styles.modalBackdrop}
-            aria-label="Close message"
-            onClick={() => setOpen(null)}
-          />
-          <div role="dialog" aria-modal="true" aria-labelledby="message-title" className={styles.modal}>
-            <h2 id="message-title" className={styles.modalTitle}>{open.subject || "(no subject)"}</h2>
-            <p className={styles.modalMeta}>{open.name} &lt;{open.email}&gt;</p>
-            <p className={styles.modalBody}>{open.message}</p>
-            {error ? <p role="alert" className={styles.errorText}>{error}</p> : null}
-            <div className={styles.modalActions}>
+        <AdminDialog
+          variant="modal"
+          title={open.subject || "(no subject)"}
+          onClose={() => setOpen(null)}
+          footer={
+            <>
               <a className="btn btn-outline" href={`mailto:${open.email}?subject=${encodeURIComponent(`Re: ${open.subject || "your message"}`)}`}>Reply by email</a>
               {open.is_read ? (
                 <Button variant="text" disabled={busy === open.id} onClick={() => void setRead(open, false)}>Mark unread</Button>
               ) : null}
               <Button variant="text" tone="danger" disabled={busy === open.id} onClick={() => void remove(open)}>Delete</Button>
               <Button onClick={() => setOpen(null)}>Close</Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+            <p className={styles.modalMeta}>{open.name} &lt;{open.email}&gt;</p>
+            <p className={styles.modalBody}>{open.message}</p>
+            {error ? <p role="alert" className={styles.errorText}>{error}</p> : null}
+        </AdminDialog>
       ) : null}
     </div>
   );

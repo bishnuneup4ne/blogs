@@ -28,7 +28,11 @@ export async function GET() {
     .list("uploads", { limit: 200, sortBy: { column: "created_at", order: "desc" } });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const files = (data ?? [])
-    .filter((file) => file.name && !file.name.endsWith("/"))
+    .filter((file) => file.name && !file.name.startsWith(".") && !file.name.endsWith("/") && Number(file.metadata?.size ?? 0) > 0)
+    .filter((file) => {
+      const type = String(file.metadata?.mimetype ?? "");
+      return type.startsWith("image/") || type.startsWith("video/");
+    })
     .map((file) => {
       const path = `uploads/${file.name}`;
       const { data: publicUrl } = db.storage.from(env.storageBucket).getPublicUrl(path);
