@@ -21,6 +21,16 @@ interface AlbumDraft {
   sort_order: number;
 }
 
+const EMPTY_DRAFT = (sortOrder: number): AlbumDraft => ({
+  title: "",
+  slug: "",
+  subtitle: "",
+  description: "",
+  year: new Date().getFullYear(),
+  cover_url: "",
+  sort_order: sortOrder,
+});
+
 export default function AdminGalleryPage() {
   const router = useRouter();
   const confirm = useConfirm();
@@ -78,54 +88,75 @@ export default function AdminGalleryPage() {
     }
   }
 
+  const totalFrames = albumsC.items.reduce((n, a) => n + (a.photo_count ?? 0), 0);
+
   return (
     <div>
       <PageHeader
         title="Gallery folders"
-        description="Each folder is a collection with a name, description and date. Open one to add photos and videos."
+        description={
+          albumsC.items.length
+            ? `${albumsC.items.length} ${albumsC.items.length === 1 ? "folder" : "folders"} · ${totalFrames} frames. Open one to add photos and videos.`
+            : "Each folder is a collection with a name, description and date. Open one to add photos and videos."
+        }
         actions={
-          <Button onClick={() => setEditing({ title: "", slug: "", subtitle: "", description: "", year: new Date().getFullYear(), cover_url: "", sort_order: albumsC.items.length + 1 })}>
-            New folder
-          </Button>
+          <Button onClick={() => setEditing(EMPTY_DRAFT(albumsC.items.length + 1))}>New folder</Button>
         }
       />
       {error ? <p role="alert" className={styles.formError}>{error}</p> : null}
       {albumsC.loading ? <p className={styles.emptyNote}>Loading folders…</p> : null}
       {albumsC.error ? <p role="alert" className={styles.formError}>Could not load folders: {albumsC.error}</p> : null}
       {!albumsC.loading && !albumsC.error && albumsC.items.length === 0 ? (
-        <p className={styles.emptyNote}>No gallery folders yet. Create one to start adding photos.</p>
+        <div className={styles.emptyState}>
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+            <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
+          </svg>
+          <p>No gallery folders yet.</p>
+          <em>Create one to start collecting frames.</em>
+        </div>
       ) : null}
 
-      <div className={styles.grid}>
-        {albumsC.items.map((album) => (
-          <article key={album.id} className={styles.card}>
-            <Link href={`/admin/gallery/${album.id}`} className={styles.folderHead}>
-              {album.first_photo || album.cover_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={album.cover_url || album.first_photo} alt="" className={styles.folderCover} width={52} height={52} />
-              ) : (
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
-                  <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
-                </svg>
-              )}
-              <span>
-                <strong>{album.title}</strong>
-                <em>
-                  {album.photo_count ?? 0} photos{album.video_count ? ` · ${album.video_count} videos` : ""} · {album.year}
-                </em>
-              </span>
-            </Link>
-            <p className={styles.desc}>{album.subtitle || album.description}</p>
-            <div className={styles.rowActions}>
-              <Button size="sm" variant="outlined" onClick={() => setEditing({ id: album.id, title: album.title, slug: album.slug, subtitle: album.subtitle, description: album.description, year: album.year, cover_url: album.cover_url, sort_order: album.sort_order })}>
-                Edit details
-              </Button>
-              <Link href={`/gallery/${album.slug}`} target="_blank" rel="noreferrer noopener" className="btn btn-ghost">View</Link>
-              <Button size="sm" variant="text" tone="danger" onClick={() => deleteAlbum(album.id, { title: album.title, slug: album.slug, subtitle: album.subtitle, description: album.description, year: album.year, cover_url: album.cover_url, sort_order: album.sort_order })}>Delete</Button>
-            </div>
-          </article>
-        ))}
-      </div>
+      <ul className={styles.grid}>
+        {albumsC.items.map((album) => {
+          const cover = album.cover_url || album.first_photo || "";
+          return (
+            <li key={album.id}>
+              <Link href={`/admin/gallery/${album.id}`} className={styles.card}>
+                <span className={cover ? styles.bannerWithCover : styles.banner}>
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cover} alt="" className={styles.bannerImg} loading="lazy" />
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+                      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
+                    </svg>
+                  )}
+                  <span className={styles.countPill}>{album.photo_count ?? 0}</span>
+                </span>
+                <span className={styles.body}>
+                  <span className={styles.headRow}>
+                    <strong className={styles.name}>{album.title}</strong>
+                    <span className={styles.year}>{album.year}</span>
+                  </span>
+                  <span className={styles.meta}>
+                    {album.photo_count ?? 0} photos{album.video_count ? ` · ${album.video_count} videos` : ""}
+                  </span>
+                  {album.subtitle || album.description ? (
+                    <span className={styles.desc}>{album.subtitle || album.description}</span>
+                  ) : null}
+                </span>
+              </Link>
+              <div className={styles.rowActions}>
+                <Button size="sm" variant="outlined" onClick={() => setEditing({ id: album.id, title: album.title, slug: album.slug, subtitle: album.subtitle, description: album.description, year: album.year, cover_url: album.cover_url, sort_order: album.sort_order })}>
+                  Edit details
+                </Button>
+                <Link href={`/gallery/${album.slug}`} target="_blank" rel="noreferrer noopener" className="btn btn-ghost">View on site</Link>
+                <Button size="sm" variant="text" tone="danger" onClick={() => deleteAlbum(album.id, { title: album.title, slug: album.slug, subtitle: album.subtitle, description: album.description, year: album.year, cover_url: album.cover_url, sort_order: album.sort_order })}>Delete</Button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       {editing ? (
         <AdminDialog

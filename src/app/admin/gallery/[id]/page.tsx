@@ -8,6 +8,7 @@ import { Button } from "@/components/admin/Button";
 import { AdminDialog } from "@/components/admin/Dialog";
 import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { detectExternalVideo } from "@/lib/external-video";
+import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import styles from "./folder.module.scss";
 
 type Filter = "all" | "image" | "video";
@@ -28,6 +29,9 @@ export default function AdminFolderPage() {
   const [uploading, setUploading] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [editing, setEditing] = useState<{ title: string; slug: string; subtitle: string; description: string; year: number; cover_url: string; sort_order: number } | null>(null);
+  const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadCount = useRef(0);
 
@@ -137,6 +141,21 @@ export default function AdminFolderPage() {
     photosC.reload();
   }
 
+  async function saveDetails() {
+    if (!editing || !album || !editing.title.trim()) return;
+    setBusy(true);
+    try {
+      await api.patch(`/api/admin/albums/${album.id}`, editing);
+      toast("Folder details saved", "success");
+      setEditing(null);
+      albumsC.reload();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not save details", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (albumsC.loading) return <p className={styles.muted}>Loading folder…</p>;
   if (!album) {
     return (
@@ -156,16 +175,31 @@ export default function AdminFolderPage() {
       </nav>
 
       <header className={styles.head}>
-        <div className={styles.headText}>
-          <h1 className={styles.title}>{album.title}</h1>
-          <p className={styles.sub}>
-            {counts.image} photo{counts.image === 1 ? "" : "s"} · {counts.video} video{counts.video === 1 ? "" : "s"} · {album.year}
-          </p>
-          {album.description ? <p className={styles.desc}>{album.description}</p> : null}
+        <div className={styles.headCover}>
+          {album.cover_url || album.first_photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={album.cover_url || album.first_photo} alt="" />
+          ) : (
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+              <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
+            </svg>
+          )}
         </div>
-        <div className={styles.headActions}>
-          <Button variant="outlined" onClick={() => router.push("/admin/gallery")}>All folders</Button>
-          <Link href={`/gallery/${album.slug}`} target="_blank" rel="noreferrer noopener" className="btn btn-ghost">View on site ↗</Link>
+        <div className={styles.headMain}>
+          <div className={styles.headText}>
+            <h1 className={styles.title}>{album.title}</h1>
+            <p className={styles.sub}>
+              {counts.image} photo{counts.image === 1 ? "" : "s"} · {counts.video} video{counts.video === 1 ? "" : "s"} · {album.year}
+            </p>
+            {album.description ? <p className={styles.desc}>{album.description}</p> : null}
+          </div>
+          <div className={styles.headActions}>
+            <Button variant="outlined" onClick={() => setEditing({ title: album.title, slug: album.slug, subtitle: album.subtitle ?? "", description: album.description ?? "", year: album.year, cover_url: album.cover_url ?? "", sort_order: album.sort_order })}>
+              Edit details
+            </Button>
+            <Button variant="outlined" onClick={() => router.push("/admin/gallery")}>All folders</Button>
+            <Link href={`/gallery/${album.slug}`} target="_blank" rel="noreferrer noopener" className="btn btn-ghost">View on site ↗</Link>
+          </div>
         </div>
       </header>
 
@@ -182,20 +216,20 @@ export default function AdminFolderPage() {
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm" multiple hidden onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
         <div className={styles.dropRow}>
           <button type="button" className={styles.dropBox} onClick={() => fileInputRef.current?.click()} disabled={uploading > 0}>
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
               <path d="M12 16V4m0 0L8 8m4-4 4 4" />
               <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
             </svg>
-            <strong>{uploading > 0 ? `Uploading ${uploading}…` : "Drop photos or videos here"}</strong>
-            <em>or click to browse — JPEG, PNG, WebP, GIF, MP4, WebM</em>
+            <strong>{uploading > 0 ? `Uploading ${uploading}…` : "Upload photos or videos"}</strong>
+            <em>drag &amp; drop here, or click to browse — JPEG, PNG, WebP, GIF, MP4, WebM</em>
           </button>
           <button type="button" className={styles.linkBox} onClick={() => setLinkOpen(true)}>
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
               <path d="M10 13.5a4 4 0 0 0 5.7.4l2.6-2.6a4 4 0 1 0-5.7-5.7L11.4 6.8" />
               <path d="M14 10.5a4 4 0 0 0-5.7-.4l-2.6 2.6a4 4 0 1 0 5.7 5.7l1.2-1.2" />
             </svg>
             <strong>Add video by link</strong>
-            <em>YouTube or Vimeo URL</em>
+            <em>YouTube / Vimeo</em>
           </button>
         </div>
         <div className={styles.metaRow}>
@@ -218,21 +252,23 @@ export default function AdminFolderPage() {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={album.cover_url} alt="Current cover" className={styles.coverChip} />
           ) : (
-            <em>none yet — tap “Cover” on any photo</em>
+            <em>none yet — press “Set cover” on any photo</em>
           )}
         </p>
       </div>
 
       {photosC.loading ? <p className={styles.muted}>Loading items…</p> : null}
       {!photosC.loading && shown.length === 0 ? (
-        <p className={styles.muted}>{filter === "all" ? "This folder is empty — drop your first photo above." : `No ${filter}s in this folder yet.`}</p>
+        <div className={styles.emptyState}>
+          {filter === "all" ? "This folder is empty — drop your first photo above." : `No ${filter === "image" ? "photos" : "videos"} in this folder yet.`}
+        </div>
       ) : null}
 
       <ul className={styles.grid}>
         {shown.map((ph, i) => {
           const isCover = ph.kind !== "video" && Boolean(album.cover_url) && album.cover_url === ph.src;
           return (
-          <li key={ph.id} className={styles.item}>
+          <li key={ph.id} className={isCover ? `${styles.item} ${styles.isCover}` : styles.item}>
             <div className={styles.thumbWrap}>
               {ph.kind === "video" ? (
                 ph.poster_url ? (
@@ -242,10 +278,17 @@ export default function AdminFolderPage() {
                   <span className={styles.videoBadge} aria-hidden="true">▶</span>
                 )
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={ph.src} alt="" className={styles.thumb} loading="lazy" />
+                <button type="button" className={styles.zoomBtn} aria-label={`Preview ${ph.caption || `item ${i + 1}`}`} onClick={() => setLightbox(shown.indexOf(ph))}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ph.src} alt="" className={styles.thumb} loading="lazy" />
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5M11 8v6M8 11h6" />
+                  </svg>
+                </button>
               )}
               {ph.kind === "video" ? <span className={styles.videoTag}>Video</span> : null}
+              {isCover ? <span className={styles.coverFlag}>Cover</span> : null}
               <span className={styles.pos}>{photosC.items.indexOf(ph) + 1}</span>
             </div>
             <div className={styles.itemForm}>
@@ -274,7 +317,7 @@ export default function AdminFolderPage() {
                     aria-pressed={isCover}
                     onClick={() => void patchPhoto(ph.id, { cover: true }).then(() => toast("Cover updated", "success"))}
                   >
-                    {isCover ? "✓ Cover" : "Cover"}
+                    {isCover ? "✓ Cover" : "Set cover"}
                   </button>
                 ) : null}
                 <button type="button" className={styles.removeBtn} aria-label="Remove item" onClick={() => void removePhoto(ph)}>×</button>
@@ -286,6 +329,34 @@ export default function AdminFolderPage() {
       </ul>
 
       {linkOpen ? <VideoLinkDialog albumId={id} onClose={() => setLinkOpen(false)} onAdded={() => { photosC.reload(); albumsC.reload(); }} /> : null}
+
+      <Lightbox
+        images={shown.filter((p) => p.kind !== "video").map((p): LightboxItem => ({ src: p.src, alt: p.alt || p.caption, caption: p.caption }))}
+        index={lightbox}
+        onClose={() => setLightbox(null)}
+        onIndexChange={setLightbox}
+      />
+
+      {editing ? (
+        <AdminDialog
+          variant="modal"
+          title="Edit folder details"
+          onClose={() => setEditing(null)}
+          footer={
+            <>
+              <Button variant="outlined" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button disabled={!editing.title.trim() || busy} onClick={saveDetails}>{busy ? "Saving…" : "Save changes"}</Button>
+            </>
+          }
+        >
+          <label><span>Name</span><input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} /></label>
+          <label><span>Slug</span><input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} /></label>
+          <label><span>Subtitle</span><input value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></label>
+          <label><span>Description</span><textarea rows={3} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} /></label>
+          <label><span>Date / year</span><input type="number" value={editing.year} onChange={(e) => setEditing({ ...editing, year: Number(e.target.value) })} /></label>
+          <label><span>Cover URL (optional)</span><input value={editing.cover_url} onChange={(e) => setEditing({ ...editing, cover_url: e.target.value })} /></label>
+        </AdminDialog>
+      ) : null}
     </div>
   );
 }

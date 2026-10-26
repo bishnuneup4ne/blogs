@@ -109,7 +109,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               <div className={styles.summaryRow}>
                 <div className={styles.dateBlock}>
                   <time dateTime={post.date}>{formatDate(post.date)}</time>
-                  <span>{post.readingMinutes} min read · {relativeDate(post.date)}</span>
+                  <span>{post.readingMinutes} min read</span>
                 </div>
                 <p className={styles.summary}>{post.description}</p>
               </div>
