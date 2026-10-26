@@ -18,10 +18,15 @@ export const PATCH = adminRoute(async (req, ctx) => {
   if ("taken_at" in b) patch.taken_at = dateOnly(b.taken_at);
   if ("camera" in b) patch.camera = str(b.camera, 120)?.trim() ?? "";
   if ("position" in b) patch.position = integer(b.position, 0, 10000, 0);
+  if ("kind" in b) patch.kind = b.kind === "video" ? "video" : "image";
+  if ("poster_url" in b) patch.poster_url = image(b.poster_url);
   if (!Object.keys(patch).length) return json({ error: "no fields" }, 400);
   const { data, error } = await db.from("fn_photos").update(patch).eq("id", id).select().maybeSingle();
   if (error) return json({ error: error.message }, 400);
   if (!data) return json({ error: "Not found" }, 404);
+  if (b.cover === true && data.album_id && data.src) {
+    await db.from("fn_albums").update({ cover_url: data.src }).eq("id", data.album_id);
+  }
   return json({ photo: data });
 });
 

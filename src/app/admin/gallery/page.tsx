@@ -308,6 +308,14 @@ function PhotoRow({ photo, onPatch, onChanged }: { photo: ApiPhoto; onPatch: (id
           onPatch(photo.id, { taken_at: e.target.value });
         }}
       />
+      <button
+        type="button"
+        className={styles.coverBtn}
+        title="Use this photo as the folder cover"
+        onClick={() => void onPatch(photo.id, { caption, alt: caption, taken_at: takenAt, cover: true } as Partial<ApiPhoto>).then(() => { toast("Folder cover updated", "success"); onChanged(); })}
+      >
+        Cover
+      </button>
       <button type="button" aria-label="Remove photo" onClick={remove}>×</button>
     </li>
   );

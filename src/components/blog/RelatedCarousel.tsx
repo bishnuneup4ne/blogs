@@ -42,26 +42,27 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
         ref={trackRef}
         onScroll={update}
         onPointerDown={(e) => {
-          if (e.pointerType !== "mouse" || !trackRef.current) return;
-          drag.current = { down: true, startX: e.clientX, startLeft: trackRef.current.scrollLeft, moved: false };
-        }}
-        onPointerMove={(e) => {
           const t = trackRef.current;
-          if (!t || !drag.current.down) return;
-          const dx = e.clientX - drag.current.startX;
-          if (Math.abs(dx) > 6) {
-            drag.current.moved = true;
-            t.classList.add(styles.dragging);
-            t.scrollLeft = drag.current.startLeft - dx;
-          }
-        }}
-        onPointerUp={() => {
-          drag.current.down = false;
-          trackRef.current?.classList.remove(styles.dragging);
-        }}
-        onPointerLeave={() => {
-          drag.current.down = false;
-          trackRef.current?.classList.remove(styles.dragging);
+          if (e.pointerType !== "mouse" || !t) return;
+          const start = { down: true, startX: e.clientX, startLeft: t.scrollLeft, moved: false };
+          drag.current = start;
+          t.classList.add(styles.dragging);
+          const move = (ev: PointerEvent) => {
+            if (!trackRef.current || !start.down) return;
+            const dx = ev.clientX - start.startX;
+            if (Math.abs(dx) > 4) {
+              start.moved = true;
+              trackRef.current.scrollLeft = start.startLeft - dx;
+            }
+          };
+          const up = () => {
+            start.down = false;
+            trackRef.current?.classList.remove(styles.dragging);
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", up);
+          };
+          window.addEventListener("pointermove", move);
+          window.addEventListener("pointerup", up);
         }}
         onClickCapture={(e) => {
           if (drag.current.moved) {

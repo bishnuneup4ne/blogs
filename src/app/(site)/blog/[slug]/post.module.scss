@@ -282,6 +282,10 @@
   .page {
     max-width: 100%;
   }
+
+  .grid {
+    column-gap: 0;
+  }
 }
 
 @media (max-width: 640px) {

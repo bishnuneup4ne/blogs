@@ -51,6 +51,7 @@ export interface ApiAlbum {
   cover_url: string;
   sort_order: number;
   photo_count?: number;
+  video_count?: number;
   first_photo?: string;
 }
 
@@ -66,7 +67,9 @@ export interface ApiPhoto {
   camera: string;
   kind?: "image" | "video";
   poster_url?: string;
+  external?: boolean;
   position: number;
+  cover?: boolean;
 }
 
 export interface ApiSubscriber {

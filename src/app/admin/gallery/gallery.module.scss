@@ -190,3 +190,18 @@
   object-fit: cover;
   background: var(--gray-100);
 }
+
+.coverBtn {
+  border: none;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.coverBtn:hover {
+  background: var(--gray-200);
+}

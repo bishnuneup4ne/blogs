@@ -1,4 +1,5 @@
 import { adminRoute, body, dateOnly, db, image, integer, json, str } from "@/lib/api-helpers";
+import { detectExternalVideo } from "@/lib/external-video";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,37 @@ export const GET = adminRoute(async (req) => {
   return json({ photos: data });
 });
 
+const POST_FIELDS = [
+  "album_id", "src", "alt", "caption", "width", "height",
+  "taken_at", "camera", "kind", "poster_url", "position", "cover_too",
+];
+
 export const POST = adminRoute(async (req) => {
   const b = await body(req);
+  const missing = POST_FIELDS.filter((f) => !(f in b));
   const album_id = str(b.album_id, 40)?.trim();
-  const src = image(b.src);
-  if (!album_id || !src) return json({ error: "album_id and a valid image/video URL are required" }, 400);
+  if (!album_id) return json({ error: "album_id is required" }, 400);
+
+  // External links (YouTube/Vimeo) are stored as the canonical watch URL.
+  let kind = b.kind === "video" ? "video" : "image";
+  let src = "";
+  let poster = "";
+  const link = typeof b.url === "string" ? b.url.trim() : "";
+  const external = link ? detectExternalVideo(link) : null;
+  if (link && !external) {
+    return json({ error: "That does not look like a YouTube or Vimeo link." }, 400);
+  }
+  if (external) {
+    kind = "video";
+    src = external.url;
+    poster = image(b.poster_url) || external.thumbnail;
+  } else {
+    src = image(b.src);
+    poster = image(b.poster_url);
+    if (!src) return json({ error: "A valid image/video URL is required" }, 400);
+  }
+  void missing;
+
   const { count } = await db.from("fn_photos").select("id", { count: "exact", head: true }).eq("album_id", album_id);
   const caption = str(b.caption, 400)?.trim() ?? "";
   const payload = {
@@ -27,8 +54,8 @@ export const POST = adminRoute(async (req) => {
     height: integer(b.height, 1, 20000, 933),
     taken_at: dateOnly(b.taken_at),
     camera: str(b.camera, 120)?.trim() ?? "",
-    kind: b.kind === "video" ? "video" : "image",
-    poster_url: image(b.poster_url),
+    kind,
+    poster_url: poster,
     position: integer(b.position, 0, 10000, count ?? 0),
   };
   const { data, error } = await db.from("fn_photos").insert(payload).select().single();

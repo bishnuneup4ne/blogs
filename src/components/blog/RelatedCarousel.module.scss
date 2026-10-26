@@ -20,9 +20,14 @@
 }
 
 .track.dragging {
-  scroll-snap-type: none;
+  scroll-snap-type: none !important;
+  scroll-behavior: auto !important;
   cursor: grabbing;
   user-select: none;
+}
+
+.track.dragging * {
+  pointer-events: none;
 }
 
 .item {

@@ -189,9 +189,15 @@
   border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%;
 }
 
+@media (max-width: 900px) {
+  :root {
+    --container-pad: 18px;
+  }
+}
+
 @media (max-width: 640px) {
   :root {
-    --container-pad: 16px;
+    --container-pad: 12px;
     --header-h: 64px;
     --spacer-7: 60px;
     --spacer-8: 80px;
