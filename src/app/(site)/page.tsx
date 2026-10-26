@@ -86,8 +86,9 @@ export default async function HomePage() {
                         ) : null}
                       </span>
                       <span className={styles.sideText}>
-                        <span className={styles.kicker}>{getCategory(post.category).name}</span>
-                        <span className={styles.sideTitle}>{post.title}</span>                         <span className={styles.sideMeta}>{relativeDate(post.date)}</span>
+                        <span className={styles.sideTitle}>{post.title}</span>
+                        <span className={styles.sideDesc}>{post.description}</span>
+                        <span className={styles.sideMeta}>{relativeDate(post.date)} · Read more →</span>
                       </span>
                     </Link>
                   </Reveal>

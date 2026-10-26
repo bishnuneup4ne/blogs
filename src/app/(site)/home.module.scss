@@ -164,6 +164,20 @@
   color: var(--gray-500);
 }
 
+.sideDesc {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--gray-600);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sideCard:hover .sideMeta {
+  color: var(--blue);
+}
+
 @media (max-width: 1100px) {
   .heroInner {
     grid-template-columns: minmax(0, 1fr);
