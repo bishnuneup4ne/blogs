@@ -32,7 +32,7 @@ export interface SiteSettings {
   };
   hero: { title: string; standfirst: string };
   socials: { label: string; href: string; icon?: string }[];
-  toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean };
+  toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string; icon?: string }[];
   footerLinks: { label: string; href: string; icon?: string }[];
   homeSections: HomeSection[];
@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { label: "Threads", href: "https://www.threads.com/@bishnuneup4ne" },
     { label: "Email", href: "mailto:bishnuneup4ne@gmail.com" },
   ],
-  toggles: { newsletter: true, comments: true, views: true, contactForm: true },
+  toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [
     { label: "Blog", href: "/blog" },
     { label: "Topics", href: "/categories" },
@@ -170,6 +170,7 @@ function normaliseSettings(raw: SiteSettings, base: SiteSettings): SiteSettings 
       comments: typeof toggles.comments === "boolean" ? toggles.comments : base.toggles.comments,
       views: typeof toggles.views === "boolean" ? toggles.views : base.toggles.views,
       contactForm: typeof toggles.contactForm === "boolean" ? toggles.contactForm : base.toggles.contactForm,
+      toc: typeof toggles.toc === "boolean" ? toggles.toc : (base.toggles as SiteSettings["toggles"]).toc ?? true,
     },
     nav: safeList(raw.nav, base.nav, (item) => {
       if (!item || typeof item !== "object") return null;

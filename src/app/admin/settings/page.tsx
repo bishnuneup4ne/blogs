@@ -17,7 +17,7 @@ interface SettingsForm {
   identity: { wordmark: string; siteName: string; tagline: string; email: string; location: string; avatarUrl: string; authorName: string };
   hero: { title: string; standfirst: string };
   socials: { label: string; href: string; icon?: string }[];
-  toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean };
+  toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string }[];
   footerLinks: { label: string; href: string }[];
   about: { kicker: string; title: string; lede: string; quote: string; focus: string[]; story: string[]; now: AboutEntry[]; timeline: AboutEntry[]; updated: string };
@@ -27,7 +27,7 @@ const BLANK: SettingsForm = {
   identity: { wordmark: "", siteName: "", tagline: "", email: "", location: "", avatarUrl: "", authorName: "" },
   hero: { title: "", standfirst: "" },
   socials: [],
-  toggles: { newsletter: true, comments: true, views: true, contactForm: true },
+  toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [],
   footerLinks: [],
   about: { kicker: "About", title: "", lede: "", quote: "", focus: [], story: [], now: [], timeline: [], updated: "" },
@@ -232,6 +232,12 @@ export default function AdminSettingsPage() {
               hint="Count article reads for the analytics dashboard."
               checked={form.toggles.views}
               onChange={(v) => patch("toggles", { views: v })}
+            />
+            <Toggle
+              label="Table of contents"
+              hint="Show the “In this article” panel beside posts when they have headings."
+              checked={form.toggles.toc !== false}
+              onChange={(v) => patch("toggles", { toc: v })}
             />
             <Toggle
               label="Contact form"

@@ -10,14 +10,14 @@
 }
 
 /* Hidden until the article title has scrolled past (blog.google behaviour).
-   opacity + pointer-events, not visibility — so it never flashes on load. */
+   JS toggles display + gsap for the slide; this is the resting style. */
+.bar {
+  transition: opacity 200ms ease;
+}
+
 .bar[data-visible="off"] {
   opacity: 0;
   pointer-events: none;
-}
-
-.bar {
-  transition: opacity 200ms ease;
 }
 
 /* Same column as the article body: grid col 2, centered 720px. */

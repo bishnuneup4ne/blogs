@@ -91,7 +91,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <div className={styles.page}>
         <div className={styles.grid}>
           <div className={styles.aside}>
-            <InThisArticle headings={headings} />
+            {settings.toggles.toc !== false && headings.length > 0 ? <InThisArticle headings={headings} /> : null}
           </div>
 
           <div className={styles.articleFlow}>

@@ -26,23 +26,41 @@ export function ArticleProgress({ title, shareUrl }: { title: string; shareUrl: 
       const h1 = document.querySelector("h1");
       const bar = barRef.current;
       if (!bar) return;
-      const passed = h1 ? h1.getBoundingClientRect().top < 0 : window.scrollY > 200;
+      const passed = h1 ? h1.getBoundingClientRect().top < -20 : window.scrollY > 280;
       if (passed && !shownRef.current) {
         shownRef.current = true;
+        bar.style.display = "";
         bar.removeAttribute("data-visible");
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          gsap.fromTo(bar, { y: "-100%" }, { y: 0, duration: 0.35, ease: "power3.out" });
+          gsap.fromTo(bar, { y: "-100%", opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out" });
         }
       } else if (!passed && shownRef.current) {
         shownRef.current = false;
         bar.setAttribute("data-visible", "off");
         gsap.killTweensOf(bar);
-        gsap.set(bar, { y: 0 });
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          gsap.to(bar, {
+            y: "-100%",
+            opacity: 0,
+            duration: 0.28,
+            ease: "power2.in",
+            onComplete: () => {
+              // Fully remove it from flow so the page never shows a gap.
+              if (barRef.current && shownRef.current === false) {
+                barRef.current.style.display = "none";
+                gsap.set(barRef.current, { y: "0px" });
+              }
+            },
+          });
+        } else {
+          bar.style.display = "none";
+        }
       }
     }
     function onScroll() {
       if (!frame) frame = requestAnimationFrame(update);
     }
+    if (barRef.current) barRef.current.style.display = "none";
     update();
     requestAnimationFrame(update);
     window.addEventListener("scroll", onScroll, { passive: true });
