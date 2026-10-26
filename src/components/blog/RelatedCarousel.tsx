@@ -11,6 +11,7 @@ import styles from "./RelatedCarousel.module.scss";
    shape, kicker + title + byline) with circular arrows and a progress line. */
 export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
+  const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
   const [progress, setProgress] = useState(0);
 
   const update = useCallback(() => {
@@ -36,7 +37,40 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
 
   return (
     <div>
-      <ul className={styles.track} ref={trackRef} onScroll={update}>
+      <ul
+        className={styles.track}
+        ref={trackRef}
+        onScroll={update}
+        onPointerDown={(e) => {
+          if (e.pointerType !== "mouse" || !trackRef.current) return;
+          drag.current = { down: true, startX: e.clientX, startLeft: trackRef.current.scrollLeft, moved: false };
+        }}
+        onPointerMove={(e) => {
+          const t = trackRef.current;
+          if (!t || !drag.current.down) return;
+          const dx = e.clientX - drag.current.startX;
+          if (Math.abs(dx) > 6) {
+            drag.current.moved = true;
+            t.classList.add(styles.dragging);
+            t.scrollLeft = drag.current.startLeft - dx;
+          }
+        }}
+        onPointerUp={() => {
+          drag.current.down = false;
+          trackRef.current?.classList.remove(styles.dragging);
+        }}
+        onPointerLeave={() => {
+          drag.current.down = false;
+          trackRef.current?.classList.remove(styles.dragging);
+        }}
+        onClickCapture={(e) => {
+          if (drag.current.moved) {
+            e.preventDefault();
+            e.stopPropagation();
+            drag.current.moved = false;
+          }
+        }}
+      >
         {items.map(({ post }, i) => {
           const category = getCategory(post.category);
           return (

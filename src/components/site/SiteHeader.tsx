@@ -31,8 +31,11 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
   useEffect(() => {
     function check() {
-      overlayOpen.current = !!document.querySelector('[role="dialog"][aria-modal="true"]');
-      setHidden(overlayOpen.current);
+      // The site menu drawer is part of the header itself — never hide for it.
+      const dialogs = [...document.querySelectorAll('[role="dialog"][aria-modal="true"]')];
+      const foreign = dialogs.some((d) => !headerRef.current?.contains(d));
+      overlayOpen.current = foreign;
+      setHidden(foreign);
     }
     check();
     const observer = new MutationObserver(check);

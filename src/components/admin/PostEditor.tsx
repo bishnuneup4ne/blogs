@@ -242,9 +242,15 @@ export function PostEditor({ postId }: { postId: string }) {
       setSaved(next.status === "published" ? "Published" : "Saved");
       toast(next.status === "published" ? "Post published" : "Post saved", "success");
       setTimeout(() => setSaved(null), 1800);
-      router.refresh();
-      if (isNew) router.push(`/admin/posts/${data.post.id}/edit`);
-      else if (status === "published") router.push("/admin/posts");
+      if (isNew) {
+        // Replace the URL without a route change so the editor state survives.
+        window.history.replaceState(null, "", `/admin/posts/${data.post.id}/edit`);
+      } else if (status === "published") {
+        router.refresh();
+        router.push("/admin/posts");
+      } else {
+        router.refresh();
+      }
     } catch (e) {
       setSaved(e instanceof Error ? e.message : "Save failed");
       setTimeout(() => setSaved(null), 2600);

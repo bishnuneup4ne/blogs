@@ -112,9 +112,8 @@
     gap: 12px;
   }
 
-  /* Captions stay readable on touch where there is no hover */
+  /* One tap opens the lightbox directly — no caption veil in the way. */
   .overlay {
-    opacity: 1;
-    padding-top: 28px;
+    display: none;
   }
 }

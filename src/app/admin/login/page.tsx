@@ -26,7 +26,7 @@ export default function AdminLoginPage() {
       router.refresh();
     } else {
       const data = await res.json().catch(() => null);
-      setError(data?.message || "Invalid password. Access denied.");
+      const msg = data?.message; setError(typeof msg === "string" ? (msg.includes("Too many") ? "Too many attempts — wait a minute, then try again." : msg) : "Invalid password. Access denied.");
       setLoading(false);
     }
   }

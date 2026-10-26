@@ -19,6 +19,12 @@
   display: none;
 }
 
+.track.dragging {
+  scroll-snap-type: none;
+  cursor: grabbing;
+  user-select: none;
+}
+
 .item {
   flex: 0 0 300px;
   scroll-snap-align: start;

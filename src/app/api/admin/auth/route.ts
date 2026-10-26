@@ -12,7 +12,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = rateLimit(`admin-login:${requestIp(request)}`, 10, 15 * 60 * 1000);
+  // Generous window: honest users rarely need it; brute forcers get throttled hard.
+  const limit = rateLimit(`admin-login:${requestIp(request)}`, 25, 15 * 60 * 1000);
   if (!limit.ok) {
     return NextResponse.json(
       { message: "Too many sign-in attempts. Try again later." },

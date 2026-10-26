@@ -45,7 +45,7 @@
   position: absolute;
   inset: -2px;
   border-radius: var(--radius-pill);
-  border: 2px solid var(--blue-600);
+  border: 2px solid var(--gray-500);
   opacity: 0;
   pointer-events: none;
 }
@@ -65,16 +65,12 @@
   border-color: var(--gray-400);
 }
 
-.activeLike {
-  border-color: var(--blue-600);
-  background: rgba(26, 115, 232, 0.08);
-  color: var(--blue-700);
-}
-
+/* Selected state stays neutral — grey fill + dark icon, no blue/red paint. */
+.activeLike,
 .activeDislike {
-  border-color: #c5221f;
-  background: rgba(234, 67, 53, 0.07);
-  color: #c5221f;
+  border-color: var(--gray-500);
+  background: var(--gray-200);
+  color: var(--gray-900);
 }
 
 /* Drawer — portalled to <body>, so it clears the sticky header (z 60). */
