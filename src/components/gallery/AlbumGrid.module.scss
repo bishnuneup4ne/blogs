@@ -106,7 +106,7 @@
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -115,5 +115,41 @@
   /* One tap opens the lightbox directly — no caption veil in the way. */
   .overlay {
     display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .item {
+    cursor: zoom-in;
+  }
+  .item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 200ms ease;
+    pointer-events: none;
+  }
+  .item:hover::after {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .overlay {
+    display: none;
+  }
+  .image {
+    cursor: pointer;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  .image:hover {
+    transform: scale(1.04);
   }
 }

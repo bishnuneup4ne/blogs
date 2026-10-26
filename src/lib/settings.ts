@@ -72,7 +72,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [
     { label: "Blog", href: "/blog" },
-    { label: "Topics", href: "/categories" },
+    { label: "Topics", href: "/topics" },
     { label: "Tags", href: "/tags" },
     { label: "Personal", href: "/personal" },
     { label: "About", href: "/about" },

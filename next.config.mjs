@@ -38,6 +38,9 @@ const nextConfig = {
     remotePatterns,
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [{ source: "/categories", destination: "/topics", permanent: true }];
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

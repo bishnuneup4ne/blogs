@@ -19,14 +19,13 @@ export const metadata: Metadata = {
 };
 
 export default async function PersonalPage() {
-  const [lifePosts, photoPosts, albums] = await Promise.all([
-    getPostsByCategory("life"),
-    getPostsByCategory("photography"),
+  const [personalPosts, albums] = await Promise.all([
+    getPostsByCategory("personal"),
     getAlbums(),
   ]);
 
-  // Everything personal — life and photography — in one feed.
-  const writing = [...lifePosts, ...photoPosts].sort((a, b) => (a.date < b.date ? 1 : -1));
+  // Everything under the Personal topic, newest first.
+  const writing = personalPosts;
   const [featured, ...more] = albums;
   const latest = writing[0]?.date ?? "2026-10-21";
 

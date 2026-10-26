@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { allCategories, getAlbums } from "@/lib/data";
 import { ArrowRight } from "@/components/icons/Icons";
-import styles from "./categories.module.scss";
+import styles from "./topics.module.scss";
 
 export const metadata: Metadata = {
   title: "Topics",
   description: "Browse posts by topic and photo collection.",
-  alternates: { canonical: "/categories" },
-  openGraph: { url: "/categories", title: "Topics", description: "Browse posts by topic and photo collection." },
+  alternates: { canonical: "/topics" },
+  openGraph: { url: "/topics", title: "Topics", description: "Browse posts by topic and photo collection." },
 };
 
 export default async function CategoriesPage() {

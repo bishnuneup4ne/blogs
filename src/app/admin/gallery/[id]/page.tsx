@@ -17,7 +17,7 @@ export default function AdminFolderPage() {
   const router = useRouter();
   const toast = useToast();
   const confirm = useConfirm();
-  const id = String(params?.id ?? "");
+  const id = decodeURIComponent(String(params?.id ?? ""));
 
   const albumsC = useApiCollection<ApiAlbum>("/api/admin/albums", "albums");
   const album = useMemo(() => albumsC.items.find((a) => a.id === id || a.slug === id), [albumsC.items, id]);

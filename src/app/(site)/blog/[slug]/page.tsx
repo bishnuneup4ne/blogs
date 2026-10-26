@@ -99,7 +99,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               <nav className={styles.breadcrumb} aria-label="Breadcrumb">
                 <Link href="/">Home</Link>
                 <span aria-hidden="true">›</span>
-                <Link href="/categories">Topics</Link>
+                <Link href="/topics">Topics</Link>
                 <span aria-hidden="true">›</span>
                 <Link href={`/blog/category/${category.slug}`}>{category.name}</Link>
               </nav>

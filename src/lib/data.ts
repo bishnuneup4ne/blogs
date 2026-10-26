@@ -62,13 +62,11 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
   if (!hasSupabase()) return null;
   const authorName = (await getSettings()).identity.authorName;
   try {
-    const [postsRes, topicsRes, albumsRes, photosRes, seriesRes, seriesLinksRes] = await Promise.all([
+    const [postsRes, topicsRes, albumsRes, photosRes] = await Promise.all([
       db.from("fn_posts").select("*").eq("status", "published").order("date", { ascending: false }),
       db.from("fn_topics").select("*").order("sort_order"),
       db.from("fn_albums").select("*").order("sort_order", { ascending: false }),
       db.from("fn_photos").select("*").order("position"),
-      db.from("fn_series").select("*").eq("status", "live").order("created_at"),
-      db.from("fn_series_posts").select("series_id, post_id, position").order("position"),
     ]);
     if (postsRes.error || topicsRes.error || albumsRes.error) throw postsRes.error ?? topicsRes.error ?? albumsRes.error;
     const published = (postsRes.data ?? []) as DbPostRow[];
@@ -108,22 +106,7 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
         photos,
       };
     });
-    const postRefs = new Map(published.map((row) => [row.id, { slug: row.slug, title: row.title }]));
-    const links = seriesRes.error ? [] : (seriesLinksRes.data ?? []) as { series_id: string; post_id: string; position: number }[];
-    const series: Series[] = seriesRes.error
-      ? []
-      : ((seriesRes.data ?? []) as { id: string; slug: string; title: string; description: string }[])
-          .map((row) => ({
-            slug: row.slug,
-            title: row.title,
-            description: row.description,
-            posts: links
-              .filter((link) => link.series_id === row.id && postRefs.has(link.post_id))
-              .map((link) => postRefs.get(link.post_id)!)
-              .filter((ref, index, all) => all.findIndex((item) => item.slug === ref.slug) === index),
-          }))
-          .filter((row) => row.posts.length > 0);
-    return { posts, topics, albums, series };
+    return { posts, topics, albums, series: [] as Series[] };
   } catch {
     return null;
   }

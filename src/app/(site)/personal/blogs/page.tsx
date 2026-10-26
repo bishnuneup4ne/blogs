@@ -11,12 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PersonalBlogsPage() {
-  const [life, photography] = await Promise.all([
-    getPostsByCategory("life"),
-    getPostsByCategory("photography"),
-  ]);
-
-  const posts = [...life, ...photography].sort((a, b) => (a.date < b.date ? 1 : -1));
+  const posts = await getPostsByCategory("personal");
 
   return (
     <>

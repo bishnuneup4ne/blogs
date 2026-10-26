@@ -46,7 +46,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span aria-hidden="true">›</span>
-          <Link href="/categories">Topics</Link>
+          <Link href="/topics">Topics</Link>
           <span aria-hidden="true">›</span>
           <span aria-current="page">{category.name}</span>
         </nav>
@@ -69,7 +69,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
       <p className={styles.footnote}>
         {posts.length} {posts.length === 1 ? "story" : "stories"} filed under {category.name.toLowerCase()}.{" "}
-        <Link href="/categories">Browse all topics</Link>.
+        <Link href="/topics">Browse all topics</Link>.
       </p>
     </>
   );

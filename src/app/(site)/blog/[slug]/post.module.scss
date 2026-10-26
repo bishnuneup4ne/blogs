@@ -315,5 +315,26 @@
 
   .relatedInner {
     padding-top: var(--spacer-4);
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .grid {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .grid {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .grid {
+    padding-left: calc(var(--container-pad) * 0.5);
+    padding-right: calc(var(--container-pad) * 0.5);
   }
 }

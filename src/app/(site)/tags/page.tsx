@@ -48,7 +48,7 @@ export default async function TagsPage() {
       {most ? (
         <p className={styles.footnote}>
           Most used: <Link href={`/blog/tag/${most.slug}`}>{most.name}</Link> ·{" "}
-          <Link href="/categories">browse by topic instead</Link>
+          <Link href="/topics">browse by topic instead</Link>
         </p>
       ) : null}
     </div>

@@ -65,12 +65,21 @@
   border-color: var(--gray-400);
 }
 
-/* Selected state stays neutral — grey fill + dark icon, no blue/red paint. */
-.activeLike,
-.activeDislike {
+/* Selected state stays neutral — grey fill + dark icon, no blue/red paint. */.activeLike,
+  .activeDislike {
   border-color: var(--gray-500);
   background: var(--gray-200);
   color: var(--gray-900);
+}
+
+.pill:active,
+.pill:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+}
+
+.pill:focus-visible {
+  border-color: var(--blue-600);
 }
 
 /* Drawer — portalled to <body>, so it clears the sticky header (z 60). */
