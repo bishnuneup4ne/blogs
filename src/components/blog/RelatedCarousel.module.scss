@@ -158,6 +158,8 @@
   border: none;
   background: transparent;
   color: var(--gray-900);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: background-color 150ms ease, color 150ms ease;
 }
 

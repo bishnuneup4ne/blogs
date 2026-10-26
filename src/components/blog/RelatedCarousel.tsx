@@ -105,7 +105,6 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
             type="button"
             className={styles.arrow}
             onClick={() => go(-1)}
-            disabled={progress <= 0.001}
             aria-label="Previous stories"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -116,7 +115,6 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
             type="button"
             className={styles.arrow}
             onClick={() => go(1)}
-            disabled={progress >= 0.999}
             aria-label="More stories"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

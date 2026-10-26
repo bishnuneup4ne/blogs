@@ -349,6 +349,13 @@
   .galleryButton,
   .cta { display: none; }
   .headerInner { gap: 12px; }
+
+  /* Thumbs are bigger than icons — give the two header controls room. */
+  .iconButton,
+  .burger {
+    width: 54px;
+    height: 54px;
+  }
 }
 
 @media (max-width: 440px) {

@@ -69,4 +69,13 @@
   .title {
     font-size: 14px;
   }
+
+  /* The strip's share button opens downward — it must not be clipped. */
+  .bar {
+    overflow: visible;
+  }
+
+  .inner {
+    overflow: visible;
+  }
 }
