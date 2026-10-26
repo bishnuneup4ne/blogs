@@ -1,9 +1,30 @@
 :root {
-  /* Fonts — blog.google stacks */
-  --font-ui: "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
+  /* Fonts — blog.google stacks (Google Sans Flex is their current face) */
+  --font-ui: "Google Sans Flex", "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
   --font-body: var(--font-ui);
   --font-display: var(--font-ui);
   --font-mono: "Roboto Mono", monospace, Arial, Helvetica, sans-serif;
+
+  /* Type scale — blog.google --typography-* tokens */
+  --type-display-1: 60px;   /* ls -0.2px, w500 */
+  --type-display-2: 48px;   /* ls -0.2px, w400 */
+  --type-h1: 60px;          /* ls -0.25px, w400 */
+  --type-h2: 48px;          /* ls -0.25px, w400 */
+  --type-h3: 36px;
+  --type-h4: 28px;
+  --type-h5: 20px;
+  --type-h6: 16px;
+  --type-body-xl: 20px;
+  --type-body-l: 18px;
+  --type-body-m: 16px;      /* article paragraph size */
+  --type-body-s: 14px;
+  --type-body-xs: 12px;
+  --type-eyebrow: 14px;     /* ls 0.2px, w500 */
+  --type-ctas: 16px;        /* ls 0.1px, w500 */
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
 
   /* Greys — blog.google --color-grey-* */
   --white: #ffffff;
@@ -147,19 +168,19 @@
   --radius-48: 48px;
   --radius-circle: 120px;
   --radius-pill: 999px;
-  --radius-card: 16px;
+  --radius-card: 24px;   /* blog.google --radius-main — cards, hero media, search bar */
   --radius-xl: 24px;
   --radius-md: 12px;
 
-  /* Spacing — blog.google spacer scale */
+  /* Spacing — blog.google spacer scale (8/16/24/36/60/80/120/180) */
   --spacer-1: 8px;
   --spacer-2: 16px;
   --spacer-3: 24px;
   --spacer-4: 36px;
-  --spacer-5: 48px;
-  --spacer-6: 60px;
-  --spacer-7: 92px;
-  --spacer-8: 136px;
+  --spacer-5: 60px;
+  --spacer-6: 80px;
+  --spacer-7: 120px;
+  --spacer-8: 180px;
 
   /* Layout */
   --container: 1440px;

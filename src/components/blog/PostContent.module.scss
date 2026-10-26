@@ -1,6 +1,7 @@
 .prose {
-  font-size: 16px;
-  line-height: 26px;
+  font-size: 18px;
+  line-height: 28px;
+  letter-spacing: 0;
   color: var(--gray-900);
 
   p {
@@ -39,15 +40,17 @@
   }
 
   h2 {
-    font-size: 28px;
-    line-height: 34px;
-    margin: 44px 0 12px;
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.25px;
+    margin: 48px 0 14px;
   }
 
   h3 {
-    font-size: 22px;
-    line-height: 28px;
-    margin: 36px 0 10px;
+    font-size: 28px;
+    line-height: 36px;
+    letter-spacing: -0.2px;
+    margin: 40px 0 12px;
   }
 
   .anchor {
@@ -221,12 +224,19 @@
 }
 
 @media (max-width: 760px) {
+  .prose {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
   .prose h2 {
-    font-size: 24px;
+    font-size: 28px;
+    line-height: 36px;
   }
 
   .prose h3 {
-    font-size: 19px;
+    font-size: 22px;
+    line-height: 30px;
   }
 
   .quote blockquote {

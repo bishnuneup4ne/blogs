@@ -19,7 +19,8 @@ export default async function HomePage() {
   const enabled = (id: string) => (settings.homeSections.find((x) => x.id === id) ?? { enabled: true }).enabled;
   const topics = cats.map((c) => ({ slug: c.slug, name: c.name }));
 
-  const [lead, ...rest] = posts;
+  const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+  const [lead, ...rest] = ordered;
   const secondary = rest.slice(0, 2);
   const leadCategory = lead ? getCategory(lead.category) : null;
 

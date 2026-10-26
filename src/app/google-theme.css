@@ -5,8 +5,8 @@
    ========================================================================== */
 
 :root {
-  /* Fonts — blog.google stacks */
-  --font-ui: "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
+  /* Fonts — blog.google stacks (Google Sans Flex is their current face) */
+  --font-ui: "Google Sans Flex", "Google Sans", "Google Sans Text", Roboto, Arial, Helvetica, sans-serif;
   --font-body: var(--font-ui);
   --font-display: var(--font-ui);
 
