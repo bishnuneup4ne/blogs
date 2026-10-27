@@ -43,7 +43,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className={styles.page}>
-      <div className={styles.hero} style={backdrop ? { backgroundImage: `url(${JSON.stringify(backdrop)})` } : undefined}>
+      <div className={styles.hero}>
         <div className={styles.heroInner}>
           <h1 className={styles.title}>{album.title}</h1>
           <p className={styles.subtitle}>{album.subtitle}</p>

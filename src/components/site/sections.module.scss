@@ -23,19 +23,13 @@
   background-color: var(--gray-100);
 }
 
+/* blog.google banner media: full-bleed to the tile's top corners */
 .updateMedia {
   position: relative;
   display: block;
   aspect-ratio: 3 / 2;
   background: var(--gray-100);
-  border-radius: var(--radius-card);
   overflow: hidden;
-  transition: all 300ms cubic-bezier(0.31, 0.94, 0.34, 1);
-}
-
-.updateCard:hover .updateMedia {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
 }
 
 .updateMedia .mediaImg {
@@ -49,10 +43,10 @@
 .updateBody {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 12px 24px 24px;
-  flex: 1;
   justify-content: space-between;
+  gap: 20px;
+  padding: 16px 24px 24px;
+  flex: 1;
 }
 
 .updateTitle {
@@ -75,7 +69,6 @@
 
 .readArticle {
   align-self: flex-start;
-  margin-top: auto;
   height: 48px;
   padding: 0 24px;
   gap: 8px;

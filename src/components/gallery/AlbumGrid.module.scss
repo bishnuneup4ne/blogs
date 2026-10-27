@@ -1,6 +1,3 @@
-/* Uniform album grid — every tile shares one aspect ratio so portrait shots
-   never balloon next to landscape ones. Quiet overlay, premium hover lift. */
-
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -84,7 +81,6 @@
   opacity: 1;
 }
 
-/* magnifier affordance so every tile reads as clickable */
 .item::after {
   content: "";
   position: absolute;
@@ -139,7 +135,6 @@
     gap: 18px;
   }
 
-  /* One tap opens the lightbox directly — no caption veil in the way. */
   .overlay {
     display: none;
   }
@@ -181,8 +176,6 @@
   }
 }
 
-/* Hover lift only where hover is a real affordance — on touch the scale
-   would stick after a tap. */
 @media (hover: none) {
   .item:hover {
     box-shadow: none;
