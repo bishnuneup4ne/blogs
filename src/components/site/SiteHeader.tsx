@@ -17,6 +17,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -26,11 +27,32 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const brandInitial = settings.identity.authorName.trim().charAt(0).toUpperCase() || "B";
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    // On article pages the reading bar takes over: hide the header at exactly
+    // the moment the headline leaves the viewport, so the two never overlap.
+    const article = document.querySelector("[data-article-progress]");
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      if (!article) {
+        setHidden(false);
+        return;
+      }
+      const h1 = document.querySelector("article h1, h1");
+      const barH = 64;
+      setHidden(h1 ? h1.getBoundingClientRect().top < -barH * 0.5 : window.scrollY > 120);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname]);
+
+  // Overlays own the top edge while open; never hide under them.
+  useEffect(() => {
+    if (drawer || searchOpen) setHidden(false);
+  }, [drawer, searchOpen]);
 
   useEffect(() => {
     setDrawer(false);
@@ -138,7 +160,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   }
 
   return (
-    <div className={`${styles.shell} ${scrolled ? styles.shellScrolled : ""}`}>
+    <div className={`${styles.shell} ${scrolled ? styles.shellScrolled : ""} ${hidden ? styles.shellHidden : ""}`}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.brand} aria-label={`${settings.identity.siteName} home`}>

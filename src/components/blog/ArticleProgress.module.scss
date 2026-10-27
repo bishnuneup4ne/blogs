@@ -33,9 +33,10 @@
   align-items: center;
   gap: 16px;
   height: 100%;
-  max-width: calc(720px + var(--container-pad) * 2);
+  /* Full page width like blog.google, with a readable cap on huge screens. */
+  max-width: 1440px;
   margin-inline: auto;
-  padding-inline: var(--container-pad);
+  padding-inline: clamp(16px, 3.5vw, 48px);
 }
 
 /* blog.google fills the very top edge of the bar. Keep it flush above the
@@ -65,8 +66,9 @@
 }
 
 .track {
+  /* blog.google draws the fill along the bar's bottom edge, under the row. */
   position: absolute;
-  top: 0;
+  bottom: -1px;
   left: 0;
   right: 0;
   height: 3px;
@@ -127,10 +129,10 @@
   width: 100%;
   height: 100%;
   font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--gray-700);
-  background: var(--gray-200);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white, #fff);
+  background: var(--blue-600, #1a73e8);
 }
 
 @media (max-width: 640px) {
