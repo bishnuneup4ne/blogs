@@ -10,7 +10,7 @@ export function PageHero({
   align = "center",
   children,
 }: {
-  kicker: string;
+  kicker?: string;
   title: ReactNode;
   lede: string;
   align?: "center" | "start";
@@ -18,7 +18,7 @@ export function PageHero({
 }) {
   return (
     <div className={align === "start" ? `${styles.hero} ${styles.start}` : styles.hero}>
-      <p className={styles.kicker}>{kicker}</p>
+      {kicker ? <p className={styles.kicker}>{kicker}</p> : null}
       <h1 className={styles.title}>{title}</h1>
       <p className={styles.lede}>{lede}</p>
       {children ? <div className={styles.slot}>{children}</div> : null}

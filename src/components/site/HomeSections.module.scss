@@ -250,7 +250,7 @@ a:hover .compactMedia .coverImg {
   span {
     position: absolute;
     inset: 0;
-    background: var(--gray-900);
+    background: var(--blue-600);
     transform-origin: left center;
     transition: transform 240ms ease;
   }
@@ -615,12 +615,13 @@ a:hover .compactMedia .coverImg {
   gap: 8px;
   flex: none;
   margin-top: 4px;
-  padding: 9px 18px;
-  border: 1px solid var(--gray-300);
+  padding: 10px 20px;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
+  background: var(--blue-600);
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-900);
+  color: var(--white);
   text-decoration: none;
   transition: border-color 150ms ease, background-color 150ms ease;
 
@@ -629,8 +630,7 @@ a:hover .compactMedia .coverImg {
   }
 
   &:hover {
-    border-color: var(--gray-900);
-    background: var(--gray-50);
+    background: var(--blue-800);
 
     svg {
       transform: translateX(3px);
@@ -887,5 +887,26 @@ a:hover .compactMedia .coverImg {
   .tipTitle {
     font-size: 24px;
     line-height: 32px;
+  }
+}
+
+/* Horizontal variant of the "category latest" list. */
+.catRail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(82%, 420px);
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > li {
+    scroll-snap-align: start;
+    min-width: 0;
   }
 }

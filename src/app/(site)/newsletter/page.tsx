@@ -34,7 +34,6 @@ export default async function NewsletterPage() {
           </nav>
 
           <PageHero
-            kicker="Newsletter"
             title="Notes worth an inbox."
             lede="New posts land here first, with a short note on what I'm building, breaking and photographing. Roughly once a fortnight — never more."
           >

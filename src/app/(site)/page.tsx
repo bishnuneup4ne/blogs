@@ -1,24 +1,34 @@
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterSection } from "@/components/site/NewsletterSection";
-import { CategoryLatest, Feature, HeroRail, ThreeUp } from "@/components/site/HomeSections";
+import { CategoryLatest, Feature, HeroRail } from "@/components/site/HomeSections";
 import styles from "./home.module.scss";
 export default async function HomePage() {
   const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
-  // Featured first for the rail, but everything else stays newest-first so
-  // "Latest stories" never jumps back in time behind a featured post.
-  const byDate = [...posts].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-  const ordered = [...byDate.filter((p) => p.featured), ...byDate.filter((p) => !p.featured)];
-  // blog.google home: featured rail → 3-up → "The latest" feed → quick tip.
-  // Exactly one "latest" block on the page.
-  const heroPosts = ordered.slice(0, 6);
-  const moreUpdates = ordered.slice(6, 9);
-  // One "latest" per category (5 stories + View more), never a mixed list.
-  // Exclude what the first block already shows, so the two never repeat.
-  const personalPosts = ordered.filter(
-    (p) => p.category === "personal" && !heroPosts.includes(p) && !moreUpdates.includes(p),
+  // Separate posts by date (newest first) and by featured status.
+  // This ensures no post appears in two sections.
+  const byDate = [...posts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
-  const featured = ordered.find((p) => !heroPosts.includes(p) && !moreUpdates.includes(p)) ?? ordered[0];
+
+  // Featured posts go first (in date order among featured).
+  const featuredPosts = byDate.filter((post) => post.featured);
+
+  // Hero section: first featured, then non-featured newest posts. Cap the rail
+  // so the sections below ("Latest stories", "Latest Personal Stories") always
+  // have something to show on a small archive.
+  const heroLimit = Math.min(6, Math.max(1, posts.length - 2));
+  const heroPosts = [...featuredPosts, ...byDate.filter((post) => !post.featured)].slice(0, heroLimit);
+  const heroSet = new Set(heroPosts.map((post) => post.slug));
+
+  // Latest stories: everything not already in the hero rail, newest first.
+  const latestPosts = byDate.filter((post) => !heroSet.has(post.slug));
+
+  // Personal posts from the remaining pool.
+  const personalPosts = latestPosts.filter((p) => p.category === "personal");
+
+  // One post not already in the rail, for the Feature component.
+  const featured = latestPosts[0];
   // Statement headline split like blog.google/research: "Word one," floats
   // left, "word two." drops to the right on the next line.
   const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/).filter(Boolean);
@@ -62,23 +72,26 @@ export default async function HomePage() {
 
       <HeroRail posts={heroPosts} />
 
-      {moreUpdates.length > 0 ? <ThreeUp title="More updates" posts={moreUpdates} href="/blog" /> : null}
-
-      <CategoryLatest
-        title="Latest stories"
-        subtitle="The newest writing across every topic."
-        posts={ordered}
-        moreHref="/blog"
-        moreLabel="View more stories"
-      />
+      {/* One latest rail across every topic, then the personal slice. The
+          separate "Latest stories" list was a third copy of the same posts. */}
+      {latestPosts.length > 0 ? (
+        <CategoryLatest
+          title="Latest stories"
+          subtitle="The newest writing across every topic."
+          posts={latestPosts.slice(0, 6)}
+          moreHref="/blog"
+          moreLabel="View more stories"
+        />
+      ) : null}
 
       {personalPosts.length > 0 ? (
         <CategoryLatest
-          title="Personal"
+          title="Latest Personal Stories"
           subtitle="Notes from the life around the work."
-          posts={personalPosts}
+          posts={personalPosts.slice(0, 6)}
           moreHref="/personal"
           moreLabel="More on Personal"
+          carousel
         />
       ) : null}
 

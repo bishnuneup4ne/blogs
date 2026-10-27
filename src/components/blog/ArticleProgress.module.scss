@@ -8,7 +8,7 @@
   left: 0;
   right: 0;
   z-index: 55;
-  height: 60px;
+  height: 64px;
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
   opacity: 0;
@@ -31,19 +31,23 @@
 .inner {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   height: 100%;
   max-width: calc(720px + var(--container-pad) * 2);
   margin-inline: auto;
   padding-inline: var(--container-pad);
 }
 
+/* blog.google fills the very top edge of the bar. Keep it flush above the
+   content row so the blue line reads as the page's own progress. */
 .track {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
+  background: var(--gray-100, #f1f3f4);
+  overflow: hidden;
 }
 
 .fill {
@@ -59,9 +63,9 @@
   flex: 1;
   min-width: 0;
   font-family: var(--font-ui);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 22px;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 24px;
   color: var(--gray-900);
   white-space: nowrap;
   overflow: hidden;
@@ -73,11 +77,16 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
   overflow: hidden;
-  background: var(--gray-100);
+  background: var(--gray-900);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .avatar {

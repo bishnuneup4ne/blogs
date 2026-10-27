@@ -92,13 +92,11 @@ export function ArticleProgress({
         <span ref={fillRef} className={styles.fill} />
       </span>
       <div className={styles.inner}>
-        {/* blog.google puts their "G" mark here — we put the post's cover. */}
-        {coverUrl ? (
-          <Link href={`/blog/${postSlug}`} className={styles.brand} aria-label={title} tabIndex={-1} aria-hidden="true">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt="" className={styles.avatar} width={32} height={32} />
-          </Link>
-        ) : null}
+        {/* blog.google puts their "G" mark here; a cover thumbnail is
+            unreadable at 36px, so the site mark takes its place. */}
+        <Link href="/" className={styles.brand} aria-label={siteName || "Home"} tabIndex={-1} aria-hidden="true">
+          {(siteName || "B").trim().charAt(0).toUpperCase()}
+        </Link>
         <Link href="/blog" className={styles.title}>{title}</Link>
         <ShareMenu title={title} url={shareUrl} compact />
       </div>

@@ -33,6 +33,14 @@
   color: var(--gray-700);
   transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 
+  /* Chrome/Safari add their own clear button to type="search"; the custom
+     one below is styled to match the design, so hide the native twin. */
+  input::-webkit-search-cancel-button,
+  input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
   &:focus-within {
     background: var(--white);
     border-color: var(--blue-600);
