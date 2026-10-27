@@ -115,7 +115,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "row": {
               return (
                 <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
-                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${Math.min(block.items.length, 4)}, minmax(0, 1fr))` }}>
+                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${block.columns ?? Math.min(block.items.length, 4)}, minmax(0, 1fr))` }}>
                     {block.items.map((it, j) => {
                       const myIndex = images.findIndex((img) => img.src === it.src);
                       return (

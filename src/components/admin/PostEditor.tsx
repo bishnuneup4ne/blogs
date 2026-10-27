@@ -103,7 +103,7 @@ function newBlock(type: Block["type"]): Block {
     case "image":
       return { type, src: "", alt: "", caption: "" };
     case "row":
-      return { type, items: [{ src: "", alt: "" }, { src: "", alt: "" }], caption: "" };
+      return { type, items: [{ src: "", alt: "" }, { src: "", alt: "" }], columns: 2, caption: "" };
     case "video":
       return { type, url: "", caption: "" };
     case "related":
@@ -749,12 +749,13 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
             // eslint-disable-next-line @next/next/no-img-element
             <img src={block.src} alt={block.alt} className={styles.imagePreview} />
           ) : null}
-          <select value={block.src} onChange={(e) => onChange({ ...block, src: e.target.value })}>
+          <select value={imageOptions.some((g) => g.src === block.src) || !block.src ? block.src : ""} onChange={(e) => onChange({ ...block, src: e.target.value })}>
             <option value="">Choose an image…</option>
             {imageOptions.map((g) => (
               <option key={g.src} value={g.src}>{g.label}</option>
             ))}
           </select>
+          <input value={block.src} placeholder="…or paste any image URL" onChange={(e) => onChange({ ...block, src: e.target.value.trim() })} />
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <span style={{ fontSize: 12, color: "#5f6368" }}>Size</span>
             {(["full", "wide", "medium", "small"] as const).map((sz) => (
@@ -820,6 +821,43 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
           {block.items.length < 4 ? (
             <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Add image</button>
           ) : null}
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "#5f6368" }}>Per row</span>
+            {[2, 3, 4].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onChange({ ...block, columns: n as 2 | 3 | 4 })}
+                style={{
+                  fontSize: 12, padding: "4px 10px", borderRadius: 999,
+                  border: (block.columns ?? Math.min(block.items.length, 4)) === n ? "1px solid #1a73e8" : "1px solid #dadce0",
+                  background: (block.columns ?? Math.min(block.items.length, 4)) === n ? "#e8f0fe" : "transparent",
+                  color: (block.columns ?? Math.min(block.items.length, 4)) === n ? "#1967d2" : "#3c4043", cursor: "pointer",
+                }}
+              >
+                {n} across
+              </button>
+            ))}
+          </div>
+          <label className={styles.uploadBtn}>
+            Upload an image into this row
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file || block.items.length >= 4) return;
+                try {
+                  const { src } = await api.upload(file);
+                  patchItems([...block.items, { src, alt: file.name.replace(/\.[^.]+$/, "") }]);
+                } catch (err) {
+                  toast(err instanceof Error ? err.message : "Upload failed");
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
           <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
         </div>
       );

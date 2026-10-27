@@ -161,7 +161,7 @@ export default function AdminFolderPage() {
     return (
       <div>
         <p>Folder not found.</p>
-        <Link href="/admin/gallery" className="btn btn-outline">Back to folders</Link>
+        <Button variant="outlined" onClick={() => router.push("/admin/gallery")}>Back to folders</Button>
       </div>
     );
   }

@@ -44,18 +44,26 @@ interface DbAuthorRow {
 
 function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
   const author = null as null | { name?: string; role?: string };
+  const blocks = normalizeBlocks(row.blocks);
+  // Reading time is derived from the actual body so it can never go stale.
+  const words = blocks
+    .map((b) => ("html" in b ? b.html : "text" in b ? b.text : "code" in b ? b.code : "items" in b ? b.items.join(" ") : ""))
+    .join(" ")
+    .replace(/<[^>]+>/g, "")
+    .split(/\s+/)
+    .filter(Boolean).length;
   return {
     slug: row.slug,
     title: row.title,
     description: row.summary,
     date: String(row.date).slice(0, 10),
-    readingMinutes: row.reading_minutes,
+    readingMinutes: Math.max(1, Math.round(words / 220)),
     category: (row.topic_slug ?? "engineering") as Post["category"],
     tags: row.tags ?? [],
     cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "", height: Number(row.cover_height ?? 0) || undefined } : undefined,
     featured: Boolean(row.featured),
     author: { name: author?.name || authorName, role: author?.role ?? "", avatar: "/avatar.jpg" },
-    blocks: normalizeBlocks(row.blocks),
+    blocks,
   };
 }
 
