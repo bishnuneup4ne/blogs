@@ -31,7 +31,8 @@
 }
 
 .item {
-  flex: 0 0 300px;
+  /* Exactly three cards per view on desktop; arrows reveal the rest. */
+  flex: 0 0 calc((100% - 32px) / 3);
   scroll-snap-align: start;
   list-style: none;
 }
@@ -179,7 +180,7 @@
 
 @media (max-width: 900px) {
   .item {
-    flex-basis: 240px;
+    flex-basis: calc((100% - 16px) / 2);
   }
 }
 
