@@ -3,8 +3,20 @@
    images, 24px radii, rail arrows + progress line. */
 
 .coverImg {
+  /* Hero thumbnails are portrait while most covers are landscape. `cover`
+     crops, `contain` letterboxes — so fill the frame and bias the crop to the
+     lower half, where the subject of a road/desk/building photo actually is. */
   object-fit: cover;
+  object-position: center 72%;
   transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Wide media slots keep a roughly centred crop. */
+.heroMedia .coverImg,
+.triMedia .coverImg,
+.compactMedia .coverImg,
+.updateMedia .coverImg {
+  object-position: center 55%;
 }
 
 .mediaFallback {

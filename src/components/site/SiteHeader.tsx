@@ -273,21 +273,9 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     <div className={shellClass} ref={headerRef}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link
-            href="/"
-            className={styles.brand}
-            aria-label={`${settings.identity.siteName} home`}
-          >
-            <span className={styles.brandMark} aria-hidden="true">
-              {brandInitial}
-            </span>
-            <span className={styles.brandText}>
-              <span className={styles.brandKicker}>{settings.identity.authorName}</span>
-              <span className={styles.brandName}>{settings.identity.wordmark}</span>
-            </span>
+          <Link href="/" className={styles.brand} aria-label={`${settings.identity.siteName} home`}>
+            <span className={styles.brandName}>{settings.identity.wordmark}</span>
           </Link>
-
-          <span className={styles.divider} aria-hidden="true" />
 
           <nav className={styles.nav} aria-label="Primary">
             {nav.map((item) => {
@@ -302,14 +290,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                   className={`${styles.navLink}${active ? ` ${styles.navLinkActive}` : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  {item.icon ? (
-                    <SocialIcon
-                      name={item.icon}
-                      width={16}
-                      height={16}
-                      className={styles.navIcon}
-                    />
-                  ) : null}
                   {item.label}
                 </Link>
               );
@@ -320,20 +300,16 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             <button
               ref={searchButtonRef}
               type="button"
-              className={styles.searchTrigger}
+              className={styles.iconBtn}
               aria-label="Search"
               aria-expanded={searchOpen}
               aria-controls="site-search"
               aria-keyshortcuts="/"
               onClick={openSearch}
             >
-              <SearchIcon width={18} height={18} />
-              <span className={styles.searchLabel}>Search</span>
-              <kbd className={styles.searchKey} aria-hidden="true">
-                /
-              </kbd>
+              <SearchIcon width={22} height={22} />
             </button>
-            <Link href="/gallery" className={styles.galleryButton} aria-label="Gallery">
+            <Link href="/gallery" className={styles.iconBtn} aria-label="Gallery">
               <ImagesIcon />
             </Link>
             {settings.toggles.newsletter ? (

@@ -88,14 +88,13 @@
 
 .brandKicker {
   overflow: hidden;
-  color: var(--gray-500);
+  color: var(--gray-600);
   font-family: var(--font-ui);
-  font-size: 9.5px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  line-height: 1.1;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2;
   text-overflow: ellipsis;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -103,10 +102,11 @@
   overflow: hidden;
   color: var(--gray-900);
   font-family: var(--font-ui);
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: -0.35px;
-  line-height: 1.05;
+  /* blog.google wordmark: large, medium weight, tight tracking. */
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
   text-overflow: ellipsis;
   transition: color 150ms ease;
   white-space: nowrap;

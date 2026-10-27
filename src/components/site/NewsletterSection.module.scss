@@ -1,21 +1,50 @@
-/* blog.google newsletter footer: two-column grey card — headline + reader row
-   on the left, white form card on the right. */
+/* blog.google newsletter band: a soft pastel wash with decorative shapes,
+   copy on the left and a white form card on the right. */
 .wrap {
   position: relative;
   margin: var(--spacer-6) auto 0;
   max-width: var(--container);
-  border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  background: var(--gray-50);
+  background:
+    radial-gradient(560px 300px at 88% 8%, rgb(254 239 195 / 55%) 0%, transparent 68%),
+    radial-gradient(520px 280px at 96% 96%, rgb(218 249 212 / 55%) 0%, transparent 70%),
+    linear-gradient(180deg, #f2f6ff 0%, #eef7fb 100%);
   overflow: hidden;
 }
 
+/* Two faint blobs, like the reference's pale shapes. */
+.wrap::before,
+.wrap::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wrap::before {
+  top: -120px;
+  right: -80px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgb(255 236 179 / 45%) 0%, transparent 70%);
+}
+
+.wrap::after {
+  bottom: -160px;
+  right: 12%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgb(198 240 219 / 45%) 0%, transparent 70%);
+}
+
 .inner {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
-  gap: var(--spacer-5);
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: clamp(32px, 5vw, 72px);
   align-items: center;
-  padding: var(--spacer-6);
+  padding: clamp(36px, 5vw, 64px) clamp(30px, 5vw, 72px);
 }
 
 .copy {
@@ -35,10 +64,10 @@
 
 .title {
   margin-bottom: 14px;
-  font-size: clamp(28px, 3.4vw, 40px);
+  font-size: clamp(28px, 3.6vw, 44px);
   font-weight: 400;
-  letter-spacing: -0.5px;
-  line-height: 1.18;
+  letter-spacing: -0.6px;
+  line-height: 1.14;
   color: var(--gray-900);
   text-wrap: balance;
 }

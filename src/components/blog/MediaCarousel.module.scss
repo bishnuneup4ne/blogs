@@ -1,37 +1,35 @@
 .wrap {
-  /* Full-bleed rail: the strip spans the whole viewport and the first card
-     lines up with the article text, so cards bleed off both edges evenly. */
+  /* Break out of the reading column to the page edges so wide media gets
+     room. 50% - 50vw assumed the parent measured the viewport; inside the
+     article grid it landed the track at x=0 and clipped every card. */
   margin-block: 36px;
-  margin-inline: calc(50% - 50vw);
+  margin-inline: calc(-1 * (50vw - 50%));
   padding-inline: 0;
+  max-width: 100vw;
   overflow: hidden;
 }
 
 .track,
 .track[class] {
-  /* Wider than the reading column so photos and clips get real estate —
-     still inset enough that the article margins read as intentional. */
-  --col: min(100vw - 2 * var(--container-pad), 1040px);
+  /* Size from the rail's own box, not the viewport. The old --col used
+     100vw, which is wider than the article column, so cards started offset
+     and were clipped (a photo in a narrow strip, video spilling right). */
+  container-type: inline-size;
   --rail-gap: 16px;
-  --band-h: min(44vw, 585px);
-  --tile-w: calc(var(--band-h) * 1.7778);
-  /* Distance from viewport edge to the reading column's left edge. */
-  --edge: max(calc((100vw - var(--col)) / 2), 16px);
+  --band-h: clamp(220px, 40cqi, 460px);
+  /* One card plus a peek of the next, so the rail reads as scrollable. */
+  --col: 86%;
   display: flex;
   gap: var(--rail-gap);
   scroll-snap-type: x mandatory;
   list-style: none;
   margin: 0;
-  /* Cards start flush with the article text (the wrap breakout already lands
-     the track box on the reading column); only a right gutter for the end. */
-  /* The track box spans viewport-to-viewport (wrap breakout), so re-add the
-     breakout as symmetric padding: first card lands on the text column and
-     later cards bleed off-screen right. */
-  /* Track spans viewport-to-viewport; inset both sides by the wrap breakout
-     plus the page gutter so cards line up with the article text. */
-  --gutter: max(calc((100vw - min(100vw, var(--container))) / 2 - 27px), clamp(16px, 2.5vw, 32px));
-  padding: 4px calc(min(20vw, 340px) + var(--gutter));
-  scroll-padding-inline: calc(min(20vw, 340px) + var(--gutter));
+  /* First card lines up with the article text, later cards bleed right.
+     On wide screens the body column starts at (100vw - 1440)/2 + 25% (cols
+     4–9 of the 12-col page); on narrow ones it is flush to the gutter. */
+  --rail-inset: max(calc((100vw - min(100vw, 1440px)) / 2 + (min(100vw, 1440px) - 24px) * 3 / 12), 16px);
+  padding: 4px 0 4px var(--rail-inset);
+  scroll-padding-inline: var(--rail-inset);
   overflow-x: auto;
   scrollbar-width: none;
   scroll-behavior: smooth;
@@ -215,7 +213,7 @@
   gap: 20px;
   margin-top: 14px;
   /* Line the arrows up with the article text, not the viewport edge. */
-  padding-inline: max(calc((100vw - var(--col, 720px)) / 2), var(--container-pad));
+  padding-inline: 0;
 }
 
 .arrows {
@@ -269,14 +267,6 @@
   transition: transform 220ms ease;
 }
 
-@media (min-width: 1100px) {
-  .track,
-  .track[class] {
-    /* 16:9 frame derived from the widened column (1040px → 585px tall). */
-    --band-h: min(40vw, 585px);
-  }
-}
-
 @media (max-width: 760px) {
   .wrap {
     margin-inline: calc(-1 * var(--container-pad));
@@ -284,9 +274,10 @@
 
   .track,
   .track[class] {
-    --band-h: min(58vw, 320px);
+    --band-h: clamp(180px, 52cqi, 320px);
     --rail-gap: 12px;
-    --col: calc(100vw - 2 * var(--container-pad));
+    --col: 100%;
+    --rail-inset: 0px;
   }
 
   .caption {
