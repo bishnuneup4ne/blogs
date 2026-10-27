@@ -815,7 +815,7 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
       const patchItems = (items: { src: string; alt: string }[]) => onChange({ ...block, items });
       return (
         <div className={styles.imageWrap}>
-          <span style={{ fontSize: 12, color: "#5f6368" }}>Images side by side (2–4) — perfect for a strip of photos in one moment.</span>
+          <span style={{ fontSize: 12, color: "#5f6368" }}>Images side by side (2 or more) — perfect for a strip of photos in one moment.</span>
           {block.items.map((it, i) => (
             <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
               {it.src ? (
@@ -829,24 +829,44 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
                 ))}
               </select>
               <input value={it.alt} placeholder="Alt text" onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))} />
+              <label className={styles.uploadBtn}>
+                Upload
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const { src } = await api.upload(file);
+                      patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src } : x)));
+                    } catch (err) {
+                      toast(err instanceof Error ? err.message : "Upload failed");
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
               <button type="button" onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))}>×</button>
             </div>
           ))}
-          {block.items.length < 4 ? (
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Add image</button>
-          ) : null}
+            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }, { src: "", alt: "" }])}>+ Add 2</button>
+          </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <span style={{ fontSize: 12, color: "#5f6368" }}>Per row</span>
-            {[2, 3, 4].map((n) => (
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <button
                 key={n}
                 type="button"
-                onClick={() => onChange({ ...block, columns: n as 2 | 3 | 4 })}
+                onClick={() => onChange({ ...block, columns: n })}
                 style={{
                   fontSize: 12, padding: "4px 10px", borderRadius: 999,
-                  border: (block.columns ?? Math.min(block.items.length, 4)) === n ? "1px solid #1a73e8" : "1px solid #dadce0",
-                  background: (block.columns ?? Math.min(block.items.length, 4)) === n ? "#e8f0fe" : "transparent",
-                  color: (block.columns ?? Math.min(block.items.length, 4)) === n ? "#1967d2" : "#3c4043", cursor: "pointer",
+                  border: (block.columns ?? Math.min(block.items.length, 3)) === n ? "1px solid #1a73e8" : "1px solid #dadce0",
+                  background: (block.columns ?? Math.min(block.items.length, 3)) === n ? "#e8f0fe" : "transparent",
+                  color: (block.columns ?? Math.min(block.items.length, 3)) === n ? "#1967d2" : "#3c4043", cursor: "pointer",
                 }}
               >
                 {n} across
@@ -884,7 +904,7 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
             placeholder="YouTube or Vimeo link… or upload a video below"
             onChange={(e) => onChange({ ...block, url: e.target.value })}
           />
-          {block.url && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
+          {!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
             <label className={styles.uploadBtn}>
               Upload video (MP4/WebM)
               <input

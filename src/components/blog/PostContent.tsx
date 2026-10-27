@@ -7,7 +7,7 @@ import { CodeBlock } from "./CodeBlock";
 import { ChartBlockView } from "./ChartBlock";
 import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import Link from "next/link";
-import { detectExternalVideo } from "@/lib/external-video";
+import { VideoEmbed } from "./VideoEmbed";
 import styles from "./PostContent.module.scss";
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
@@ -115,7 +115,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "row": {
               return (
                 <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
-                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${block.columns ?? Math.min(block.items.length, 4)}, minmax(0, 1fr))` }}>
+                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${block.columns ?? Math.min(block.items.length, 3)}, minmax(0, 1fr))` }}>
                     {block.items.map((it, j) => {
                       const myIndex = images.findIndex((img) => img.src === it.src);
                       return (
@@ -129,31 +129,8 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </figure>
               );
             }
-            case "video": {
-              const external = detectExternalVideo(block.url);
-              if (external) {
-                return (
-                  <figure key={key} className={styles.figure}>
-                    <span className={styles.videoFrame}>
-                      <iframe
-                        src={external.embedUrl}
-                        title={block.caption || `${external.kind} video`}
-                        loading="lazy"
-                        allow="accelerometer; encrypted-media; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </span>
-                    {block.caption ? <figcaption>{block.caption}</figcaption> : null}
-                  </figure>
-                );
-              }
-              return (
-                <figure key={key} className={styles.figure}>
-                  <video src={block.url} poster={block.poster} controls playsInline preload="metadata" className={styles.videoFile} />
-                  {block.caption ? <figcaption>{block.caption}</figcaption> : null}
-                </figure>
-              );
-            }
+            case "video":
+              return <VideoEmbed key={key} url={block.url} caption={block.caption} />;
             case "related":
               return (
                 <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedCard}>

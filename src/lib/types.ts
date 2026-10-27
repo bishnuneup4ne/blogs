@@ -27,7 +27,7 @@ export type Block =
   | { type: "code"; lang: string; filename?: string; code: string }
   | { type: "list"; ordered: boolean; items: string[] }
   | { type: "image"; src: string; alt: string; caption?: string; width?: "full" | "wide" | "medium" | "small" }
-  | { type: "row"; items: { src: string; alt: string }[]; columns?: 2 | 3 | 4; caption?: string }
+  | { type: "row"; items: { src: string; alt: string }[]; columns?: number; caption?: string }
   | { type: "video"; url: string; poster?: string; caption?: string }
   | { type: "related"; slug: string; title: string; description?: string; image?: string }
   | { type: "table"; head: string[]; rows: string[][] }

@@ -1,0 +1,87 @@
+.figure {
+  margin: var(--prose-block, 40px) 0;
+}
+
+/* Big, rounded media — the shape blog.google uses for inline video */
+.frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-card, 24px);
+  overflow: hidden;
+  background: #0e0f11;
+
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
+
+.facade {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card, 24px);
+  overflow: hidden;
+  background: #0e0f11 center / cover no-repeat;
+  cursor: pointer;
+}
+
+/* Dark veil so the play glyph stays readable on any poster */
+.facade::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.12));
+  transition: background-color 200ms ease;
+}
+
+.facade:hover::after {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.play {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 7vw, 88px);
+  height: clamp(64px, 7vw, 88px);
+  border-radius: 50%;
+  background: #fff;
+  color: #202124;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
+  transition: transform 200ms ease;
+
+  svg {
+    width: 42%;
+    height: 42%;
+    margin-left: 6%;
+  }
+}
+
+.facade:hover .play {
+  transform: scale(1.06);
+}
+
+.file {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-card, 24px);
+  background: #0e0f11;
+}
+
+.figure figcaption {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-600);
+}

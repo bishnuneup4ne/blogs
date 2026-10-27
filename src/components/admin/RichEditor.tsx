@@ -25,19 +25,21 @@ export function RichEditor({
   minHeight?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const lastEmit = useRef(value);
+  const lastEmit = useRef<string | null>(null);
   const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
 
-  // Sync external value without stealing focus/caret mid-typing.
+  // The editor owns its DOM. React must never write innerHTML here: doing so
+  // resets the caret to offset 0, which is why clicking mid-paragraph used to
+  // jump back to the first line. We only seed content while unfocused.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const focused = el === document.activeElement || el.contains(document.activeElement);
-    if (!focused && value !== lastEmit.current) {
-      el.innerHTML = value || "";
-      lastEmit.current = value;
-    }
+    if (focused) return;
+    if (value === lastEmit.current) return;
+    el.innerHTML = value || "";
+    lastEmit.current = value;
   }, [value]);
 
   const emit = useCallback(() => {
@@ -65,9 +67,11 @@ export function RichEditor({
 
   function rememberSelection() {
     const sel = window.getSelection();
-    if (sel?.rangeCount && !sel.isCollapsed && ref.current?.contains(sel.anchorNode)) {
-      lastRange.current = sel.getRangeAt(0).cloneRange();
-    }
+    if (!sel?.rangeCount || !ref.current?.contains(sel.anchorNode)) return;
+    const range = sel.getRangeAt(0);
+    // A collapsed selection means the user just placed a caret — forget any
+    // older highlight so toolbar clicks act where they clicked.
+    lastRange.current = range.collapsed ? null : range.cloneRange();
   }
 
   function run(cmd: string, point?: { x: number; y: number }) {
@@ -225,7 +229,6 @@ export function RichEditor({
           rememberSelection();
         }}
         onFocus={refreshActive}
-        dangerouslySetInnerHTML={{ __html: value || "" }}
       />
     </div>
   );

@@ -452,7 +452,7 @@ function normaliseBlock(raw: unknown): Block | null {
       return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
     }
     case "row": {
-      const rawItems = Array.isArray(source.items) ? source.items.slice(0, 4) : [];
+      const rawItems = Array.isArray(source.items) ? source.items.slice(0, 12) : [];
       const items = rawItems
         .map((it) => {
           const o = (it ?? {}) as Record<string, unknown>;
@@ -461,7 +461,8 @@ function normaliseBlock(raw: unknown): Block | null {
         })
         .filter((x): x is { src: string; alt: string } => Boolean(x));
       if (items.length < 2) return null;
-      const columns = ([2, 3, 4] as const).includes(Number(source.columns) as 2) ? (Number(source.columns) as 2 | 3 | 4) : (Math.min(items.length, 4) as 2 | 3 | 4);
+      const wanted = Math.min(Math.max(Math.round(Number(source.columns)) || items.length, 1), 6);
+      const columns = Number.isFinite(wanted) ? wanted : items.length;
       return { type, items, columns, caption: text(source.caption, 600) };
     }
     case "video": {
