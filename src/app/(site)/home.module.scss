@@ -429,18 +429,19 @@
 /* ---------- Statement hero (blog.google/research style) ---------- */
 .statement {
   position: relative;
-  padding-top: clamp(56px, 9vw, 120px);
+  padding-top: clamp(40px, 5vw, 64px);
   overflow-x: clip;
 }
 
 .statementTitle {
   margin: 0 auto;
-  max-width: 1080px;
+  max-width: 980px;
   display: grid;
   font-family: var(--font-ui);
   font-weight: 400;
   font-size: clamp(40px, 5.2vw, 72px);
-  line-height: 1.02;
+  line-height: 1.08;
+  row-gap: 4px;
   letter-spacing: -0.03em;
   color: var(--gray-900);
 }
@@ -451,7 +452,7 @@
 
 .stLineRight {
   justify-self: end;
-  padding-right: clamp(8px, 6vw, 96px);
+  padding-right: clamp(8px, 4vw, 72px);
 }
 
 .dotBlue,
@@ -475,17 +476,17 @@
 
 .arrowArc {
   position: absolute;
-  top: clamp(8px, 2vw, 30px);
-  right: clamp(0px, 4vw, 60px);
+  top: 6px;
+  right: clamp(0px, 3vw, 48px);
   width: clamp(120px, 16vw, 230px);
   color: var(--gray-800);
   pointer-events: none;
 }
 
 .statementLede {
-  margin: clamp(28px, 4vw, 48px) 0 0 auto;
-  max-width: 34ch;
-  padding-right: clamp(8px, 8vw, 160px);
+  margin: clamp(14px, 1.6vw, 22px) 0 0 auto;
+  max-width: 30ch;
+  padding-right: clamp(8px, 4vw, 88px);
   font-size: 16px;
   line-height: 26px;
   color: var(--gray-700);
@@ -497,7 +498,7 @@
   grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
   gap: clamp(28px, 5vw, 72px);
   align-items: start;
-  margin-top: clamp(48px, 7vw, 96px);
+  margin-top: clamp(36px, 4.5vw, 60px);
 }
 
 .missionCopy {
