@@ -45,7 +45,8 @@ export function Lightbox({
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLElement>(null);
-  const mediaRef = useRef<HTMLElement | null>(null);  const [mounted, setMounted] = useState(false);
+  const mediaRef = useRef<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [, setScaleTick] = useState(0);
 

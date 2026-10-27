@@ -2,23 +2,27 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { classifyVideo, type VideoSource } from "@/lib/external-video";
 import styles from "./MediaCarousel.module.scss";
 
 /* blog.google media rail: cards that peek off both edges of the reading
    column, a one-line caption with a round "+" expander under each card, and
-   the joined arrow pair with a progress line beneath the strip. */
-export interface CarouselItem {
-  src: string;
-  alt: string;
-  index: number;
-  video?: boolean;
-  size?: string;
-  caption?: string;
-}
+   the joined arrow pair with a progress line beneath the strip. Slides can
+   mix photos, uploaded clips, YouTube/Vimeo embeds and quote cards. */
+export type CarouselSlide =
+  | {
+      kind: "media";
+      src: string;
+      alt: string;
+      /** Position in the post-wide lightbox gallery; -1 when not zoomable. */
+      index: number;
+      size?: string;
+    }
+  | { kind: "quote"; html: string; author?: string; role?: string };
 
-export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen: (lightboxIndex: number) => void }) {
+export function MediaCarousel({ slides, onOpen }: { slides: CarouselSlide[]; onOpen: (lightboxIndex: number) => void }) {
   const trackRef = useRef<HTMLUListElement>(null);
-  const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
+  const drag = useRef<{ down: boolean; startX: number; startLeft: number; moved: boolean; imageIdx?: number }>({ down: false, startX: 0, startLeft: 0, moved: false });
   const [progress, setProgress] = useState(0);
   const [active, setActive] = useState(0);
   const [max, setMax] = useState(0);
@@ -61,7 +65,7 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
   function go(delta: number) {
     const t = trackRef.current;
     if (!t) return;
-    const next = Math.min(Math.max(active + delta, 0), Math.max(items.length - 1, 0));
+    const next = Math.min(Math.max(active + delta, 0), Math.max(slides.length - 1, 0));
     const el = t.children[next] as HTMLElement | undefined;
     if (!el) return;
     const trackLeft = t.getBoundingClientRect().left;
@@ -72,10 +76,10 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
     t.scrollTo({ left, behavior: "smooth" });
   }
 
-  if (items.length === 0) return null;
+  if (slides.length === 0) return null;
 
   const atStart = active <= 0;
-  const atEnd = max > 0 && active >= items.length - 1;
+  const atEnd = max > 0 && active >= slides.length - 1;
 
   return (
     <div className={styles.wrap}>
@@ -86,6 +90,39 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
         onPointerDown={(e) => {
           const t = trackRef.current;
           if (e.pointerType !== "mouse" || !t) return;
+          // Right-click drag to move image
+          if (e.button !== 0) {
+            drag.current = { down: true, startX: e.clientX, startLeft: t.scrollLeft, moved: false, imageIdx: active };
+            t.classList.add(styles.dragging);
+            const move = (ev: PointerEvent) => {
+              if (!trackRef.current || !drag.current?.down) return;
+              const dx = ev.clientX - drag.current.startX;
+              if (Math.abs(dx) > 4) {
+                drag.current.moved = true;
+                trackRef.current.scrollLeft = drag.current.startLeft - dx;
+                const img = t.querySelector<HTMLElement>(`.${styles.tile}[data-index="${drag.current.imageIdx}"]`);
+                if (img) {
+                  img.style.transition = "none";
+                  img.style.transform = `translate3d(${dx}px, 0, 0)`;
+                }
+              }
+            };
+            const up = () => {
+              drag.current.down = false;
+              trackRef.current && trackRef.current.classList.remove(styles.dragging);
+              if (drag.current.moved && trackRef.current) {
+                trackRef.current.scrollLeft = drag.current.startLeft;
+                const img = t.querySelector<HTMLElement>(`.${styles.tile}[data-index="${drag.current.imageIdx}"]`);
+                if (img) img.style.transform = "";
+              }
+              window.removeEventListener("pointermove", move);
+              window.removeEventListener("pointerup", up);
+            };
+            window.addEventListener("pointermove", move);
+            window.addEventListener("pointerup", up);
+            drag.current.imageIdx = active;
+            return;
+          }
           const start = { down: true, startX: e.clientX, startLeft: t.scrollLeft, moved: false };
           drag.current = start;
           t.classList.add(styles.dragging);
@@ -114,52 +151,34 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
           drag.current.moved = false;
         }}
       >
-        {items.map((it, i) => (
+        {slides.map((slide, i) => (
           <li key={i} className={styles.item}>
-            {it.video ? (
-              <div className={styles.tile}>
-                <video
-                  src={it.src}
-                  playsInline
-                  preload="metadata"
-                  controls={Boolean(playing[i])}
-                  loop
-                  className={styles.img}
-                  onPlay={() => setPlaying((p) => ({ ...p, [i]: true }))}
-                  onPause={() => setPlaying((p) => ({ ...p, [i]: false }))}
-                  aria-label={it.alt}
-                />
-                {!playing[i] ? (
-                  <button
-                    type="button"
-                    className={styles.videoPlay}
-                    onClick={(e) => {
-                      const video = (e.currentTarget.parentElement?.querySelector("video")) as HTMLVideoElement | null;
-                      video?.play();
-                    }}
-                    aria-label={`Play video: ${it.alt}`}
-                  >
-                    <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
-                      <path d="M8 5.5v13l11-6.5z" />
-                    </svg>
-                  </button>
+            {slide.kind === "quote" ? (
+              <figure className={styles.quoteTile} aria-label={slide.author ? `Quote from ${slide.author}` : undefined}>
+                <blockquote className={styles.quoteText} dangerouslySetInnerHTML={{ __html: slide.html }} />
+                {slide.author || slide.role ? (
+                  <figcaption className={styles.quoteBy}>
+                    {slide.author ? <span className={styles.quoteAuthor}>{slide.author}</span> : null}
+                    {slide.role ? <span className={styles.quoteRole}>{slide.role}</span> : null}
+                  </figcaption>
                 ) : null}
-              </div>
+              </figure>
             ) : (
-              <button
-                type="button"
-                className={`${styles.tile} ${it.size === "portrait" ? styles.tilePortrait : it.size === "square" ? styles.tileSquare : it.size === "wide" ? styles.tileWide : ""}`}
-                onClick={() => it.index >= 0 && onOpen(it.index)}
-                aria-label={`Zoom image: ${it.alt}`}
-              >
-                <Image src={it.src} alt={it.alt} fill sizes="60vw" className={styles.img} />
-              </button>
+              <MediaTile
+                src={slide.src}
+                alt={slide.alt}
+                size={slide.size}
+                playing={Boolean(playing[i])}
+                onPlay={() => setPlaying((p) => ({ ...p, [i]: true }))}
+                onPause={() => setPlaying((p) => ({ ...p, [i]: false }))}
+                onZoom={() => slide.index >= 0 && onOpen(slide.index)}
+              />
             )}
 
-            {it.caption || it.alt ? (
+            {slide.kind === "media" && slide.alt ? (
               <div className={styles.captionRow}>
                 <p className={expanded[i] ? `${styles.caption} ${styles.captionOpen}` : styles.caption}>
-                  {it.caption || it.alt}
+                  {slide.alt}
                 </p>
                 <button
                   type="button"
@@ -179,7 +198,7 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
         ))}
       </ul>
 
-      {items.length > 1 ? (
+      {slides.length > 1 ? (
         <div className={styles.controls}>
           <div className={styles.arrows}>
             <button
@@ -187,7 +206,7 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
               className={styles.arrow}
               onClick={() => go(-1)}
               disabled={atStart}
-              aria-label="Previous images"
+              aria-label="Previous slide"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="m15 18-6-6 6-6" />
@@ -198,7 +217,7 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
               className={styles.arrow}
               onClick={() => go(1)}
               disabled={atEnd}
-              aria-label="Next images"
+              aria-label="Next slide"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="m9 18 6-6-6-6" />
@@ -211,5 +230,100 @@ export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen
         </div>
       ) : null}
     </div>
+  );
+}
+
+const PlayGlyph = () => (
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+    <path d="M8 5.5v13l11-6.5z" />
+  </svg>
+);
+
+function MediaTile({
+  src,
+  alt,
+  size,
+  playing,
+  onPlay,
+  onPause,
+  onZoom,
+}: {
+  src: string;
+  alt: string;
+  size?: string;
+  playing: boolean;
+  onPlay: () => void;
+  onPause: () => void;
+  onZoom: () => void;
+}) {
+  const video: VideoSource | null = classifyVideo(src);
+  const sizeClass = size === "portrait" ? styles.tilePortrait : size === "square" ? styles.tileSquare : size === "wide" ? styles.tileWide : "";
+
+  if (video?.kind === "file") {
+    return (
+      <div className={styles.tile}>
+        <video
+          src={src}
+          playsInline
+          preload="metadata"
+          controls={playing}
+          loop
+          className={styles.img}
+          onPlay={onPlay}
+          onPause={onPause}
+          aria-label={alt}
+        />
+        {!playing ? (
+          <button
+            type="button"
+            className={styles.videoPlay}
+            onClick={(e) => {
+              (e.currentTarget.parentElement?.querySelector("video") as HTMLVideoElement | null)?.play();
+            }}
+            aria-label={`Play video: ${alt}`}
+          >
+            <PlayGlyph />
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (video) {
+    // Provider embeds play in place — a bare <a> navigated away instead.
+    return (
+      <div className={`${styles.tile} ${styles.embedTile} ${sizeClass}`}>
+        {playing ? (
+          <iframe
+            src={video.embedSrc}
+            title={alt || "Video"}
+            className={styles.embed}
+            allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <button
+            type="button"
+            className={styles.embedCover}
+            onClick={onPlay}
+            aria-label={`Play ${video.kind === "youtube" ? "YouTube" : "Vimeo"} video: ${alt}`}
+          >
+            {video.poster ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={video.poster} alt="" loading="lazy" className={styles.img} />
+            ) : null}
+            <span className={styles.videoPlay} aria-hidden="true">
+              <PlayGlyph />
+            </span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <button type="button" className={`${styles.tile} ${sizeClass}`} onClick={onZoom} aria-label={`Zoom image: ${alt}`}>
+      <Image src={src} alt={alt} fill sizes="60vw" className={styles.img} />
+    </button>
   );
 }

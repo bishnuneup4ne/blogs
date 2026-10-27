@@ -16,6 +16,8 @@ export type PostInput = {
   cover_url?: string | null;
   cover_alt?: string;
   cover_height?: number | null;
+  /** Vertical focal point for the cover crop, 0–100 (defaults to 30). */
+  cover_focal?: number | null;
   date?: string;
   reading_minutes?: number;
   blocks?: Block[];
@@ -107,14 +109,21 @@ export function parsePostInput(input: unknown, options: { partial: boolean; titl
     }
   }
   if (has("cover_alt")) data.cover_alt = typeof input.cover_alt === "string" ? input.cover_alt.trim().slice(0, 600) : "";
-  if (has("cover_height")) {
+  if (has("cover_height") || has("cover_focal")) {
     const h = Number(input.cover_height);
-    // Only send the column when it exists — older schemas reject unknown columns.
-    if (Number.isFinite(h) && h >= 200 && h <= 900 && hasCoverHeight()) {
-      data.cover_height = Math.round(h);
-    } else if (!hasCoverHeight()) {
-      // silently drop; editor falls back to auto sizing
-    }
+    const hasHeight = Number.isFinite(h) && h >= 200 && h <= 900;
+    const focalRaw = Number(input.cover_focal);
+    const focal = Number.isFinite(focalRaw) ? Math.min(Math.max(Math.round(focalRaw), 0), 100) : 30;
+
+    // Write the real columns when the schema has them...
+    if (hasCoverHeight() && hasHeight) data.cover_height = Math.round(h);
+
+    // ...and ALWAYS mirror into cover_alt, which every schema has. The read
+    // path prefers the columns and falls back to this tag, so the value
+    // survives whether or not cover_height exists. h=0 means "Auto".
+    const base = String(data.cover_alt ?? input.cover_alt ?? "").replace(/\[\[cover:[^\]]*\]\]/g, "").trim();
+    const storedH = hasHeight ? Math.round(h) : 0;
+    data.cover_alt = `${base} [[cover:h=${storedH};f=${focal}]]`.trim().slice(0, 600);
   }
   if (has("date")) {
     const date = typeof input.date === "string" ? cleanDate(input.date) : null;

@@ -34,6 +34,7 @@ export function RichEditor({
   const lastEmit = useRef<string | null>(null);
   const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
+  const [focused, setFocused] = useState(false);
   const [colorPopup, setColorPopup] = useState<{ x: number; y: number; cmd: PopupCmd } | null>(null);
   const popupRange = useRef<Range | null>(null);
 
@@ -155,11 +156,16 @@ export function RichEditor({
       }
       popupRange.current = range.cloneRange();
       const rect = range.getBoundingClientRect();
-      setColorPopup({
-        x: Math.max(8, Math.min(rect.left ?? el.getBoundingClientRect().left, window.innerWidth - 260)),
-        y: (rect.bottom ?? el.getBoundingClientRect().top) + 6,
-        cmd: cmd as PopupCmd,
-      });
+      // Swatch row is ~430px wide, ~52px tall — keep it fully on screen and
+      // prefer opening upward when there's no room below the caret.
+      const W = 440;
+      const H = 56;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const x = Math.max(8, Math.min(rect.left || el.getBoundingClientRect().left, vw - W - 8));
+      const below = (rect.bottom ?? el.getBoundingClientRect().top) + 8;
+      const y = below + H > vh ? Math.max(8, below - H - 24) : below;
+      setColorPopup({ x, y, cmd: cmd as PopupCmd });
       return;
     }
     if (cmd === "mark" || cmd === "underline" || cmd === "strikeThrough") {
@@ -336,7 +342,8 @@ export function RichEditor({
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={focused ? `${styles.wrap} ${styles.wrapFocused}` : styles.wrap}>
+      {(focused || colorPopup) ? (
       <div className={styles.toolbar} role="toolbar" aria-label="Text formatting">
         {TOOLS.map((t) => {
           const saveSel = (e: React.MouseEvent) => {
@@ -374,6 +381,7 @@ export function RichEditor({
           );
         })}
       </div>
+      ) : null}
       {colorPopup ? (
         <>
           <div className={styles.popupScrim} onMouseDown={(e) => { e.preventDefault(); setColorPopup(null); popupRange.current = null; }} />
@@ -407,6 +415,7 @@ export function RichEditor({
         style={{ minHeight }}
         onInput={emit}
         onBlur={() => {
+          setFocused(false);
           const sel = window.getSelection();
           if (sel?.rangeCount && !sel.getRangeAt(0).collapsed && ref.current?.contains(sel.anchorNode)) {
             lastRange.current = sel.getRangeAt(0).cloneRange();
@@ -421,7 +430,10 @@ export function RichEditor({
           refreshActive();
           rememberSelection();
         }}
-        onFocus={refreshActive}
+        onFocus={() => {
+          setFocused(true);
+          refreshActive();
+        }}
       />
     </div>
   );

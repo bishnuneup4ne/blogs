@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { relativeDate } from "@/lib/dates";
 import type { ScoredPost } from "@/lib/recommend";
+import { getCategory } from "@/lib/categories";
 import styles from "./RelatedCarousel.module.scss";
 
 /* blog.google "More updates" row: grey tile with the cover inside a blob
@@ -80,7 +81,7 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
           <li key={post.slug} className={styles.item}>
             <Link href={`/blog/${post.slug}`} className={styles.card}>
               <span className={styles.media}>
-                <span className={`${styles.blob} ${BLOBS[i % BLOBS.length]}`}>
+                <span className={`${styles.blob} ${BLOBS[i % BLOBS.length]}${post.cover ? "" : ` pastel-${getCategory(post.category).pastel}`}`}>
                   {post.cover ? (
                     <Image
                       src={post.cover.src}
@@ -93,6 +94,7 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
                 </span>
               </span>
               <span className={styles.body}>
+                <span className={styles.eyebrow}>{getCategory(post.category).name}</span>
                 <span className={styles.title}>{post.title}</span>
                 <span className={styles.byline}>
                   {relativeDate(post.date)} · {post.readingMinutes} min read

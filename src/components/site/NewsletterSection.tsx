@@ -10,14 +10,16 @@ export function NewsletterSection({
   authorName,
   avatarUrl,
   subscriberCount,
+  compact = false,
 }: {
   name?: string;
   authorName?: string;
   avatarUrl?: string;
   subscriberCount?: number;
+  compact?: boolean;
 }) {
   return (
-    <section className={styles.wrap} id="newsletter" aria-labelledby="newsletter-title">
+    <section className={`${styles.wrap}${compact ? ` ${styles.compact}` : ""}`} id="newsletter" aria-labelledby="newsletter-title">
       <div className={styles.inner}>
         <div className={styles.copy}>
           <span className={styles.kicker}>Newsletter</span>

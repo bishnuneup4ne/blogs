@@ -65,11 +65,18 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         lastY = y;
         return;
       }
-      // On article pages the reading-progress strip takes over the top edge:
-      // hide the main header as soon as you start scrolling. The strip itself
-      // is sticky at y=0, so it covers the gap the hidden header leaves.
-      if (document.querySelector('[class*="ArticleProgress"]')) {
-        setHidden(y >= 120);
+      // On article pages the reading-progress strip takes over the top edge.
+      // Hand off at exactly the moment the big title leaves the viewport, so
+      // the two never fight: otherwise the header slides away while the
+      // headline is still on screen and the page jumps under it.
+      if (document.querySelector("[data-article-progress]")) {
+        const h1 = document.querySelector("article h1, h1");
+        if (h1) {
+          const barH = headerRef.current?.getBoundingClientRect().height ?? 64;
+          setHidden(h1.getBoundingClientRect().top < -barH * 0.5);
+        } else {
+          setHidden(y >= 120);
+        }
         lastY = y;
         return;
       }

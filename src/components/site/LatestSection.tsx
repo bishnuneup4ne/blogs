@@ -8,7 +8,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { UpdateCard } from "./sections";
 import styles from "./LatestSection.module.scss";
 
-const PAGE = 6;
+const PAGE = 3;
 
 export function LatestSection({
  posts,
@@ -28,13 +28,22 @@ export function LatestSection({
  markFirst?: boolean;
 }) {
  const [topic, setTopic] = useState("all");
+ const [author, setAuthor] = useState("all");
  const [visible, setVisible] = useState(PAGE);
 
  const pool = posts;
+ const authors = useMemo(() => {
+  const seen = new Map<string, string>();
+  pool.forEach((p) => { if (p.author?.name) seen.set(p.author.name, p.author.name); });
+  return [...seen.keys()].sort();
+ }, [pool]);
 
  const filtered = useMemo(
-  () => (topic === "all" ? pool : pool.filter((p) => p.category === topic)),
-  [pool, topic],
+  () =>
+   pool
+    .filter((p) => topic === "all" || p.category === topic)
+    .filter((p) => author === "all" || p.author?.name === author),
+  [pool, topic, author],
  );
  const shown = filtered.slice(0, visible);
 
@@ -63,6 +72,32 @@ export function LatestSection({
      </button>
     ))}
    </div>
+   {authors.length > 1 ? (
+    <>
+     <p className={styles.railLabel}>By author</p>
+     <div className={styles.topicPills} role="group" aria-label="Filter by author">
+      <button
+       type="button"
+       className={`pill ${author === "all" ? "pill-active" : ""}`}
+       onClick={() => { setAuthor("all"); setVisible(PAGE); }}
+       aria-pressed={author === "all"}
+      >
+       Everyone
+      </button>
+      {authors.map((name) => (
+       <button
+        key={name}
+        type="button"
+        className={`pill ${author === name ? "pill-active" : ""}`}
+        onClick={() => { setAuthor(name); setVisible(PAGE); }}
+        aria-pressed={author === name}
+       >
+        {name}
+       </button>
+      ))}
+     </div>
+    </>
+   ) : null}
   </aside>
  ); if (variant === "grid") {
   return (
@@ -72,7 +107,7 @@ export function LatestSection({
      <ul className={styles.grid}>
       {shown.map((post, i) => (
        <Reveal as="li" key={post.slug} delay={(i % 3) * 80}>
-        <UpdateCard post={post} />
+        <UpdateCard post={post} showByline={authors.length > 1} />
        </Reveal>
       ))}
      </ul>
@@ -84,7 +119,7 @@ export function LatestSection({
     {filtered.length > shown.length ? (
      <div className={styles.loadMoreRow}>
       <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => v + PAGE)}>
-       Explore more articles
+       Load more stories
        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <path d="m6 9 6 6 6-6" />
        </svg>
@@ -111,7 +146,9 @@ export function LatestSection({
        </div>
        <div className={styles.feedText}>
         <span className={`${styles.feedChip} pill pill-soft`}>{topicName(post, topics)}</span>
-        <h3 className={styles.feedTitle}>{post.title}</h3>                   <p className={styles.feedByline}>
+        <h3 className={styles.feedTitle}>{post.title}</h3>
+                 <p className={styles.feedByline}>
+                   {authors.length > 1 && post.author?.name ? `By ${post.author.name} · ` : ""}
                    {relativeDate(post.date)} · {post.readingMinutes} min read
                  </p>
        </div>

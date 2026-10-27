@@ -10,10 +10,10 @@ function shortRelative(iso: string): string {
   return "–";
 }
 
-export function DateCell({ iso, size = "normal" }: { iso: string; size?: "small" | "normal" }) {
+export function DateCell({ iso, size = "normal", label }: { iso: string; size?: "small" | "normal"; label?: string }) {
   const display = size === "small" ? shortRelative(iso) : relativeDate(iso) || formatDate(iso);
   return (
-    <td className={size === "small" ? `${styles.dateCell} ${styles.dateSmall}` : styles.dateCell}>
+    <td className={size === "small" ? `${styles.dateCell} ${styles.dateSmall}` : styles.dateCell} data-label={label}>
       <time dateTime={iso}>
         <span>{display}</span>
       </time>

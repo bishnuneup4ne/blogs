@@ -54,6 +54,12 @@
   max-width: 520px;
 }
 
+/* One category should not float alone on the far right — line it up with the
+   lede instead. */
+.topicChips:has(> :only-child) {
+  justify-content: flex-start;
+}
+
 @media (max-width: 900px) {
   .heroTop {
     flex-direction: column;

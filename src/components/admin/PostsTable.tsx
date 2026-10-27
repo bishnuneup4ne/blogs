@@ -58,7 +58,6 @@ export function PostsTable() {
       .sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [state.posts, tab, category, query]);
 
-  const authorName = (_id?: string) => "Bishnu Neupane";
   const categoryName = (slug: string) => state.topics.find((t) => t.slug === slug)?.name ?? slug;
 
   function toggle(id: string) {
@@ -200,8 +199,10 @@ export function PostsTable() {
                 </td>
                 <td data-label="Status"><StatusChip status={post.status} tone={statusTone(post.status)} /></td>
                 <td data-label="Topic">{categoryName(post.category)}</td>
-                <td data-label="Author">{authorName(post.authorId)}</td>
-              <DateCell iso={post.date} />
+                <td data-label="Author">
+                  <span title="Single-author blog — every post is published by the site owner">Bishnu Neupane</span>
+                </td>
+              <DateCell iso={post.date} label="Date" />
               <td data-label="Actions" data-card="actions">
                   <div className={styles.rowActions}>
                     <Link href={`/admin/posts/${post.id}/edit`} className={styles.iconAction} aria-label={`Edit ${post.title}`}>

@@ -6,7 +6,7 @@ import { getCategory } from "@/lib/categories";
 import { relativeDate, shortDate } from "@/lib/dates";
 import styles from "./sections.module.scss";
 
-export function UpdateCard({ post }: { post: Post }) {
+export function UpdateCard({ post, showByline = false }: { post: Post; showByline?: boolean }) {
   const category = getCategory(post.category);
   return (
     <article className={styles.updateCard}>
@@ -26,6 +26,9 @@ export function UpdateCard({ post }: { post: Post }) {
         <h3 className={styles.updateTitle}>
           <Link href={`/blog/${post.slug}`}>{post.title}</Link>
         </h3>
+        {showByline && post.author?.name ? (
+          <p className={styles.updateByline}>By {post.author.name}</p>
+        ) : null}
         <Link href={`/blog/${post.slug}`} className={styles.readArticle}>
           Read article <ArrowRight width={20} height={20} />
         </Link>

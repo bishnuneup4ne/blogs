@@ -56,16 +56,31 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [railOpen, setRailOpen] = useState(false);
+  const isEditor = pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
 
   useEffect(() => {
     document.body.classList.add(styles.adminBody);
     return () => document.body.classList.remove(styles.adminBody);
   }, []);
 
+  useEffect(() => {
+    setRailOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!railOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setRailOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [railOpen]);
+
   async function signOut() {
     setSigningOut(true);
     try {
-      await api.post("/api/admin/logout", {});
+      await api.del("/api/admin/auth");
     } catch {
       /* redirect below regardless */
     }
@@ -75,7 +90,15 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className={styles.shell}>
-      <aside className={styles.rail}>
+      {railOpen ? (
+        <button type="button" className={styles.scrim} aria-label="Close menu" onClick={() => setRailOpen(false)} />
+      ) : null}
+      <aside id="admin-rail" className={railOpen ? `${styles.rail} ${styles.railOpen}` : styles.rail}>
+        <button type="button" className={styles.railClose} aria-label="Close menu" onClick={() => setRailOpen(false)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
         <Link href="/admin" className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">B</span>
           <span className={styles.brandText}>
@@ -98,6 +121,7 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
                     href={item.href}
                     className={active ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
                     aria-current={active ? "page" : undefined}
+                    onClick={() => setRailOpen(false)}
                   >
                     <span className={styles.navIcon}>{item.icon}</span>
                     {item.label}
@@ -122,6 +146,21 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
       </aside>
 
       <main className={styles.main}>{children}</main>
+
+      {!isEditor && !railOpen ? (
+        <button
+          type="button"
+          className={styles.burger}
+          aria-label="Open admin menu"
+          aria-expanded={railOpen}
+          aria-controls="admin-rail"
+          onClick={() => setRailOpen(true)}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+      ) : null}
     </div>
   );
 }

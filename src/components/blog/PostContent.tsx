@@ -9,15 +9,23 @@ import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import Link from "next/link";
 import { VideoEmbed } from "./VideoEmbed";
 import styles from "./PostContent.module.scss";
-import { MediaCarousel } from "./MediaCarousel";
+import { MediaCarousel, type CarouselSlide } from "./MediaCarousel";
+import { getCategory } from "@/lib/categories";
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
   const [zoom, setZoom] = useState<number | null>(null);
+  // Cover URLs can 404 before hydration (no onError fires then), so read
+  // naturalWidth on mount as well and remember failures by block index.
+  const [brokenCovers, setBrokenCovers] = useState<Record<string, true>>({});
+  const coverBroken = (key: string, el: HTMLImageElement | null) => {
+    if (!el || el.complete === false || el.naturalWidth > 0) return;
+    setBrokenCovers((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  };
   const images: LightboxItem[] = blocks.flatMap((b) =>
     b.type === "image"
       ? [{ src: b.src, alt: b.alt, caption: b.caption }]
       : b.type === "row"
-        ? b.items.map((it) => ({ src: it.src, alt: it.alt, caption: b.caption }))
+        ? b.items.flatMap((it) => (it.kind === "quote" ? [] : [{ src: it.src, alt: it.alt, caption: b.caption }]))
         : [],
   );
 
@@ -38,8 +46,23 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
       : [],
   );
 
+  // Contents/In this article section at top
+  const hasContents = headingsSource.length > 0;
+
   return (
     <>
+      {hasContents && (
+        <div className={styles.contentsTop} aria-label="In this article">
+          <p className={styles.contentsTitle}>In this article</p>
+          <ol className={styles.contentsChips}>
+            {headingsSource.map((h) => (
+              <li key={h.id} data-level={h.level}>
+                <a href={`#${h.id}`}>{h.text}</a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
       <div className={styles.prose}>
         {(() => { let footnoteCount = 0; return blocks.map((block, index) => {
           const key = `${block.type}-${index}`;
@@ -131,9 +154,15 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               return (
                 <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
                   <MediaCarousel
-                    items={block.items.map((it) => {
-                      const idx = images.findIndex((img) => img.src === it.src);
-                      return { src: it.src, alt: it.alt, index: idx, video: /\.(mp4|webm)(\?|$)/i.test(it.src), size: typeof it.size === "string" ? it.size : undefined, caption: it.alt || block.caption };
+                    slides={block.items.map((it): CarouselSlide => {
+                      if (it.kind === "quote") return { kind: "quote", html: it.html, author: it.author, role: it.role };
+                      return {
+                        kind: "media",
+                        src: it.src,
+                        alt: it.alt,
+                        index: images.findIndex((img) => img.src === it.src && img.alt === it.alt),
+                        size: it.size,
+                      };
                     })}
                     onOpen={(i) => setZoom(i)}
                   />
@@ -142,18 +171,36 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             }
             case "video":
-              return <VideoEmbed key={key} url={block.url} caption={block.caption} />;
+              return <VideoEmbed key={key} url={block.url} poster={block.poster} autoplay={block.autoplay} caption={block.caption} />;
             case "related":
               return (
-                <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedCard}>
-                  {block.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={block.image} alt={block.title} className={styles.relatedImg} loading="lazy" />
-                  ) : null}
-                  <span className={styles.relatedBody}>
-                    <span className={styles.relatedKicker}>Read next</span>
-                    <span className={styles.relatedTitle}>{block.title}</span>
-                    {block.description ? <span className={styles.relatedDesc}>{block.description}</span> : null}
+                <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedTout} aria-label={`${block.eyebrow ?? "Related article"}: ${block.title}`}>
+                  <span className={styles.relatedToutBody}>
+                    <span className={styles.relatedToutEyebrow}>{block.eyebrow || "Related Article"}</span>
+                    <span className={styles.relatedToutTitle}>{block.title}</span>
+                    {block.description ? <span className={styles.relatedToutSummary}>{block.description}</span> : null}
+                    <span className={styles.relatedToutCta}>
+                      {block.cta || "See more"}
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </span>
+                  <span className={`${styles.relatedToutMedia}${block.image && !brokenCovers[key] ? "" : ` pastel-${getCategory(block.slug).pastel}`}`}>
+                    {block.image && !brokenCovers[key] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={block.image}
+                        alt=""
+                        loading="lazy"
+                        className={styles.relatedToutImg}
+                        ref={(el) => {
+                          if (el?.complete) coverBroken(key, el);
+                        }}
+                        onLoad={(e) => coverBroken(key, e.currentTarget)}
+                        onError={() => setBrokenCovers((prev) => ({ ...prev, [key]: true }))}
+                      />
+                    ) : null}
                   </span>
                 </Link>
               );
@@ -205,11 +252,13 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   <span>{block.text}</span>
                 </p>
               );
-            case "jumplinks": {
+            case "jumplinks":
+              // Chip row like blog.google's article jump links — the sticky rail
+              // still carries the full list, this is the in-flow entry point.
               if (headingsSource.length === 0) return null;
               return (
-                <nav key={key} className={styles.jumplinks} aria-label={block.title || "In this article"}>
-                  <p className={styles.jumplinksTitle}>{block.title || "In this article"}</p>
+                <nav key={key} className={styles.jumpChips} aria-label={block.title || "Jump to a section"}>
+                  <p className={styles.jumpChipsLabel}>{block.title || "Jump to"}</p>
                   <ol>
                     {headingsSource.map((h) => (
                       <li key={h.id} data-level={h.level}>
@@ -219,7 +268,6 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   </ol>
                 </nav>
               );
-            }
             case "divider":
               return <hr key={key} className={styles.divider} />;
             default:

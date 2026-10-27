@@ -18,6 +18,13 @@ export interface Author {
   avatar: string;
 }
 
+export type RowSize = "full" | "square" | "portrait" | "wide";
+
+/** One slide in a media row: a photo/clip/embed, or a customer quote card. */
+export type RowItem =
+  | { kind?: "media"; src: string; alt: string; size?: RowSize }
+  | { kind: "quote"; html: string; author?: string; role?: string };
+
 export type Block =
   | { type: "p"; html: string }
   | { type: "h2"; text: string; id: string }
@@ -27,9 +34,9 @@ export type Block =
   | { type: "code"; lang: string; filename?: string; code: string }
   | { type: "list"; ordered: boolean; items: string[] }
   | { type: "image"; src: string; alt: string; caption?: string; width?: "full" | "wide" | "medium" | "small" }
-  | { type: "row"; items: ({ src: string; alt: string } & Record<string, unknown>)[]; columns?: number; caption?: string }
-  | { type: "video"; url: string; poster?: string; caption?: string }
-  | { type: "related"; slug: string; title: string; description?: string; image?: string }
+  | { type: "row"; items: RowItem[]; columns?: number; caption?: string }
+  | { type: "video"; url: string; poster?: string; caption?: string; autoplay?: boolean }
+  | { type: "related"; slug: string; title: string; description?: string; image?: string; eyebrow?: string; cta?: string }
   | { type: "table"; head: string[]; rows: string[][] }
   | { type: "chart"; chart: ChartBlock }
   | { type: "cta"; label: string; href: string; style?: "primary" | "outline"; note?: string }
@@ -112,7 +119,7 @@ export interface Post {
   readingMinutes: number;
   category: CategorySlug;
   tags: TagSlug[];
-  cover?: { src: string; alt: string; height?: number };
+  cover?: { src: string; alt: string; height?: number; focal?: number };
   featured?: boolean;
   author: Author;
   blocks: Block[];

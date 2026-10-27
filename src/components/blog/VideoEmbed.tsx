@@ -4,32 +4,36 @@ import { useState } from "react";
 import { detectExternalVideo } from "@/lib/external-video";
 import styles from "./VideoEmbed.module.scss";
 
-/* Poster with a play button — nothing from YouTube loads until the reader
-   actually clicks. No autoplay, no ambient embed, no hover surprises. */
-export function VideoEmbed({ url, caption }: { url: string; caption?: string }) {
+/* External videos show a poster until the reader clicks; direct uploads can
+   opt into muted ambient autoplay from the editor. */
+export function VideoEmbed({
+  url,
+  caption,
+  poster,
+  autoplay = false,
+}: {
+  url: string;
+  caption?: string;
+  poster?: string;
+  autoplay?: boolean;
+}) {
   const external = detectExternalVideo(url);
   const [playing, setPlaying] = useState(false);
 
   if (!external) {
     return (
       <figure className={styles.figure}>
-        <video src={url} controls playsInline preload="metadata" className={styles.file} />
-        {caption ? <figcaption>{caption}</figcaption> : null}
-      </figure>
-    );
-  }
-
-  if (!playing) {
-    // Show thumbnail/placeholder for external video until user clicks
-    return (
-      <figure className={styles.figure}>
-        <div className={styles.facade} style={external.thumbnail ? { backgroundImage: `url(${external.thumbnail})` } : undefined}>
-          <span className={styles.play} aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5.2v13.6L19 12z" />
-            </svg>
-          </span>
-        </div>
+        <video
+          src={url}
+          poster={poster || undefined}
+          controls
+          playsInline
+          preload={autoplay ? "auto" : "metadata"}
+          autoPlay={autoplay}
+          muted={autoplay}
+          loop={autoplay}
+          className={styles.file}
+        />
         {caption ? <figcaption>{caption}</figcaption> : null}
       </figure>
     );
@@ -69,7 +73,7 @@ export function VideoEmbed({ url, caption }: { url: string; caption?: string }) 
         className={styles.facade}
         onClick={() => setPlaying(true)}
         aria-label={caption ? `Play video: ${caption}` : "Play video"}
-        style={external.thumbnail ? { backgroundImage: `url(${external.thumbnail})` } : undefined}
+        style={external.thumbnail || poster ? { backgroundImage: `url(${external.thumbnail || poster})` } : undefined}
       >
         <span className={styles.play} aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor">

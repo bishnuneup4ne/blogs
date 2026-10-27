@@ -10,7 +10,8 @@ import { ShareMenu } from "@/components/blog/ShareMenu";
 import { InThisArticle } from "@/components/blog/InThisArticle";
 import { ArticleDiscussion } from "@/components/blog/ArticleDiscussion";
 import { ViewBeacon } from "@/components/blog/ViewBeacon";
-import { formatDate, getAllPosts, getCategory, getHeadings, getPost, getRelatedPostsDetailed, tagSlug } from "@/lib/data";
+import { NewsletterSection } from "@/components/site/NewsletterSection";
+import { formatDate, getAllPosts, getCategory, getHeadings, getPost, getRelatedPostsDetailed, getSubscriberCount, tagSlug } from "@/lib/data";
 import { blocksToSpeech } from "@/lib/summarize";
 import { getSettings } from "@/lib/settings";
 import { site } from "@/lib/site";
@@ -66,7 +67,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const category = getCategory(post.category);
   const related = await getRelatedPostsDetailed(post, 6);
   const headings = getHeadings(post.blocks);
-  const settings = await getSettings();
+  const [settings, subscriberCount] = await Promise.all([getSettings(), getSubscriberCount()]);
   const url = `${site.url}/blog/${post.slug}`;
 
   return (
@@ -76,7 +77,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       {post.cover ? (
         <div
           className={styles.heroMedia}
-          style={post.cover?.height ? ({ "--cover-h": `${post.cover.height}px` } as React.CSSProperties) : undefined}
+          style={
+            {
+              ...(post.cover?.height ? { "--cover-h": `${post.cover.height}px` } : {}),
+              ...(post.cover?.focal != null ? { "--cover-focal": `${post.cover.focal}%` } : {}),
+            } as React.CSSProperties
+          }
         >
           <Image
             src={post.cover.src}
@@ -169,6 +175,15 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 </section>
 
                 {settings.toggles.comments ? <ArticleDiscussion slug={post.slug} /> : null}
+
+                {settings.toggles.newsletter ? (
+                  <NewsletterSection
+                    compact
+                    name={settings.identity.authorName}
+                    avatarUrl={settings.identity.avatarUrl || undefined}
+                    subscriberCount={subscriberCount}
+                  />
+                ) : null}
               </div>
             </div>
           </div>

@@ -58,6 +58,15 @@ export const table = (head: string[], ...rows: string[][]): Block => ({
 
 export const divider = (): Block => ({ type: "divider" });
 
+/** In-body "Related Article" card — the lavender tout, not the footer rail. */
+export const readNext = (post: { slug: string; title: string }, description: string, image?: string): Block => ({
+  type: "related",
+  slug: post.slug,
+  title: post.title,
+  description,
+  ...(image ? { image } : {}),
+});
+
 const pairs = (data: [string, number][]) => data.map(([label, value]) => ({ label, value }));
 
 export const column = (title: string, data: [string, number][], opts: { unit?: string; caption?: string } = {}): Block => ({

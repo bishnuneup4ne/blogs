@@ -12,7 +12,8 @@
   overflow: hidden;
   background: #0e0f11;
 
-  iframe {
+  iframe,
+  video {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -26,6 +27,7 @@
   width: 100%;
   border-radius: var(--radius-card, 24px);
   background: #0e0f11;
+  aspect-ratio: 16 / 9;
 }
 
 .figure figcaption {
@@ -38,8 +40,7 @@
 /* Poster shown until the reader presses play */
 .facade {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   padding: 0;
@@ -48,6 +49,11 @@
   overflow: hidden;
   background: #0e0f11 center / cover no-repeat;
   cursor: pointer;
+  transition: transform 200ms ease;
+}
+
+.facade:hover {
+  transform: scale(1.02);
 }
 
 /* Dark veil so the play glyph stays readable on any poster */
@@ -68,8 +74,8 @@
   z-index: 1;
   display: grid;
   place-items: center;
-  width: clamp(64px, 7vw, 88px);
-  height: clamp(64px, 7vw, 88px);
+  width: clamp(80px, 8vw, 100px);
+  height: clamp(80px, 8vw, 100px);
   border-radius: 50%;
   background: #fff;
   color: #202124;
@@ -77,8 +83,8 @@
   transition: transform 200ms ease;
 
   svg {
-    width: 42%;
-    height: 42%;
+    width: 48%;
+    height: 48%;
     margin-left: 6%;
   }
 }

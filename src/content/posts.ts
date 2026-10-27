@@ -2,7 +2,7 @@ import type { Post } from "@/lib/types";
 import { author, guestAuthors } from "./authors";
 import {
   area, code, column, divider, donut, flow, funnel, gauge, grouped, h2, h3, img, line, note, ol, p, pie,
-  progress, quote, radar, scatter, stacked, table, timeline, tip, ul, warn,
+  progress, quote, radar, readNext, scatter, stacked, table, timeline, tip, ul, warn,
 } from "./builder";
 
 export const posts: Post[] = [
@@ -21,6 +21,7 @@ export const posts: Post[] = [
       p("For two years our dashboards were a museum. Beautiful, expensive, and only ever opened after an incident. When we finally audited them we found 412 metrics, of which <strong>nine</strong> had been looked at in the last quarter."),
       p("This is the story of deleting most of it, keeping the nine, and learning what observability is actually for."),
       note("This is a demo post. Every number below is illustrative, but the workflow is exactly the one I use on real systems."),
+      { type: "jumplinks", title: "Jump to a section" },
       h2("Start from questions, not metrics"),
       p("The mistake is starting with what the tool can collect. Start instead with the questions you want to answer at 3am:"),
       ol(
@@ -143,6 +144,11 @@ span.setAttribute("user.id_bucket", hashToBucket(userId, 32));
         { caption: "Fewer metrics meant faster questions at 3am." },
       ),
       h2("What I would do differently"),
+      readNext(
+        { slug: "what-a-good-postmortem-looks-like", title: "What a good postmortem looks like" },
+        "The template I wish I had opened the morning after — and why the actions matter more than the apology.",
+        "/images/gallery/trail-2.jpg",
+      ),
       p("I would have started with the incident review template. Every time an alert is sent, the on-call should be able to say <em>which chart</em> they opened first. That list is your real observability spec — everything else is ceremony."),
       divider(),
       p("If you are running a small team, spend the budget on sampling and ownership before you spend it on more vendors. The tooling is rarely the bottleneck."),
@@ -318,6 +324,10 @@ export class Breaker {
 `,
       ),
       h2("The cheap wins"),
+      readNext(
+        { slug: "notes-on-typography-for-developers", title: "Notes on typography for developers" },
+        "The measure, rhythm and alignment decisions behind a page that reads like a page.",
+      ),
       ul(
         "Tabular numbers for dates and counts so things line up.",
         "Hanging punctuation on quotes — one line of CSS, looks expensive.",
@@ -359,6 +369,11 @@ ALTER TABLE orders ALTER COLUMN currency SET NOT NULL;
       ),
       warn("A migration that locks a large table will look like an outage. Get the lock timeout from the plan, not from hope."),
       h2("Guardrail two: every deploy is a labelled event"),
+      readNext(
+        { slug: "observability-that-earns-its-keep", title: "Observability that earns its keep" },
+        "Which signals actually earn their keep when you are paged at 3am.",
+        "/images/gallery/trail-3.jpg",
+      ),
       p("The simplest high-leverage thing we did was make deploys visible on every chart. A red line, a deploy marker, and a name. Suddenly people could answer <em>what changed</em> without asking in chat."),
       code(
         "bash",
@@ -401,6 +416,11 @@ gh workflow run deploy.yml \\
       ),
       quote("The first hour is not about productivity. It is about having a place to stand before the day starts pushing.", undefined),
       h2("What it changed"),
+      readNext(
+        { slug: "walking-the-ridge-in-monsoon", title: "Walking the ridge in monsoon" },
+        "The same walk in three weathers, and what the light does to the ridge line.",
+        "/images/gallery/trail-1.jpg",
+      ),
       p("I stopped starting the day inside someone else's priority. The inbox is still there at 7:30. It just no longer gets to define the shape of the work."),
       img("/images/gallery/ktm-2.jpg", "The city in early morning light", "Kathmandu just after sunrise — the only hour it feels slow."),
     ],

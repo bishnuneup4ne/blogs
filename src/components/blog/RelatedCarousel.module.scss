@@ -68,7 +68,9 @@
   width: 92%;
   height: 92%;
   overflow: hidden;
-  background: var(--white);
+  /* Coverless posts get the category pastel instead of an empty white blob —
+     the .pastel-* utilities on the element supply --shape-bg. */
+  background: var(--shape-bg, var(--white));
 }
 
 .blob0 { border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%; }
@@ -90,6 +92,15 @@
   flex-direction: column;
   gap: 14px;
   padding: 4px 24px 24px;
+}
+
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.2px;
+  color: var(--gray-700);
 }
 
 .title {

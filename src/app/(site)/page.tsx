@@ -1,13 +1,21 @@
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { SectionHead, UpdateCard } from "@/components/site/sections";
+import { CategoryLatest, Feature, HeroRail, NewsletterBand, ThreeUp } from "@/components/site/HomeSections";
 import styles from "./home.module.scss";
 export default async function HomePage() {
   const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
-  const lead = ordered[0];
-  const latest = ordered.slice(1, 7);
+  // blog.google home: featured rail → 3-up → "The latest" feed → quick tip.
+  // Exactly one "latest" block on the page.
+  const heroPosts = ordered.slice(0, 5);
+  const moreUpdates = ordered.slice(5, 8);
+  // One "latest" per category (5 stories + View more), never a mixed list.
+  // Exclude what the first block already shows, so the two never repeat.
+  const personalPosts = ordered.filter(
+    (p) => p.category === "personal" && !heroPosts.includes(p) && !moreUpdates.includes(p),
+  );
+  const featured = ordered.find((p) => !heroPosts.includes(p) && !moreUpdates.includes(p)) ?? ordered[0];
   // Statement headline split like blog.google/research: "Word one," floats
   // left, "word two." drops to the right on the next line.
   const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/).filter(Boolean);
@@ -49,53 +57,33 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <section className={styles.archive} aria-labelledby="archive-heading">
-        <div className={styles.archiveCopy}>
-          <svg className={styles.archiveCurve} viewBox="0 0 90 240" fill="none" aria-hidden="true">
-            <path d="M74 8C16 40 16 200 74 232" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <h2 id="archive-heading" className={styles.archiveTitle}>
-            Take it apart.<br />
-            <span className={styles.archiveTitleSoft}>Write it down.</span>
-          </h2>
-          <p className={styles.archiveText}>
-            As I go one layer below the abstraction, I keep a human-centered note on the
-            way through — publishing what I find, working with the communities I learn
-            from, and photographing the hills I keep walking back to. The goal is a
-            write-up that is more than a log: a partner to whoever reads it next.
-          </p>
-        </div>
+      <HeroRail posts={heroPosts} />
 
-        <div className={styles.archiveMedia}>
-          {lead ? <UpdateCard post={lead} /> : null}
-        </div>
-      </section>
+      {moreUpdates.length > 0 ? <ThreeUp title="More updates" posts={moreUpdates} href="/blog" /> : null}
 
-      {latest.length > 0 ? (
-        <section className={styles.latestSection} aria-label="Latest posts">
-          <SectionHead href="/blog" linkLabel="All posts" />
-          <ul className={styles.latestGrid}>
-            {latest.map((post) => (
-              <li key={post.slug} className={styles.latestCell}>
-                <UpdateCard post={post} />
-              </li>
-            ))}
-          </ul>
-        </section>
+      <CategoryLatest
+        title="Latest stories"
+        subtitle="The newest writing across every topic."
+        posts={ordered}
+        moreHref="/blog"
+        moreLabel="View more stories"
+      />
+
+      {personalPosts.length > 0 ? (
+        <CategoryLatest
+          title="Personal"
+          subtitle="Notes from the life around the work."
+          posts={personalPosts}
+          moreHref="/personal"
+          moreLabel="More on Personal"
+        />
       ) : null}
 
-      <section className={styles.subscribeCard} aria-labelledby="subscribe-heading">
-        <h2 id="subscribe-heading" className={styles.subscribeTitle}>
-          Get the latest from bishnuneup4ne
-        </h2>
-        <p className={styles.subscribeText}>
-          A short email whenever something worth keeping lands here — field notes,
-          write-ups, photo sets. One click to join, one click to leave.
-        </p>
-        <div className={styles.subscribeForm}>
-          <NewsletterForm variant="pill" />
-        </div>
-      </section>
+      {featured ? <Feature post={featured} /> : null}
+
+      <NewsletterBand siteName={settings.identity.siteName}>
+        <NewsletterForm variant="pill" />
+      </NewsletterBand>
     </section>
   );
 }

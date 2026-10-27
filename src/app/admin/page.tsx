@@ -22,7 +22,9 @@ export default function AdminOverview() {
   }, []);
 
   const loadError = postsC.error || topicsC.error || subsC.error || analyticsError;
-  const needsSetup = /fn_[a-z_]+/.test(loadError);
+  // Same phrases isMissingSchema() checks server-side: only a truly absent
+  // schema should tell the editor to run supabase.sql.
+  const needsSetup = /does not exist|Could not find the table|schema cache|PGRST205|42P01/i.test(loadError);
   const state = {
     posts: postsC.items.map((p) => ({ id: p.id, title: p.title, slug: p.slug, status: p.status, date: String(p.date).slice(0,10), cover: p.cover_url, tags: p.tags ?? [], category: p.topic_slug ?? "", authorId: p.author_id ?? "", views: analytics.top.find((t) => t.slug === p.slug)?.views ?? 0, updatedAt: String(p.updated_at ?? p.date), blocks: [] as unknown[] })),
     subscribers: subsC.items.map((s) => ({ id: s.id, email: s.email, name: s.name || s.email.split("@")[0], status: s.status, joined: String(s.joined_at).slice(0,10) })),

@@ -49,8 +49,6 @@ export const BLOCKS: BlockDef[] = [
     icon: ic("M3 8h18v8H3z") },
   { type: "footnote", label: "Footnote", hint: "A numbered source note", group: "Structure", keywords: "reference source cite",
     icon: ic("M6 20V8a3 3 0 0 1 3-3h9M9 12h9") },
-  { type: "jumplinks", label: "Contents", hint: "Auto links from your headings", group: "Structure", keywords: "toc jumplinks anchors",
-    icon: ic("M4 6h16M4 12h10M4 18h13") },
 
   { type: "table", label: "Table", hint: "Rows and columns of data", group: "Data", keywords: "grid rows columns",
     icon: ic("M3 5h18v14H3zM3 10h18M3 15h18M9 5v14") },

@@ -88,6 +88,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
+    // An expired session turns every screen into "Unauthorized" with no way
+    // out — send the editor back to sign-in instead.
+    if (res.status === 401 && !path.startsWith("/api/admin/auth")) {
+      window.location.assign(`/admin/login?next=${encodeURIComponent(window.location.pathname)}`);
+    }
     const data = await res.json().catch(() => null);
     throw new Error(data?.error || data?.message || `Request failed (${res.status})`);
   }

@@ -153,6 +153,24 @@
   }
 }
 
+/* Article-footer variant — sits inside the reading measure, so stack the
+   copy and form instead of squeezing blog.google's two-column band. */
+.compact {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacer-3);
+    padding: var(--spacer-4);
+  }
+
+  .title {
+    font-size: clamp(24px, 3vw, 32px);
+  }
+
+  .desc {
+    margin-bottom: var(--spacer-3);
+  }
+}
+
 @media (max-width: 900px) {
   .inner {
     grid-template-columns: minmax(0, 1fr);
@@ -167,6 +185,12 @@
     border-left: none;
     border-right: none;
     border-radius: 0;
+  }
+
+  .compact {
+    border-left: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+    border-radius: var(--radius-card);
   }
 
   .readers {

@@ -79,13 +79,12 @@ export default function AdminSettingsPage() {
       const dump = await Promise.all([
         api.get<{ posts: unknown[] }>("/api/admin/posts"),
         api.get<{ topics: unknown[] }>("/api/admin/topics"),
-        api.get<{ authors: unknown[] }>("/api/admin/authors"),
         api.get<{ albums: unknown[] }>("/api/admin/albums"),
         api.get<{ photos: unknown[] }>("/api/admin/photos"),
         api.get<{ subscribers: unknown[] }>("/api/admin/subscribers"),
         api.get<{ payload: unknown }>("/api/admin/settings"),
       ]);
-      const blob = new Blob([JSON.stringify(Object.fromEntries(dump.map((d, i) => [["posts", "topics", "authors", "albums", "photos", "subscribers", "payload"][i], d])), null, 1)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(Object.fromEntries(dump.map((d, i) => [["posts", "topics", "albums", "photos", "subscribers", "payload"][i], d])), null, 1)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const siteSlug = (form.identity.siteName || "studio").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "studio";
       const link = document.createElement("a");

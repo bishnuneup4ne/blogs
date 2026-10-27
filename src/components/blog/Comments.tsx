@@ -121,7 +121,7 @@ export function Comments({ slug, embedded = false }: { slug: string; embedded?: 
   }
 
   return (
-    <section className={styles.section} aria-labelledby="comments-heading">
+    <section className={styles.section} aria-labelledby={embedded ? undefined : "comments-heading"}>
       {!embedded ? (
         <div className={styles.head}>
           <h2 id="comments-heading" className={styles.title}>Comments</h2>

@@ -480,11 +480,18 @@ function normaliseBlock(raw: unknown): Block | null {
     }
     case "row": {
       const ROW_SIZES = ["full", "square", "portrait", "wide"] as const;
-      type RowItem = { src: string; alt: string; size?: (typeof ROW_SIZES)[number] };
+      type RowItem = { kind?: "media"; src: string; alt: string; size?: (typeof ROW_SIZES)[number] } | { kind: "quote"; html: string; author?: string; role?: string };
       const rawItems = Array.isArray(source.items) ? source.items.slice(0, 60) : [];
       const items = rawItems
         .map((it): RowItem | null => {
           const o = (it ?? {}) as Record<string, unknown>;
+          if (o.kind === "quote") {
+            const body = sanitizeRichText(String(o.html ?? ""));
+            if (!body) return null;
+            const author = text(o.author, 200);
+            const role = text(o.role, 200);
+            return { kind: "quote", html: body, ...(author ? { author } : {}), ...(role ? { role } : {}) };
+          }
           const src = safeUrl(String(o.src ?? ""), true);
           if (!src) return null;
           const size = (ROW_SIZES as readonly string[]).includes(String(o.size)) ? { size: o.size as (typeof ROW_SIZES)[number] } : {};
@@ -500,14 +507,20 @@ function normaliseBlock(raw: unknown): Block | null {
       const url = safeUrl(String(source.url ?? ""));
       if (!url) return null;
       const poster = source.poster ? safeUrl(String(source.poster), true) : null;
-      return { type, url, ...(poster ? { poster } : {}), caption: text(source.caption, 600) };
+      const autoplay = Boolean(source.autoplay);
+      return { type, url, ...(poster ? { poster } : {}), ...(autoplay ? { autoplay: true } : {}), caption: text(source.caption, 600) };
     }
     case "related": {
       const relSlug = text(source.slug, 200);
       const relTitle = text(source.title, 300);
       if (!relSlug || !relTitle) return null;
       const image = source.image ? safeUrl(String(source.image), true) : null;
-      return { type, slug: relSlug, title: relTitle, description: text(source.description, 600), ...(image ? { image } : {}) };
+      const eyebrow = text(source.eyebrow, 80);
+      const cta = text(source.cta, 80);
+      return {
+        type, slug: relSlug, title: relTitle, description: text(source.description, 600),
+        ...(image ? { image } : {}), ...(eyebrow ? { eyebrow } : {}), ...(cta ? { cta } : {}),
+      };
     }
     case "table": {
       const head = stringList(source.head, 20, 200);

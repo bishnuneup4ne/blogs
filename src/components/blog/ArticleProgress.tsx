@@ -40,17 +40,16 @@ export function ArticleProgress({
       const h1 = document.querySelector("h1");
       const bar = barRef.current;
       if (!bar) return;
-      const passed = h1 ? h1.getBoundingClientRect().top < -20 : window.scrollY > 280;
+      const passed = h1 ? h1.getBoundingClientRect().top < -((parseFloat(getComputedStyle(bar).height) || 60) * 0.5) : window.scrollY > 280;
       if (passed && !shownRef.current) {
         shownRef.current = true;
-        bar.style.display = "";
-        bar.removeAttribute("data-visible");
+        bar.setAttribute("data-visible", "on");
+        gsap.killTweensOf(bar);
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           gsap.fromTo(bar, { y: "-100%", opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out" });
         }
       } else if (!passed && shownRef.current) {
         shownRef.current = false;
-        bar.setAttribute("data-visible", "off");
         gsap.killTweensOf(bar);
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           gsap.to(bar, {
@@ -59,22 +58,23 @@ export function ArticleProgress({
             duration: 0.28,
             ease: "power2.in",
             onComplete: () => {
-              // Fully remove it from flow so the page never shows a gap.
+              // Drop out of flow only once it is off screen, so the page never
+              // shows a gap; CSS keeps it absolute while hidden.
               if (barRef.current && shownRef.current === false) {
-                barRef.current.style.display = "none";
+                barRef.current.setAttribute("data-visible", "off");
                 gsap.set(barRef.current, { y: "0px" });
               }
             },
           });
         } else {
-          bar.style.display = "none";
+          bar.setAttribute("data-visible", "off");
         }
       }
     }
     function onScroll() {
       if (!frame) frame = requestAnimationFrame(update);
     }
-    if (barRef.current) barRef.current.style.display = "none";
+    if (barRef.current) barRef.current.setAttribute("data-visible", "off");
     update();
     requestAnimationFrame(update);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -87,7 +87,7 @@ export function ArticleProgress({
   }, []);
 
   return (
-    <div ref={barRef} className={styles.bar} data-visible="off">
+    <div ref={barRef} className={styles.bar} data-article-progress="" data-visible="off">
       <span className={styles.track} aria-hidden="true">
         <span ref={fillRef} className={styles.fill} />
       </span>

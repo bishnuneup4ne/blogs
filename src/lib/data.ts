@@ -14,6 +14,20 @@ import type { Album, Block, Category, GalleryPhoto, Heading, Post, Series } from
 
 export type PostStatus = "draft" | "review" | "scheduled" | "published";
 
+/* Older schemas have no cover_height/cover_focal columns, so the editor packs
+   both into cover_alt as `[[cover:h=560;f=30]]`. Strip that tag for display. */
+const COVER_META = /\[\[cover:h=(\d+);f=(\d+)\]\]/;
+
+export function parseCover(src: string, rawAlt: string | null, columnHeight: number) {
+  const alt = rawAlt ?? "";
+  const match = alt.match(COVER_META);
+  // h=0 is the editor's "Auto" state — treat it as no explicit height.
+  const packed = Number(match?.[1]) || 0;
+  const height = packed > 0 ? packed : columnHeight > 0 ? columnHeight : undefined;
+  const focal = match ? Number(match[2]) : undefined;
+  return { src, alt: alt.replace(COVER_META, "").trim(), height, focal };
+}
+
 export interface Topic extends Category {
   count: number;
 }
@@ -37,8 +51,7 @@ interface DbPostRow {
 }
 
 interface DbAuthorRow {
-  id: string;
-  name: string;
+  id: string;  name: string;
   role: string;
   avatar_url: string;
 }
@@ -60,7 +73,7 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
     readingMinutes: Math.max(1, Math.round(words / 220)),
     category: (row.topic_slug ?? "engineering") as Post["category"],
     tags: row.tags ?? [],
-    cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "", height: Number(row.cover_height ?? 0) || undefined } : undefined,
+    cover: row.cover_url ? parseCover(row.cover_url, row.cover_alt, Number(row.cover_height ?? 0)) : undefined,
     featured: Boolean(row.featured),
     author: { name: authorName, role: "", avatar: "/avatar.jpg" },
     blocks,

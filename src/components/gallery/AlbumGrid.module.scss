@@ -11,13 +11,17 @@
   min-width: 0;
 }
 
-/* Video tiles get double width and a true 16:9 frame — no letterboxing. */
+/* Video tiles run the full row so they never leave a hole beside a photo. */
 .cellVideo {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .cellVideo .item {
+  /* 16:9, but capped so a wide row doesn't dwarf the photo grid. */
   aspect-ratio: 16 / 9;
+  max-height: 520px;
+  margin-inline: auto;
+  width: min(100%, 924px);
 }
 
 /* Autoplaying YouTube tile: the iframe fills the rounded frame, and a

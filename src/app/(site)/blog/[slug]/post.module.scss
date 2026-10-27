@@ -7,7 +7,8 @@
 
 .heroImg {
   object-fit: cover;
-  object-position: center 30%;
+  /* Vertical focal point set per post in the editor (defaults to 30%). */
+  object-position: center var(--cover-focal, 30%);
 }
 
 .heroScrim {
@@ -355,8 +356,8 @@
 
   .relatedInner {
     padding-top: var(--spacer-4);
-    padding-left: 0;
-    padding-right: 0;
+    padding-left: var(--container-pad);
+    padding-right: var(--container-pad);
   }
 
   /* Keep a real inset on phones — zero padding let the article touch the

@@ -144,6 +144,71 @@
   transform: scale(1.025);
 }
 
+/* YouTube/Vimeo slide: poster + play glyph, whole tile opens the clip. */
+.embedTile {
+  display: block;
+  cursor: pointer;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(0 0 0 / 0%) 55%, rgb(0 0 0 / 22%));
+  }
+
+  .videoPlay {
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+/* Customer quote slide — same band as media, reads like a pull quote. */
+.quoteTile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  height: var(--band-h);
+  margin: 0;
+  padding: clamp(24px, 3.2vw, 44px);
+  border-radius: var(--radius-card);
+  background: var(--blue-50);
+  color: var(--gray-900);
+  overflow: auto;
+}
+
+.quoteText {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 1.9vw, 24px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+
+  &::before {
+    content: "\201C";
+  }
+
+  &::after {
+    content: "\201D";
+  }
+}
+
+.quoteBy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quoteAuthor {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.quoteRole {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
 .controls {
   display: flex;
   align-items: center;
@@ -289,4 +354,29 @@
 .videoPlay:hover {
   transform: scale(1.06);
   background: #fff;
+}
+
+/* Inline provider embed (YouTube/Vimeo) — fills the tile like a file video. */
+.embed {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.embedCover {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: var(--gray-900, #202124);
+  cursor: pointer;
+}
+
+.embedTile {
+  position: relative;
+  overflow: hidden;
 }

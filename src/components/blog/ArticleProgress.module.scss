@@ -1,18 +1,25 @@
-/* Reading-progress strip — takes over the top edge once the site header hides. */
+/* Reading-progress strip — takes over the top edge once the site header hides.
+   Hidden by default so it never reserves 60px before JS decides to show it;
+   [data-visible="on"] is set by the component while the strip is on screen. */
 
 .bar {
-  position: sticky;
+  position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 55;
   height: 60px;
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
 }
 
-/* Hidden until the article title has scrolled past (blog.google behaviour).
-   JS toggles display + gsap for the slide; this is the resting style. */
-.bar {
-  transition: opacity 200ms ease;
+.bar[data-visible="on"] {
+  position: sticky;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .bar[data-visible="off"] {

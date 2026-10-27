@@ -140,6 +140,59 @@ export function HeroRail({ posts }: { posts: Post[] }) {
   );
 }
 
+/* ---------- Category "latest" block: 5 stories + View more ---------- */
+
+export function CategoryLatest({
+  title,
+  subtitle,
+  posts,
+  moreHref,
+  moreLabel = "View more",
+}: {
+  title: string;
+  subtitle?: string;
+  posts: Post[];
+  moreHref: string;
+  moreLabel?: string;
+}) {
+  if (posts.length === 0) return null;
+  return (
+    <section className={styles.catLatest} aria-label={title}>
+      <div className={styles.catHead}>
+        <div>
+          <h2 className={styles.bandTitle}>{title}</h2>
+          {subtitle ? <p className={styles.catSubtitle}>{subtitle}</p> : null}
+        </div>
+        <Link href={moreHref} className={styles.catMore}>
+          {moreLabel}
+          <ReadArrow />
+        </Link>
+      </div>
+      <ul className={styles.catList}>
+        {posts.slice(0, 5).map((post) => (
+          <li key={post.slug}>
+            <Link href={`/blog/${post.slug}`} className={styles.catRow}>
+              <span className={styles.catMedia}>
+                <Media post={post} sizes="(max-width: 900px) 100vw, 260px" className={styles.coverImg} />
+              </span>
+              <span className={styles.catBody}>
+                <span className={styles.catTags}>
+                  {post.tags.slice(0, 2).map((tag) => (
+                    <span key={tag} className={styles.feedChip}>{tag}</span>
+                  ))}
+                </span>
+                <span className={styles.catTitle}>{post.title}</span>
+                <span className={styles.catDesc}>{post.description}</span>
+                <span className={styles.catMeta}>By {post.author.name}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 /* ---------- 3-up row ("More updates") ---------- */
 
 export function ThreeUp({ title, posts, href }: { title: string; posts: Post[]; href?: string }) {
@@ -280,25 +333,49 @@ export function LatestFeed({
   );
 }
 
-/* ---------- Quick tips (vertical video card) ---------- */
+/* ---------- Feature story ---------- */
 
-export function QuickTips({ post }: { post: Post }) {
+export function Feature({ post, eyebrow = "Feature" }: { post: Post; eyebrow?: string }) {
+  const category = getCategory(post.category);
   return (
-    <section className={styles.quickTips} aria-label="Quick tips">
-      <h2 className={styles.bandTitle}>Quick tips</h2>
-      <Link href={`/blog/${post.slug}`} className={styles.tipCard}>
-        <span className={styles.tipMedia}>
-          <Media post={post} sizes="(max-width: 760px) 100vw, 360px" className={styles.coverImg} />
-          <span className={styles.tipPlay} aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
-          </span>
+    <section className={styles.feature} aria-label="Featured story">
+      <h2 className={styles.bandTitle}>Featured</h2>
+      <Link href={`/blog/${post.slug}`} className={styles.featureCard}>
+        <span className={styles.featureMedia}>
+          <Media post={post} sizes="(max-width: 900px) 100vw, 55vw" className={styles.coverImg} />
         </span>
-        <span className={styles.tipBody}>
-          <span className={styles.tipTitle}>{post.title}</span>
-          <span className={styles.tipText}>{post.description}</span>
-          <ReadPill label="Read more" />
+        <span className={styles.featureBody}>
+          <span className={styles.feedChips}>
+            <span className={styles.feedChip}>{eyebrow}</span>
+            <span className={styles.feedChip}>{category.name}</span>
+          </span>
+          <span className={styles.featureTitle}>{post.title}</span>
+          <span className={styles.featureText}>{post.description}</span>
+          <span className={styles.featureMeta}>By {post.author.name}</span>
+          <ReadPill label="Read the story" />
         </span>
       </Link>
+    </section>
+  );
+}
+
+/* ---------- Newsletter band (blog.google) ---------- */
+
+export function NewsletterBand({ siteName, children }: { siteName: string; children: React.ReactNode }) {
+  return (
+    <section className={styles.newsBand} aria-label="Newsletter">
+      <span className={styles.newsBandBlob} aria-hidden="true" />
+      <div className={styles.newsBandInner}>
+        <h2 className={styles.newsBandTitle}>Get the latest news from {siteName} in your inbox</h2>
+        <p className={styles.newsBandText}>
+          Sign up for product updates, field notes and photo sets as they land.
+        </p>
+        <div className={styles.newsBandForm}>{children}</div>
+        <p className={styles.newsBandNote}>
+          Your information will be used in accordance with <Link href="/privacy">the privacy policy</Link>. You may
+          opt out at any time.
+        </p>
+      </div>
     </section>
   );
 }

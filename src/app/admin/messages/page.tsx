@@ -144,8 +144,9 @@ export default function AdminMessagesPage() {
                         <p><strong>{m.name}</strong></p>
                         <p className={styles.subCell}>{m.email}</p>
                       </td>
-                      <td data-label="Subject">{m.subject || "(no subject)"}</td>                        <DateCell iso={String(m.created_at)} />
-                        <td data-label="Actions" data-card="actions">
+                      <td data-label="Subject">{m.subject || "(no subject)"}</td>
+                      <DateCell iso={String(m.created_at)} label="Received" />
+                      <td data-label="Actions" data-card="actions">
                         <div className={styles.rowActions}>
                           <Button size="sm" variant="outlined" disabled={busy === m.id} onClick={() => openMessage(m)}>Open</Button>
                           <Button

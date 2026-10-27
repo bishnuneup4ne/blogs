@@ -61,8 +61,11 @@ a:hover .readPill {
 }
 
 .heroTrack {
-  --lead-w: min(100%, 1281px);
+  /* Sizes come from the container, never the viewport: the rail lives inside
+     the page column, so a viewport-derived lead width overflowed and clipped
+     the peek card. The lead leaves room for one peek card + the gap. */
   --peek-w: 311px;
+  --lead-w: calc(100% - var(--peek-w) - 20px);
   display: flex;
   gap: 20px;
   margin: 0;
@@ -72,6 +75,7 @@ a:hover .readPill {
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
 
   &::-webkit-scrollbar {
     display: none;
@@ -543,10 +547,6 @@ a:hover .compactMedia .coverImg {
   color: var(--gray-700);
 }
 
-.feedChipMuted {
-  color: var(--gray-500);
-}
-
 .feedTitle {
   font-family: var(--font-display);
   font-size: 28px;
@@ -567,18 +567,141 @@ a:hover .compactMedia .coverImg {
   color: var(--gray-600);
 }
 
-/* ---------- Quick tips ---------- */
+/* ---------- Category latest (5 stories + View more) ---------- */
 
-.quickTips {
+.catLatest {
   margin-block: 64px;
 }
 
-.tipCard {
+.catHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.catSubtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.catMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin-top: 4px;
+  padding: 9px 18px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  text-decoration: none;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  svg {
+    transition: transform 200ms ease;
+  }
+
+  &:hover {
+    border-color: var(--gray-900);
+    background: var(--gray-50);
+
+    svg {
+      transform: translateX(3px);
+    }
+  }
+}
+
+.catList {
   display: grid;
-  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
-  gap: 28px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--gray-200);
+}
+
+.catList li {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.catRow {
+  display: grid;
+  grid-template-columns: clamp(160px, 22vw, 260px) minmax(0, 1fr);
+  gap: clamp(16px, 2.5vw, 32px);
+  align-items: center;
+  padding: 18px 0;
+  color: var(--gray-900);
+  text-decoration: none;
+
+  &:hover .catTitle {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.catMedia {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.catBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.catTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catTitle {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.catDesc {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-600);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.catMeta {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+
+/* ---------- Feature story ---------- */
+
+.feature {
+  margin-block: 64px;
+}
+
+.featureCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: center;
   margin-top: 20px;
-  padding: 20px;
+  padding: clamp(16px, 2vw, 24px);
   border-radius: var(--radius-card, 24px);
   background: var(--gray-50);
   color: var(--gray-900);
@@ -587,56 +710,107 @@ a:hover .compactMedia .coverImg {
 
   &:hover {
     background: var(--gray-100);
+
+    .featureMedia .coverImg {
+      transform: scale(1.03);
+    }
   }
 }
 
-.tipMedia {
+.featureMedia {
   position: relative;
-  aspect-ratio: 9 / 16;
-  border-radius: 20px;
+  aspect-ratio: 16 / 10;
+  border-radius: 18px;
   overflow: hidden;
   background: var(--gray-200);
 }
 
-.tipPlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  margin: auto;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 92%);
-  color: var(--gray-900);
-  padding-left: 4px;
-}
-
-.tipBody {
+.featureBody {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-self: center;
-  padding: 8px 8px 8px 0;
+  min-width: 0;
 }
 
-.tipTitle {
+.featureTitle {
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: clamp(26px, 3vw, 40px);
   font-weight: 400;
-  line-height: 38px;
-  letter-spacing: -0.01em;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
 }
 
-.tipText {
-  max-width: 52ch;
+.featureText {
   font-size: 15px;
   line-height: 24px;
   color: var(--gray-700);
 }
 
-.tipBody .readPill {
+.featureMeta {
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+
+.featureBody .readPill {
   margin-top: 8px;
+}
+
+/* ---------- Newsletter band ---------- */
+
+.newsBand {
+  position: relative;
+  margin-block: 64px;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: var(--radius-card, 24px);
+  background: linear-gradient(120deg, #eef2ff 0%, #f4f6ff 55%, #fdfbf3 100%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.newsBandBlob {
+  position: absolute;
+  right: -8%;
+  top: -60%;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50% 50% 44% 56% / 52% 46% 54% 48%;
+  background: #fbf3d9;
+  opacity: 0.85;
+  z-index: -1;
+}
+
+.newsBandInner {
+  max-width: 720px;
+}
+
+.newsBandTitle {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.newsBandText {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--gray-700);
+}
+
+.newsBandForm {
+  max-width: 560px;
+}
+
+.newsBandNote {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  color: var(--gray-600);
+
+  a {
+    color: var(--blue-700);
+  }
 }
 
 /* ---------- Responsive ---------- */
@@ -695,7 +869,20 @@ a:hover .compactMedia .coverImg {
 
 @media (max-width: 640px) {
   .heroTrack {
-    --peek-w: 84vw;
+    /* One full-width card per view: the lead-minus-peek split leaves the lead
+       ~15% wide and squeezes the peek card to one character per line. */
+    --peek-w: 100%;
+    --lead-w: 100%;
+  }
+
+  .heroCard,
+  .heroCardLead {
+    min-height: 0;
+    height: auto;
+  }
+
+  .heroCardLead .heroText {
+    padding: 4px;
   }
 
   .bandTitle {

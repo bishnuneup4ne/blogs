@@ -76,3 +76,31 @@ export function detectExternalVideo(raw: string): ExternalVideo | null {
   }
   return null;
 }
+
+export interface VideoSource {
+  kind: "file" | "youtube" | "vimeo";
+  /** Direct file, or the watch/embed page opened when the clip is clicked. */
+  href: string;
+  poster: string;
+  /** Privacy-friendly player URL used to play the clip inline. */
+  embedSrc?: string;
+}
+
+/** Classifies any clip a row item might point at: an uploaded file, a YouTube
+    link, or a Vimeo link. Returns null for stills. */
+export function classifyVideo(raw: string): VideoSource | null {
+  const external = detectExternalVideo(raw);
+  if (external) {
+    const embedSrc =
+      external.kind === "youtube"
+        ? `https://www.youtube-nocookie.com/embed/${external.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
+        : `https://player.vimeo.com/video/${external.id}?autoplay=1&title=0&byline=0`;
+    return {
+      kind: external.kind,
+      href: external.url,
+      poster: external.thumbnail || `https://vumbnail.com/${external.id}.jpg`,
+      embedSrc,
+    };
+  }
+  return /\.(mp4|webm)(\?|$)/i.test(raw) ? { kind: "file", href: raw, poster: "" } : null;
+}
