@@ -3,15 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./RichEditor.module.scss";
 
-const TOOLS: { cmd: string; tag: string; label: string; title: string; html?: string }[] = [
+const TOOLS: { cmd: string; tag: string; label: string; title: string }[] = [
   { cmd: "bold", tag: "strong", label: "B", title: "Bold (Ctrl+B)" },
   { cmd: "italic", tag: "em", label: "I", title: "Italic (Ctrl+I)" },
   { cmd: "underline", tag: "u", label: "U", title: "Underline (Ctrl+U)" },
   { cmd: "strikeThrough", tag: "s", label: "S", title: "Strikethrough" },
-  { cmd: "mark", tag: "mark", label: "Highlight", title: "Highlight selection" },
+  { cmd: "foreColor", tag: "", label: "A", title: "Text colour" },
+  { cmd: "hiliteColor", tag: "", label: "H", title: "Highlight colour" },
   { cmd: "link", tag: "a", label: "Link", title: "Add link" },
   { cmd: "removeFormat", tag: "", label: "Clear", title: "Clear formatting" },
 ];
+
+const SWATCHES = ["#d93025", "#e37400", "#f9ab00", "#188038", "#1a73e8", "#9334e6", "#c5221f", "#202124"];
 
 export function RichEditor({
   value,
@@ -28,6 +31,7 @@ export function RichEditor({
   const lastEmit = useRef<string | null>(null);
   const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
+  const [colorPopup, setColorPopup] = useState<{ x: number; y: number; cmd: "foreColor" | "hiliteColor" } | null>(null);
 
   // The editor owns its DOM. React must never write innerHTML here: doing so
   // resets the caret to offset 0, which is why clicking mid-paragraph used to
@@ -115,6 +119,38 @@ export function RichEditor({
       selNow?.removeAllRanges();
       selNow?.addRange(saved);
     }
+    if (cmd === "foreColor" || cmd === "hiliteColor") {
+      const sel = window.getSelection();
+      let range: Range | null = sel?.rangeCount && !sel.isCollapsed && el.contains(sel.anchorNode) ? sel.getRangeAt(0) : lastRange.current;
+      if (!range || range.collapsed) {
+        // No live selection — colour the word under the caret instead.
+        const live = sel?.rangeCount ? sel.getRangeAt(0) : null;
+        const node = live?.startContainer;
+        if (live?.collapsed && node?.nodeType === Node.TEXT_NODE && el.contains(node)) {
+          const text = node.textContent ?? "";
+          let a = live.startOffset, b = live.startOffset;
+          while (a > 0 && !/\s/.test(text[a - 1])) a -= 1;
+          while (b < text.length && !/\s/.test(text[b])) b += 1;
+          if (b > a) {
+            const word = document.createRange();
+            word.setStart(node, a);
+            word.setEnd(node, b);
+            range = word;
+            sel?.removeAllRanges();
+            sel?.addRange(word);
+            lastRange.current = word.cloneRange();
+          }
+        }
+      }
+      if (!range || range.collapsed || !el.contains(range.commonAncestorContainer)) return;
+      const rect = range.getBoundingClientRect();
+      setColorPopup({
+        x: Math.max(8, Math.min(rect.left ?? el.getBoundingClientRect().left, window.innerWidth - 260)),
+        y: (rect.bottom ?? el.getBoundingClientRect().top) + 6,
+        cmd,
+      });
+      return;
+    }
     if (cmd === "mark" || cmd === "underline" || cmd === "strikeThrough") {
       const tag = cmd === "mark" ? "mark" : cmd === "underline" ? "u" : "s";
       const sel = window.getSelection();
@@ -180,6 +216,26 @@ export function RichEditor({
     emit();
   }
 
+  function applyColor(color: string) {
+    const el = ref.current;
+    if (!el || !colorPopup) return;
+    el.focus();
+    const sel = window.getSelection();
+    const range = lastRange.current;
+    if (range && sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    try {
+      document.execCommand("styleWithCSS", false, "true");
+      document.execCommand(colorPopup.cmd, false, colorPopup.cmd === "hiliteColor" ? color : color);
+    } catch {
+      /* older browsers */
+    }
+    setColorPopup(null);
+    emit();
+  }
+
   return (
     <div className={styles.wrap}>
       <div className={styles.toolbar} role="toolbar" aria-label="Text formatting">
@@ -203,6 +259,17 @@ export function RichEditor({
           </button>
         ))}
       </div>
+      {colorPopup ? (
+        <div className={styles.swatches} style={{ left: colorPopup.x, top: colorPopup.y }} role="menu" aria-label="Pick a colour">
+          {SWATCHES.map((c) => (
+            <button key={c} type="button" className={styles.swatch} style={{ background: c }} title={c} onMouseDown={(e) => e.preventDefault()} onClick={() => applyColor(c)} />
+          ))}
+          <label className={styles.customColor} onMouseDown={(e) => e.preventDefault()}>
+            <input type="color" onChange={(e) => applyColor(e.target.value)} aria-label="Custom colour" />
+            <span>Custom</span>
+          </label>
+        </div>
+      ) : null}
       <div
         ref={ref}
         className={styles.editor}

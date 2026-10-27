@@ -1,5 +1,19 @@
 const ALLOWED = new Set(["A", "STRONG", "EM", "B", "I", "U", "S", "STRIKE", "MARK", "SUB", "SUP", "SMALL", "KBD", "CODE", "BR"]);
-const ALLOWED_ATTR = new Set(["href"]);
+const ALLOWED_ATTR = new Set(["href", "style"]);
+const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line"]);
+
+function safeStyle(value: string): string {
+  return value
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .filter((d) => {
+      const colon = d.indexOf(":");
+      return colon > 0 && SAFE_STYLE_PROPS.has(d.slice(0, colon).trim().toLowerCase());
+    })
+    .filter((d) => !/[<>{}"']/.test(d) && !/url|expression/i.test(d))
+    .join("; ");
+}
 
 /**
  * Minimal allow-list sanitizer for inline post HTML. Editor input is untrusted
@@ -29,6 +43,11 @@ export function sanitizeInlineHtml(input: string): string {
       }
       Array.from(el.attributes).forEach((attr) => {
         if (!ALLOWED_ATTR.has(attr.name)) el.removeAttribute(attr.name);
+        else if (attr.name === "style") {
+          const kept = safeStyle(attr.value);
+          if (kept) el.setAttribute("style", kept);
+          else el.removeAttribute("style");
+        }
       });
       if (el.tagName === "A") {
         const href = el.getAttribute("href") ?? "";

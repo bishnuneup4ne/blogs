@@ -9,9 +9,27 @@ const DROP_CONTENT = new Set([
   "script", "style", "iframe", "object", "embed", "svg", "math", "template",
   "noscript", "textarea", "title", "xmp", "plaintext", "form",
 ]);
+const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line"]);
+
+/** Keep only whitelisted declarations from an inline style attribute. */
+function safeStyle(value: string): string | null {
+  const kept = value
+    .split(";")
+    .map((d) => d.trim())
+    .filter(Boolean)
+    .filter((d) => {
+      const colon = d.indexOf(":");
+      return colon > 0 && SAFE_STYLE_PROPS.has(d.slice(0, colon).trim().toLowerCase());
+    })
+    .filter((d) => !/[<>{}"']/.test(d) && !/url|expression/i.test(d));
+  return kept.length ? kept.join("; ") + ";" : null;
+}
+
 const ALLOWED_ATTRS: Record<string, string[]> = {
   a: ["href", "title", "target", "rel"],
   img: ["src", "alt", "width", "height", "title"],
+  span: ["style"],
+  mark: ["style"],
 };
 
 const MAX_HTML = 200_000;
@@ -118,6 +136,9 @@ function cleanAttrs(tag: string, attrs: [string, string][]): string[] {
     } else if (rawName === "width" || rawName === "height") {
       const number = Number.parseInt(rawValue, 10);
       if (Number.isFinite(number) && number > 0 && number <= 10_000) out.push(`${rawName}="${number}"`);
+    } else if (rawName === "style") {
+      const style = safeStyle(rawValue);
+      if (style) out.push(`style="${escapeAttr(style)}"`);
     } else {
       out.push(`${rawName}="${escapeAttr(rawValue.slice(0, 600))}"`);
     }
