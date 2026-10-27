@@ -477,10 +477,10 @@
 
 .arrowArc {
   position: absolute;
-  top: 4px;
-  right: clamp(0px, 3vw, 48px);
-  width: clamp(110px, 13vw, 190px);
-  transform: scaleX(-1); /* flipped: tail at right, head aims up-left at Newsletter */
+  /* Head must sit just below the header Newsletter button (~135px wide, right-aligned). */
+  width: clamp(120px, 14vw, 200px);
+  right: calc(32px + 16px - 0.06 * clamp(120px, 14vw, 200px));
+  top: calc(clamp(44px, 4.5vw, 64px) - 7px);
   color: var(--gray-800);
   pointer-events: none;
 }
