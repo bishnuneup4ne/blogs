@@ -20,7 +20,7 @@ interface SettingsForm {
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string }[];
   footerLinks: { label: string; href: string }[];
-  about: { kicker: string; title: string; lede: string; quote: string; focus: string[]; story: string[]; now: AboutEntry[]; timeline: AboutEntry[]; updated: string };
+  about: { kicker: string; title: string; lede: string; quote: string; portraitUrl: string; portraitAlt: string; focus: string[]; story: string[]; now: AboutEntry[]; timeline: AboutEntry[]; updated: string };
 }
 
 const BLANK: SettingsForm = {
@@ -30,7 +30,7 @@ const BLANK: SettingsForm = {
   toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [],
   footerLinks: [],
-  about: { kicker: "About", title: "", lede: "", quote: "", focus: [], story: [], now: [], timeline: [], updated: "" },
+  about: { kicker: "About", title: "", lede: "", quote: "", portraitUrl: "", portraitAlt: "", focus: [], story: [], now: [], timeline: [], updated: "" },
 };
 
 export default function AdminSettingsPage() {
@@ -182,6 +182,18 @@ export default function AdminSettingsPage() {
               <span>Quote</span>
               <input value={form.about.quote} onChange={(e) => patch("about", { quote: e.target.value })} />
             </label>
+            <div className={styles.twoCol}>
+              <label className={styles.field}>
+                <span>Portrait URL</span>
+                <input value={form.about.portraitUrl} onChange={(e) => patch("about", { portraitUrl: e.target.value })} />
+                <em>Shown to the right of the About headline. Leave empty to hide.</em>
+              </label>
+              <label className={styles.field}>
+                <span>Portrait alt text</span>
+                <input value={form.about.portraitAlt} onChange={(e) => patch("about", { portraitAlt: e.target.value })} />
+              </label>
+            </div>
+            <UploadField label="Upload About portrait" accept="image/*" onUploaded={(src) => patch("about", { portraitUrl: src })} />
             <label className={styles.field}>
               <span>Focus pills</span>
               <em>One per line — Malware analysis, Reverse engineering…</em>

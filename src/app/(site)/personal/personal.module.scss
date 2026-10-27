@@ -7,19 +7,17 @@
 }
 
 /* Masthead */
-.masthead {
-  border-bottom: 1px solid var(--border-light);
-}
-
 .masthead .inner {
-  padding-top: var(--spacer-3);
-  padding-bottom: var(--spacer-6);
+  display: grid;
+  padding-top: clamp(20px, 2.6vw, 32px);
+  padding-bottom: clamp(32px, 4vw, 52px);
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: clamp(28px, 4vw, 48px);
   font-size: 14px;
   color: var(--gray-600);
 
@@ -36,138 +34,105 @@
   }
 }
 
-.kicker {
-  margin-top: var(--spacer-4);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--gray-500);
+/* Featured album — dark scrim card, same language as the homepage lead */
+.featureSection {
+  margin-top: clamp(36px, 4.5vw, 60px);
 }
 
-.title {
-  margin-top: 10px;
-  max-width: 24ch;
+.scrimCard {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: #0b0b0c;
+  color: #fff;
+}
+
+.scrimImg {
+  object-fit: cover;
+  opacity: 0.92;
+  transition: transform 500ms cubic-bezier(0.2, 0, 0, 1), opacity 300ms ease;
+}
+
+.scrimCard:hover .scrimImg {
+  transform: scale(1.03);
+  opacity: 1;
+}
+
+.scrimKicker {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.scrimBody {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 64px 24px 22px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+}
+
+.scrimText {
+  display: grid;
+  gap: 5px;
+}
+
+.scrimTitle {
   font-family: var(--font-ui);
-    font-size: clamp(36px, 4vw, 48px);
+  font-size: clamp(24px, 3vw, 36px);
   font-weight: 400;
-  line-height: 1.17;
+  line-height: 1.18;
   letter-spacing: -0.25px;
-  color: var(--gray-900);
+  color: #fff;
   text-wrap: balance;
 }
 
-.lede {
-  margin-top: 16px;
-  max-width: 56ch;
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--gray-700);
-}
-
-.mastheadActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: var(--spacer-4);
-}
-
-/* Featured album */
-.feature {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: 48px;
-  align-items: center;
-  margin-top: var(--spacer-7);
-}
-
-.featureMedia {
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 10;
-  border-radius: var(--radius-16);
-  overflow: hidden;
-  background: var(--gray-100);
-
-  &:hover .featureImg {
-    transform: scale(1.02);
-  }
-}
-
-.featureImg {
-  object-fit: cover;
-  transition: transform 600ms cubic-bezier(0.27, 1.06, 0.18, 1);
-}
-
-.featureText {
-  display: grid;
-  justify-items: start;
-  gap: 10px;
-}
-
-.featureText .kicker {
-  margin-top: 0;
-}
-
-.featureTitle {
-  font-family: var(--font-ui);
-  font-size: 32px;
-  font-weight: 400;
-  letter-spacing: -0.25px;
-  line-height: 40px;
-  color: var(--gray-900);
-
-  a {
-    color: inherit;
-  }
-
-  a:hover {
-    color: var(--gray-600);
-  }
-}
-
-.featureSub {
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--gray-700);
-}
-
-.featureDesc {
+.scrimSub {
+  max-width: 52ch;
   font-size: 16px;
-  line-height: 27px;
-  color: var(--gray-600);
-  max-width: 44ch;
+  line-height: 25px;
+  color: rgba(255, 255, 255, 0.82);
 }
 
-.featureMeta {
-  margin-top: 2px;
+.scrimMeta {
   font-size: 13px;
-  color: var(--gray-500);
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.featureCta {
-  margin-top: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-ui);
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  color: var(--blue-600);
+.scrimCta {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  transition: background-color 200ms ease, transform 200ms ease;
+}
 
-  &:hover {
-    color: var(--blue-900);
-  }
+.scrimCard:hover .scrimCta {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateX(3px);
 }
 
 /* Sections */
 .section {
-  margin-top: var(--spacer-7);
+  margin-top: clamp(40px, 5vw, 68px);
 }
 
 .albumGrid {
+  margin-top: var(--spacer-3);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
@@ -175,10 +140,17 @@
 }
 
 .postGrid {
+  margin-top: var(--spacer-3);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
   align-items: start;
+}
+
+.empty {
+  margin-top: var(--spacer-3);
+  font-size: 16px;
+  color: var(--gray-600);
 }
 
 /* Album card */
@@ -192,7 +164,7 @@
   position: relative;
   display: block;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius-12);
+  border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--gray-100);
   margin-bottom: 10px;
@@ -265,30 +237,24 @@
 }
 
 @media (max-width: 1000px) {
-  .feature {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
   .albumGrid,
   .postGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .title {
-    font-size: 32px;
+  .albumGrid,
+  .postGrid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .lede,
-  .featureSub {
-    font-size: 16px;
-    line-height: 24px;
+  .scrimCard {
+    aspect-ratio: 4 / 3;
   }
 
-  .featureTitle {
-    font-size: 26px;
-    line-height: 34px;
+  .scrimSub {
+    font-size: 15px;
+    line-height: 23px;
   }
 }

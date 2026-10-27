@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
+import { PageHero } from "@/components/site/PageHero";
 import { PostRail } from "@/components/site/PostRail";
+import { SectionHead } from "@/components/site/sections";
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import styles from "./newsletter.module.scss";
@@ -31,33 +33,31 @@ export default async function NewsletterPage() {
             <span aria-current="page">Newsletter</span>
           </nav>
 
-          <p className={styles.kicker}>Newsletter</p>
-          <h1 className={styles.title}>Notes worth an inbox.</h1>
-          <p className={styles.lede}>
-            New posts land here first, with a short note on what I&apos;m building, breaking and
-            photographing. Roughly once a fortnight — never more.
-          </p>
-
-          {settings.toggles.newsletter ? (
-            <div className={styles.formWrap}>
-              <NewsletterForm />
-              <p className={styles.privacy}>
-                No spam, no tracking pixels. Unsubscribe from any email. Read the{" "}
-                <Link href="/privacy">privacy policy</Link>.
-              </p>
-            </div>
-          ) : (
-            <p className={styles.privacy}>The newsletter is closed right now. New posts are still on the blog and in the RSS feed.</p>
-          )}
+          <PageHero
+            kicker="Newsletter"
+            title="Notes worth an inbox."
+            lede="New posts land here first, with a short note on what I'm building, breaking and photographing. Roughly once a fortnight — never more."
+          >
+            {settings.toggles.newsletter ? (
+              <>
+                <div className={styles.formWrap}>
+                  <NewsletterForm variant="pill" />
+                </div>
+                <p className={styles.privacy}>
+                  No spam, no tracking pixels. Unsubscribe from any email. Read the{" "}
+                  <Link href="/privacy">privacy policy</Link>.
+                </p>
+              </>
+            ) : (
+              <p className={styles.privacy}>The newsletter is closed right now. New posts are still on the blog and in the RSS feed.</p>
+            )}
+          </PageHero>
         </div>
       </header>
 
       <div className={styles.inner}>
-        <section className={styles.section} aria-labelledby="recent-heading">
-          <div className={styles.recentHead}>
-            <h2 id="recent-heading" className={styles.sectionTitle}>The latest</h2>
-            <Link href="/blog" className="btn btn-outline">Browse all posts</Link>
-          </div>
+        <section className={styles.section} aria-label="The latest">
+          <SectionHead title="The latest" href="/blog" linkLabel="Browse all posts" />
           <p className={styles.sectionLede}>
             {posts.length} posts on systems, security and the slow things in between — newest first.
           </p>
