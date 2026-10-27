@@ -169,6 +169,8 @@
   display: flex;
   flex-direction: column;
   background: var(--studio-bg);
+  /* keep scrollIntoView targets clear of the sticky topbar */
+  scroll-padding-top: 80px;
 }
 
 .topbar {

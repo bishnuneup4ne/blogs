@@ -5,7 +5,7 @@ import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/site/sections";
 import { allCategories, getAllPosts, getAlbums, getCategory, getSubscriberCount } from "@/lib/data";
-import { relativeDate, shortDate } from "@/lib/dates";
+import { relativeDate } from "@/lib/dates";
 import { getSettings } from "@/lib/settings";
 import styles from "./home.module.scss";
 
@@ -34,10 +34,61 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* Masthead — who this is, before any story */}
+      <section className={styles.masthead}>
+        <div className={styles.mastInner}>
+          {settings.identity.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={settings.identity.avatarUrl} alt="" className={styles.mastAvatar} width={64} height={64} />
+          ) : null}
+          <div className={styles.mastText}>
+            <h1 className={styles.mastTitle}>
+              News from <span>{settings.identity.siteName}</span>
+            </h1>
+            <p className={styles.mastTagline}>{settings.identity.tagline}</p>
+          </div>
+          {posts.length > 0 ? (
+            <div className={styles.mastStats}>
+              <Link href="/blog" className={styles.mastStat}>
+                <strong>{posts.length}</strong> {posts.length === 1 ? "story" : "stories"}
+              </Link>
+              {albums.length > 0 ? (
+                <Link href="/gallery" className={styles.mastStat}>
+                  <strong>{albums.reduce((n, a) => n + a.photos.length, 0)}</strong> photos
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {/* Past posts — right up front, as a proper rail */}
+      {posts.length > 1 ? (
+        <section className={`${styles.section} ${styles.pastSection}`}>
+          <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
+          <ul className={styles.pastRow}>
+            {posts.slice(-8).reverse().map((post) => (
+              <li key={post.slug}>
+                <Link href={`/blog/${post.slug}`} className={styles.pastChip}>
+                  {post.cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.cover.src} alt="" className={styles.pastThumb} loading="lazy" />
+                  ) : (
+                    <span className={styles.pastFallback}>{post.title.trim().slice(0, 1).toUpperCase()}</span>
+                  )}
+                  <span className={styles.pastTitle}>{post.title}</span>
+                  <span className={styles.pastDate}>{relativeDate(post.date)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {!lead ? (
         <section className={styles.empty}>
           <p className={styles.emptyKicker}>The archive</p>
-          <h1 className={styles.emptyTitle}>{settings.hero.title}</h1>
+          <h2 className={styles.emptyTitle}>{settings.hero.title}</h2>
           <p className={styles.emptyBody}>{settings.hero.standfirst}</p>
           <Link href="/blog" className="btn btn-primary">Browse the blog</Link>
         </section>
@@ -45,6 +96,7 @@ export default async function HomePage() {
 
       {lead ? (
         <section className={styles.hero}>
+          <SectionHead title="Latest" href="/blog" linkLabel="All writing" />
           <div className={styles.heroInner}>
             <Link href={`/blog/${lead.slug}`} className={styles.lead}>
               <span className={styles.leadMedia}>
@@ -61,10 +113,9 @@ export default async function HomePage() {
               </span>
               <span className={styles.leadText}>
                 <span className={styles.kicker}>{leadCategory?.name}</span>
-                <h1 className={styles.leadTitle}>{lead.title}</h1>
+                <h2 className={styles.leadTitle}>{lead.title}</h2>
                 <span className={styles.leadDesc}>{lead.description}</span>
-                <span className={styles.leadMeta}>                   {relativeDate(lead.date)} · {lead.readingMinutes} min read
-                </span>
+                <span className={styles.leadMeta}>{relativeDate(lead.date)} · {lead.readingMinutes} min read</span>
                 <span className={styles.leadCta}>
                   Read more <span aria-hidden="true">→</span>
                 </span>
@@ -72,7 +123,7 @@ export default async function HomePage() {
             </Link>
 
             {secondary.length > 0 ? (
-              <div className={styles.side}>
+              <ul className={styles.side}>
                 {secondary.map((post, i) => (
                   <Reveal as="li" key={post.slug} delay={i * 90}>
                     <Link href={`/blog/${post.slug}`} className={styles.sideCard}>
@@ -95,7 +146,7 @@ export default async function HomePage() {
                     </Link>
                   </Reveal>
                 ))}
-              </div>
+              </ul>
             ) : null}
           </div>
         </section>
@@ -104,7 +155,6 @@ export default async function HomePage() {
       {enabled("latest") && rest.length > 2 ? (
         <LatestSection posts={rest.slice(2)} topics={topics} hideTitle variant="grid" />
       ) : null}
-
 
       {albums.length > 0 ? (
         <section className={styles.section}>
@@ -131,27 +181,6 @@ export default async function HomePage() {
                   </span>
                 </Link>
               </Reveal>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {posts.length > 1 ? (
-        <section className={styles.section}>
-          <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
-          <ul className={styles.pastRow}>
-            {posts.slice(-6).reverse().map((post) => (
-              <li key={post.slug}>
-                <Link href={`/blog/${post.slug}`} className={styles.pastChip}>
-                  {post.cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.cover.src} alt="" className={styles.pastThumb} loading="lazy" />
-                  ) : (
-                    <span className={styles.pastFallback}>{post.title.trim().slice(0, 1).toUpperCase()}</span>
-                  )}
-                  <span className={styles.pastTitle}>{post.title}</span>
-                </Link>
-              </li>
             ))}
           </ul>
         </section>
