@@ -3,12 +3,14 @@ import Image from "next/image";
 import { getAllPosts, getAlbums } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { GalleryStrip } from "@/components/site/GalleryStrip";
+import { SectionHead, UpdateCard } from "@/components/site/sections";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
   const [posts, settings, albums] = await Promise.all([getAllPosts(), getSettings(), getAlbums()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   const lead = ordered[0];
+  const latest = ordered.slice(0, 6);
   // Newest first: photos carry takenAt; fall back to album order.
   const galleryPhotos = [...albums.flatMap((a) => a.photos)]
     .filter((p) => p.kind !== "video")
@@ -91,9 +93,25 @@ export default async function HomePage() {
         ) : null}
       </div>
 
+      {latest.length > 0 ? (
+        <section className={styles.latestSection} aria-labelledby="latest-heading">
+          <SectionHead title="Latest" href="/blog" linkLabel="All posts" />
+          <ul className={styles.latestGrid}>
+            {latest.map((post) => (
+              <li key={post.slug} className={styles.latestCell}>
+                <UpdateCard post={post} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {galleryPhotos.length > 0 ? (
         <div className={styles.photoStrip}>
-          <GalleryStrip photos={galleryPhotos} />
+          <GalleryStrip
+            photos={galleryPhotos}
+            folders={albums.map((a) => ({ title: a.title, slug: a.slug, src: a.cover || a.photos.find((p) => p.kind !== "video")?.src || "", count: a.photos.length }))}
+          />
         </div>
       ) : null}
     </section>

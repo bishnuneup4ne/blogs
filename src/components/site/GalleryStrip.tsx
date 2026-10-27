@@ -8,7 +8,9 @@ import styles from "./GalleryStrip.module.scss";
 
 /* blog.google-style browse row: one large featured frame plus a swipeable
    strip of recent shots; any click opens the zoomable lightbox. */
-export function GalleryStrip({ photos }: { photos: GalleryPhoto[] }) {
+interface FolderRef { title: string; slug: string; src: string; count: number }
+
+export function GalleryStrip({ photos, folders = [] }: { photos: GalleryPhoto[]; folders?: FolderRef[] }) {
   const images = photos.filter((p) => p.kind !== "video");
   const [featured, ...rest] = images;
   const trackRef = useRef<HTMLUListElement>(null);
@@ -48,6 +50,18 @@ export function GalleryStrip({ photos }: { photos: GalleryPhoto[] }) {
       {rest.length > 0 ? (
         <div className={styles.stripWrap}>
           <ul ref={trackRef} className={styles.track}>
+            {folders.filter((f) => f.src).map((f) => (
+              <li key={`folder-${f.slug}`}>
+                <Link href={`/gallery/${f.slug}`} className={styles.folderTile} aria-label={`Open folder: ${f.title}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.src} alt="" loading="lazy" />
+                  <span className={styles.folderLabel}>
+                    <strong>{f.title}</strong>
+                    <em>{f.count} photos</em>
+                  </span>
+                </Link>
+              </li>
+            ))}
             {rest.map((p, i) => (
               <li key={p.id}>
                 <button type="button" className={styles.thumb} onClick={() => setZoom(i + 1)} aria-label={`Open photo: ${p.caption || `frame ${i + 2}`}`}>
