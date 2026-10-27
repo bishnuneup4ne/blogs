@@ -33,15 +33,12 @@ export function AlbumGrid({ photos }: { photos: GalleryPhoto[]; count?: number }
             >
               <span className={styles.media}>
                 {photo.kind === "video" ? (
-                  <video
-                    src={photo.src}
-                    poster={photo.poster}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className={styles.image}
-                    aria-hidden="true"
-                  />
+                  photo.poster ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo.poster} alt="" className={styles.image} loading="lazy" />
+                  ) : (
+                    <span className={`${styles.image} ${styles.videoPlaceholder}`} aria-hidden="true">▶</span>
+                  )
                 ) : (
                   <Image
                     src={photo.src}

@@ -42,6 +42,14 @@
   transition: transform 600ms cubic-bezier(0.2, 0, 0, 1);
 }
 
+.videoPlaceholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--gray-200), var(--gray-300));
+  color: var(--white);
+  font-size: 34px;
+}
+
 @media (hover: hover) {
   .item:hover .image {
     transform: scale(1.04);

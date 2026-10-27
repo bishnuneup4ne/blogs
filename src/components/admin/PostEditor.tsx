@@ -10,6 +10,7 @@ import { StatusChip, statusTone } from "@/components/admin/kit";
 import type { Block, ChartBlock as ChartBlockType, FlowEdge, FlowNode, FlowNodeShape } from "@/lib/types";
 import { ChartBlockView, FLOW_SHAPE_OPTIONS } from "@/components/blog/ChartBlock";
 import { sanitizeInlineHtml } from "@/admin/sanitize";
+import { RichEditor } from "./RichEditor";
 import styles from "./PostEditor.module.scss";
 
 const slugifyTitle = (v: string) =>
@@ -78,6 +79,9 @@ const BLOCK_TYPES: { type: Block["type"]; label: string }[] = [
   { type: "list", label: "List" },
   { type: "code", label: "Code" },
   { type: "image", label: "Image" },
+  { type: "row", label: "Image row" },
+  { type: "video", label: "Video" },
+  { type: "related", label: "Related article" },
   { type: "table", label: "Table" },
   { type: "chart", label: "Chart" },
   { type: "divider", label: "Divider" },
@@ -98,6 +102,12 @@ function newBlock(type: Block["type"]): Block {
       return { type, lang: "ts", code: "", filename: "" };
     case "image":
       return { type, src: "", alt: "", caption: "" };
+    case "row":
+      return { type, items: [{ src: "", alt: "" }, { src: "", alt: "" }], caption: "" };
+    case "video":
+      return { type, url: "", caption: "" };
+    case "related":
+      return { type, slug: "", title: "", description: "", image: "" };
     case "table":
       return { type, head: ["Column", "Column"], rows: [["", ""]] };
     case "chart":
@@ -115,6 +125,7 @@ export function PostEditor({ postId }: { postId: string }) {
   const topicsC = useApiCollection<ApiTopic>("/api/admin/topics", "topics");
   const albumsC = useApiCollection<ApiAlbum>("/api/admin/albums", "albums");
   const uploadsC = useApiCollection<ApiUpload>("/api/admin/upload", "files");
+  const postsC = useApiCollection<{ id: string; title: string; slug: string; summary: string; cover_url: string | null }>("/api/admin/posts", "posts");
   const [authorName, setAuthorName] = useState("Bishnu Neupane");
   useEffect(() => {
     api.get<{ payload?: { identity?: { authorName?: string } } }>("/api/admin/settings")
@@ -413,7 +424,7 @@ export function PostEditor({ postId }: { postId: string }) {
                       </button>
                       <button type="button" className={styles.gutterBtn} onClick={() => removeBlock(i)} aria-label="Delete block">×</button>
                     </div>
-                    <BlockEditor block={block} onChange={(b) => patchBlock(i, b)} imageOptions={imageOptions} />
+                    <BlockEditor block={block} onChange={(b) => patchBlock(i, b)} imageOptions={imageOptions} postOptions={postsC.items.filter((p) => p.slug !== draft?.slug).map((p) => ({ slug: p.slug, title: p.title, summary: p.summary, cover: p.cover_url ?? "" }))} />
                     {addOpen === i ? (
                       <div className={styles.blockMenu}>
                         {BLOCK_TYPES.map((t) => (
@@ -634,7 +645,7 @@ function TagEditor({ tags, onChange }: { tags: string[]; onChange: (tags: string
   );
 }
 
-function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[] }) {
+function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[]; postOptions?: { slug: string; title: string; summary: string; cover: string }[] }) {
   const toast = useToast();
   switch (block.type) {
     case "h2":
@@ -650,13 +661,7 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
     case "quote":
       return (
         <div className={styles.quoteWrap}>
-          <textarea
-            className={styles.quote}
-            value={block.html}
-            placeholder="Quote text"
-            rows={2}
-            onChange={(e) => onChange({ ...block, html: e.target.value })}
-          />
+          <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Quote text" minHeight={44} />
           <input
             className={styles.quoteCite}
             value={block.cite ?? ""}
@@ -681,12 +686,7 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
             placeholder="Title (optional)"
             onChange={(e) => onChange({ ...block, title: e.target.value })}
           />
-          <textarea
-            rows={2}
-            value={block.html}
-            placeholder="Callout text"
-            onChange={(e) => onChange({ ...block, html: e.target.value })}
-          />
+          <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Callout text" minHeight={44} />
         </div>
       );
     case "list":
@@ -724,11 +724,13 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
               placeholder="filename (optional)"
               onChange={(e) => onChange({ ...block, filename: e.target.value })}
             />
-            <select value={block.lang} onChange={(e) => onChange({ ...block, lang: e.target.value })}>
-              {["ts", "tsx", "js", "bash", "sql", "yaml", "json", "go"].map((l) => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
+            <input
+              className={styles.langInput}
+              value={block.lang}
+              placeholder="language"
+              spellCheck={false}
+              onChange={(e) => onChange({ ...block, lang: e.target.value })}
+            />
           </div>
           <textarea
             className={styles.code}
@@ -794,6 +796,70 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
           <input value={block.caption ?? ""} placeholder="Caption" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
         </div>
       );
+    case "row": {
+      const patchItems = (items: { src: string; alt: string }[]) => onChange({ ...block, items });
+      return (
+        <div className={styles.imageWrap}>
+          <span style={{ fontSize: 12, color: "#5f6368" }}>Images side by side (2–4) — perfect for a strip of photos in one moment.</span>
+          {block.items.map((it, i) => (
+            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {it.src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={it.src} alt="" style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 8 }} />
+              ) : null}
+              <select value={it.src} onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src: e.target.value } : x)))}>
+                <option value="">Choose an image…</option>
+                {imageOptions.map((g) => (
+                  <option key={g.src} value={g.src}>{g.label}</option>
+                ))}
+              </select>
+              <input value={it.alt} placeholder="Alt text" onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))} />
+              <button type="button" onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))}>×</button>
+            </div>
+          ))}
+          {block.items.length < 4 ? (
+            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Add image</button>
+          ) : null}
+          <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
+        </div>
+      );
+    }
+    case "video":
+      return (
+        <div className={styles.imageWrap}>
+          <input
+            value={block.url}
+            placeholder="YouTube or Vimeo link… or upload a video below"
+            onChange={(e) => onChange({ ...block, url: e.target.value })}
+          />
+          {block.url && !/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
+            <label className={styles.uploadBtn}>
+              Upload video (MP4/WebM)
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                hidden
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const { src } = await api.upload(file);
+                    onChange({ ...block, url: src });
+                  } catch (err) {
+                    toast(err instanceof Error ? err.message : "Upload failed");
+                  }
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          ) : null}
+          {block.url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`https://img.youtube.com/vi/${(block.url.match(/(?:v=|youtu\.be\/)([\w-]{6,})/)?.[1] ?? "")}/hqdefault.jpg`} alt="" hidden={!/youtu/i.test(block.url)} style={{ width: 220, borderRadius: 10 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          ) : null}
+          <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
+        </div>
+      );
     case "table":
       return (
         <div className={styles.tableWrap}>
@@ -831,20 +897,45 @@ function BlockEditor({ block, onChange, imageOptions }: { block: Block; onChange
           </button>
         </div>
       );
+    case "related":
+      return (
+        <div className={styles.imageWrap}>
+          <span style={{ fontSize: 12, color: "#5f6368" }}>Inserts a “Read next” card linking to one of your posts.</span>
+          <select
+            value={block.slug}
+            onChange={(e) => {
+              const pick = postOptions.find((o) => o.slug === e.target.value);
+              onChange(pick ? { ...block, slug: pick.slug, title: pick.title, description: pick.summary, image: pick.cover } : { ...block, slug: e.target.value });
+            }}
+          >
+            <option value="">Pick a post to feature…</option>
+            {postOptions.map((o) => (
+              <option key={o.slug} value={o.slug}>{o.title}</option>
+            ))}
+          </select>
+          <input value={block.title} placeholder="Title (shown on the card)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+          <input value={block.description ?? ""} placeholder="One-line description" onChange={(e) => onChange({ ...block, description: e.target.value })} />
+          <select value={block.image ?? ""} onChange={(e) => onChange({ ...block, image: e.target.value })}>
+            <option value="">Card image (optional)…</option>
+            {imageOptions.map((g) => (
+              <option key={g.src} value={g.src}>{g.label}</option>
+            ))}
+          </select>
+        </div>
+      );
     case "chart":
       return <ChartEditor chart={block.chart} onChange={(chart) => onChange({ type: "chart", chart })} />;
     case "divider":
       return <hr className={styles.divider} />;
-    default:
+    default: {
+      const html = "html" in block ? block.html : "";
       return (
-        <textarea
-          className={styles.blockP}
-          value={"html" in block ? block.html : ""}
-          placeholder="Write something… (basic HTML allowed: <a>, <strong>, <em>)"
-          rows={3}
-          onChange={(e) => onChange({ ...block, html: e.target.value })}
+        <RichEditor
+          value={html}
+          onChange={(next) => onChange({ ...(block as { type: "p"; html: string }), html: next })}
         />
       );
+    }
   }
 }
 

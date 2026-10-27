@@ -6,13 +6,19 @@ import type { Block } from "@/lib/types";
 import { CodeBlock } from "./CodeBlock";
 import { ChartBlockView } from "./ChartBlock";
 import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
+import Link from "next/link";
+import { detectExternalVideo } from "@/lib/external-video";
 import styles from "./PostContent.module.scss";
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
   const [zoom, setZoom] = useState<number | null>(null);
-  const images: LightboxItem[] = blocks
-    .filter((b): b is Extract<Block, { type: "image" }> => b.type === "image")
-    .map((b) => ({ src: b.src, alt: b.alt, caption: b.caption }));
+  const images: LightboxItem[] = blocks.flatMap((b) =>
+    b.type === "image"
+      ? [{ src: b.src, alt: b.alt, caption: b.caption }]
+      : b.type === "row"
+        ? b.items.map((it) => ({ src: it.src, alt: it.alt, caption: b.caption }))
+        : [],
+  );
 
   let imageIndex = -1;
 
@@ -106,6 +112,62 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </figure>
               );
             }
+            case "row": {
+              return (
+                <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
+                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${Math.min(block.items.length, 4)}, minmax(0, 1fr))` }}>
+                    {block.items.map((it, j) => {
+                      const myIndex = images.findIndex((img) => img.src === it.src);
+                      return (
+                        <button key={j} type="button" className={styles.imageWrap} onClick={() => setZoom(myIndex)} aria-label={`Zoom image: ${it.alt}`}>
+                          <Image src={it.src} alt={it.alt} width={700} height={520} sizes="(max-width: 760px) 48vw, 860px" className={styles.image} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {block.caption ? <figcaption>{block.caption}</figcaption> : null}
+                </figure>
+              );
+            }
+            case "video": {
+              const external = detectExternalVideo(block.url);
+              if (external) {
+                return (
+                  <figure key={key} className={styles.figure}>
+                    <span className={styles.videoFrame}>
+                      <iframe
+                        src={external.embedUrl}
+                        title={block.caption || `${external.kind} video`}
+                        loading="lazy"
+                        allow="accelerometer; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </span>
+                    {block.caption ? <figcaption>{block.caption}</figcaption> : null}
+                  </figure>
+                );
+              }
+              return (
+                <figure key={key} className={styles.figure}>
+                  <video src={block.url} poster={block.poster} controls playsInline preload="metadata" className={styles.videoFile} />
+                  {block.caption ? <figcaption>{block.caption}</figcaption> : null}
+                </figure>
+              );
+            }
+            case "related":
+              return (
+                <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedCard}>
+                  {block.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={block.image} alt="" className={styles.relatedImg} loading="lazy" />
+                  ) : null}
+                  <span className={styles.relatedBody}>
+                    <span className={styles.relatedKicker}>Read next</span>
+                    <span className={styles.relatedTitle}>{block.title}</span>
+                    {block.description ? <span className={styles.relatedDesc}>{block.description}</span> : null}
+                  </span>
+                </Link>
+              );
             case "table":
               return (
                 <div key={key} className={styles.tableWrap}>

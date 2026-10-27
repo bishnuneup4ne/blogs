@@ -1,5 +1,5 @@
-/* uni-landing-newsletter — premium grey card: hairline border, generous
-   rhythm, headline + form in one balanced column. No extra colors. */
+/* blog.google newsletter footer: two-column grey card — headline + reader row
+   on the left, white form card on the right. */
 .wrap {
   position: relative;
   margin: var(--spacer-6) auto 0;
@@ -11,16 +11,15 @@
 }
 
 .inner {
-  position: relative;
-  z-index: 1;
-  max-width: 640px;
-  padding: var(--spacer-4) var(--spacer-4) var(--spacer-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+  gap: var(--spacer-5);
+  align-items: center;
+  padding: var(--spacer-6);
 }
 
-@media (min-width: 901px) {
-  .inner {
-    padding: var(--spacer-6) var(--spacer-6) var(--spacer-7);
-  }
+.copy {
+  min-width: 0;
 }
 
 .kicker {
@@ -35,22 +34,107 @@
 }
 
 .title {
-  margin-bottom: 12px;
-  font-size: clamp(26px, 3vw, 34px);
+  margin-bottom: 14px;
+  font-size: clamp(28px, 3.4vw, 40px);
   font-weight: 400;
-  letter-spacing: -0.4px;
-  line-height: 1.22;
+  letter-spacing: -0.5px;
+  line-height: 1.18;
   color: var(--gray-900);
   text-wrap: balance;
+}
+
+.inbox {
+  color: var(--blue-700);
 }
 
 .desc {
   margin-top: 0;
   margin-bottom: var(--spacer-4);
-  max-width: 52ch;
+  max-width: 46ch;
   font-size: 16px;
   line-height: 28px;
   color: var(--gray-700);
+}
+
+.readers {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatars {
+  display: flex;
+  align-items: center;
+
+  img,
+  span {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-50);
+    object-fit: cover;
+  }
+
+  > * + * {
+    margin-left: -10px;
+  }
+}
+
+.avatarMine {
+  z-index: 3;
+}
+
+.avatarGhost {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--white);
+}
+
+.a1 {
+  z-index: 2;
+  background: #aecbfa;
+  color: #174ea6;
+}
+
+.a2 {
+  z-index: 1;
+  background: #f6aea9;
+  color: #a50e0e;
+}
+
+.a3 {
+  background: #b7d3a6;
+  color: #1e4620;
+}
+
+.readersLine {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-700);
+
+  strong {
+    font-weight: 500;
+    color: var(--gray-900);
+  }
+}
+
+.aboutLink {
+  color: var(--blue-700);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.formCard {
+  padding: var(--spacer-4);
+  border-radius: var(--radius-card);
+  background: var(--white);
+  box-shadow: var(--shadow-1);
 }
 
 .note {
@@ -69,11 +153,23 @@
   }
 }
 
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacer-4);
+    padding: var(--spacer-5) var(--container-pad);
+  }
+}
+
 @media (max-width: 560px) {
   .wrap {
     margin-top: var(--spacer-5);
     border-left: none;
     border-right: none;
     border-radius: 0;
+  }
+
+  .readers {
+    flex-wrap: wrap;
   }
 }

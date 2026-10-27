@@ -1,7 +1,7 @@
 import type { Block, ChartBlock, FlowEdge, FlowNode, FlowNodeShape } from "@/lib/types";
 
 const ALLOWED_TAGS = new Set([
-  "a", "p", "br", "strong", "em", "b", "i", "u", "code", "pre", "ul", "ol", "li",
+  "a", "p", "br", "strong", "em", "b", "i", "u", "s", "strike", "mark", "sub", "sup", "small", "kbd", "code", "pre", "ul", "ol", "li",
   "blockquote", "h2", "h3", "h4", "span", "img",
 ]);
 const VOID_TAGS = new Set(["br", "img"]);
@@ -10,7 +10,7 @@ const DROP_CONTENT = new Set([
   "noscript", "textarea", "title", "xmp", "plaintext", "form",
 ]);
 const ALLOWED_ATTRS: Record<string, string[]> = {
-  a: ["href", "title"],
+  a: ["href", "title", "target", "rel"],
   img: ["src", "alt", "width", "height", "title"],
 };
 
@@ -450,6 +450,32 @@ function normaliseBlock(raw: unknown): Block | null {
       if (!src) return null;
       const width = ["full", "wide", "medium", "small"].includes(String(source.width)) ? (String(source.width) as "full" | "wide" | "medium" | "small") : undefined;
       return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
+    }
+    case "row": {
+      const rawItems = Array.isArray(source.items) ? source.items.slice(0, 4) : [];
+      const items = rawItems
+        .map((it) => {
+          const o = (it ?? {}) as Record<string, unknown>;
+          const src = safeUrl(String(o.src ?? ""), true);
+          return src ? { src, alt: text(o.alt, 400) ?? "" } : null;
+        })
+        .filter((x): x is { src: string; alt: string } => Boolean(x));
+      if (items.length < 2) return null;
+      const columns = ([2, 3, 4] as const).includes(Number(source.columns) as 2) ? (Number(source.columns) as 2 | 3 | 4) : (Math.min(items.length, 4) as 2 | 3 | 4);
+      return { type, items, columns, caption: text(source.caption, 600) };
+    }
+    case "video": {
+      const url = safeUrl(String(source.url ?? ""));
+      if (!url) return null;
+      const poster = source.poster ? safeUrl(String(source.poster), true) : null;
+      return { type, url, ...(poster ? { poster } : {}), caption: text(source.caption, 600) };
+    }
+    case "related": {
+      const relSlug = text(source.slug, 200);
+      const relTitle = text(source.title, 300);
+      if (!relSlug || !relTitle) return null;
+      const image = source.image ? safeUrl(String(source.image), true) : null;
+      return { type, slug: relSlug, title: relTitle, description: text(source.description, 600), ...(image ? { image } : {}) };
     }
     case "table": {
       const head = stringList(source.head, 20, 200);

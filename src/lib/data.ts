@@ -59,20 +59,21 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
   };
 }
 
-async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Album[]; series: Series[] } | null> {
+async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Album[]; series: Series[]; subscriberCount: number } | null> {
   if (!hasSupabase()) return null;
   const authorName = (await getSettings()).identity.authorName;
   try {
-    const [postsRes, topicsRes, albumsRes, photosRes] = await Promise.all([
+    const [postsRes, topicsRes, albumsRes, photosRes, subsRes] = await Promise.all([
       db.from("fn_posts").select("*").eq("status", "published").order("date", { ascending: false }),
       db.from("fn_topics").select("*").order("sort_order"),
       db.from("fn_albums").select("*").order("sort_order", { ascending: false }),
       db.from("fn_photos").select("*").order("position"),
+      db.from("fn_subscribers").select("id", { count: "exact", head: true }).in("status", ["subscribed", "pending"]),
     ]);
     if (postsRes.error || topicsRes.error || albumsRes.error) throw postsRes.error ?? topicsRes.error ?? albumsRes.error;
     const published = (postsRes.data ?? []) as DbPostRow[];
     // Empty DB means empty site — never fall back to the bundled demo posts.
-    if (published.length === 0) return { posts: [], topics: [], albums: [], series: [] };
+    if (published.length === 0) return { posts: [], topics: [], albums: [], series: [], subscriberCount: 0 };
     const posts = published.map((r) => mapPost(r, authorName));
     const topics: Category[] = (topicsRes.data ?? []).map((t: any) => ({
       slug: t.slug,
@@ -107,7 +108,7 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
         photos,
       };
     });
-    return { posts, topics, albums, series: [] as Series[] };
+    return { posts, topics, albums, series: [] as Series[], subscriberCount: subsRes.count ?? 0 };
   } catch {
     return null;
   }
@@ -115,7 +116,7 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
 
 function fileData() {
   const sorted = [...filePosts].sort((a, b) => (a.date < b.date ? 1 : -1));
-  return { posts: sorted, topics: fileCategories, albums: [...fileAlbums].sort((a, b) => b.year - a.year), series: [] as Series[] };
+  return { posts: sorted, topics: fileCategories, albums: [...fileAlbums].sort((a, b) => b.year - a.year), series: [] as Series[], subscriberCount: 0 };
 }
 
 /** Cached snapshot of all DB content (or files when DB is unavailable/unseeded). */
@@ -145,6 +146,10 @@ export async function getRelatedPostsDetailed(post: Post, limit = 6): Promise<Sc
 
 export async function getPostsByCategory(slug: string): Promise<Post[]> {
   return (await getAllPosts()).filter((p) => p.category === slug);
+}
+
+export async function getSubscriberCount(): Promise<number> {
+  return (await getContent()).subscriberCount;
 }
 
 export async function allTopics(): Promise<Topic[]> {

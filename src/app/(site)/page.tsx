@@ -4,17 +4,18 @@ import { LatestSection } from "@/components/site/LatestSection";
 import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/site/sections";
-import { allCategories, getAllPosts, getAlbums, getCategory } from "@/lib/data";
+import { allCategories, getAllPosts, getAlbums, getCategory, getSubscriberCount } from "@/lib/data";
 import { relativeDate, shortDate } from "@/lib/dates";
 import { getSettings } from "@/lib/settings";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
-  const [posts, cats, settings, albums] = await Promise.all([
+  const [posts, cats, settings, albums, subscriberCount] = await Promise.all([
     getAllPosts(),
     allCategories(),
     getSettings(),
     getAlbums(),
+    getSubscriberCount(),
   ]);
   const enabled = (id: string) => (settings.homeSections.find((x) => x.id === id) ?? { enabled: true }).enabled;
   const topics = cats.map((c) => ({ slug: c.slug, name: c.name }));
@@ -136,7 +137,7 @@ export default async function HomePage() {
       ) : null}
 
       {settings.toggles.newsletter && enabled("newsletter") ? (
-        <NewsletterSection name={settings.identity.siteName.split(" ")[0]} />
+        <NewsletterSection name={settings.identity.siteName.split(" ")[0]} authorName={settings.identity.authorName} avatarUrl={settings.identity.avatarUrl} subscriberCount={subscriberCount} />
       ) : null}
     </>
   );

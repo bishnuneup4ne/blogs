@@ -1,4 +1,4 @@
-const ALLOWED = new Set(["A", "STRONG", "EM", "CODE", "BR"]);
+const ALLOWED = new Set(["A", "STRONG", "EM", "B", "I", "U", "S", "STRIKE", "MARK", "SUB", "SUP", "SMALL", "KBD", "CODE", "BR"]);
 const ALLOWED_ATTR = new Set(["href"]);
 
 /**
