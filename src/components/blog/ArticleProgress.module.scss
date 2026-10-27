@@ -40,6 +40,30 @@
 
 /* blog.google fills the very top edge of the bar. Keep it flush above the
    content row so the blue line reads as the page's own progress. */
+/* Search + share sit together at the right edge, like blog.google. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--gray-700);
+  text-decoration: none;
+  transition: background-color 140ms ease;
+
+  &:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+  }
+}
+
 .track {
   position: absolute;
   top: 0;

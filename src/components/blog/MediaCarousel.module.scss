@@ -2,6 +2,8 @@
   /* Break out of the reading column to the page edges so wide media gets
      room. 50% - 50vw assumed the parent measured the viewport; inside the
      article grid it landed the track at x=0 and clipped every card. */
+  /* Reading-column width, used only by the controls below the rail. */
+  --rail-col: min(100% - 2 * var(--container-pad, 32px), 720px);
   margin-block: 36px;
   margin-inline: calc(-1 * (50vw - 50%));
   padding-inline: 0;
@@ -16,9 +18,9 @@
      and were clipped (a photo in a narrow strip, video spilling right). */
   container-type: inline-size;
   --rail-gap: 16px;
-  --band-h: clamp(220px, 40cqi, 460px);
-  /* One card plus a peek of the next, so the rail reads as scrollable. */
-  --col: 86%;
+  /* blog.google proportions: a wide 16:9 band with the next card peeking. */
+  --band-h: clamp(240px, 46cqi, 520px);
+  --col: 78%;
   display: flex;
   gap: var(--rail-gap);
   scroll-snap-type: x mandatory;
@@ -211,9 +213,16 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin-top: 14px;
-  /* Line the arrows up with the article text, not the viewport edge. */
-  padding-inline: 0;
+  margin-top: 16px;
+  /* The wrap is full-bleed, so the controls need the reading-column inset
+     themselves — otherwise the arrows pin to the viewport edge. */
+  padding-inline: max(calc((100vw - var(--rail-col, 720px)) / 2), 20px);
+}
+
+@media (max-width: 760px) {
+  .controls {
+    padding-inline: var(--container-pad, 16px);
+  }
 }
 
 .arrows {

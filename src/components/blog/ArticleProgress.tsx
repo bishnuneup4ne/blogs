@@ -98,7 +98,15 @@ export function ArticleProgress({
           {(siteName || "B").trim().charAt(0).toUpperCase()}
         </Link>
         <Link href="/blog" className={styles.title}>{title}</Link>
-        <ShareMenu title={title} url={shareUrl} compact />
+        <span className={styles.actions}>
+          <Link href="/search" className={styles.iconBtn} aria-label="Search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-4-4" />
+            </svg>
+          </Link>
+          <ShareMenu title={title} url={shareUrl} compact />
+        </span>
       </div>
     </div>
   );
