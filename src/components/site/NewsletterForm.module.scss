@@ -37,6 +37,19 @@
   }
 }
 
+/* pill variant — fully rounded input + gradient pill button (blog.google subscribe card) */
+.formPill {
+  .input {
+    border-radius: var(--radius-pill);
+  }
+
+  .submit {
+    flex: none;
+    width: auto;
+    border-radius: var(--radius-pill);
+  }
+}
+
 .input {
   flex: 1;
   min-width: 0;

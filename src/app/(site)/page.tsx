@@ -37,9 +37,9 @@ export default async function HomePage() {
           </span>
         </h1>
         <svg className={styles.arrowArc} viewBox="0 0 220 120" fill="none" aria-hidden="true">
-          {/* Tail starts low-right near the headline, sweeps up-left; head at (8,14) points straight at Newsletter */}
-          <path d="M212 112C174 34 82 8 12 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M24 14 10 26l17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Sits beside the lede; tail starts low-left, head at top-right points up at Newsletter */}
+          <path d="M8 112C46 34 138 8 208 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M196 14 210 26l-17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <p className={styles.statementLede}>{settings.hero.standfirst}</p>
       </div>
@@ -102,20 +102,17 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <section className={styles.subscribeBand} aria-labelledby="subscribe-heading">
-        <div className={styles.subscribeCopy}>
-          <p className={styles.subscribeKicker}>Newsletter</p>
-          <h2 id="subscribe-heading" className={styles.subscribeTitle}>
-            New notes, once in a while.<br />
-            <span className={styles.subscribeTitleSoft}>Nothing else, ever.</span>
-          </h2>
-          <p className={styles.subscribeText}>
-            A short email whenever something worth keeping lands here — field notes,
-            write-ups, photo sets. One click to join, one click to leave.
-          </p>
-        </div>
+      <section className={styles.subscribeCard} aria-labelledby="subscribe-heading">
+        <p className={styles.subscribeKicker}>Newsletter</p>
+        <h2 id="subscribe-heading" className={styles.subscribeTitle}>
+          Get the latest from bishnuneup4ne
+        </h2>
+        <p className={styles.subscribeText}>
+          A short email whenever something worth keeping lands here — field notes,
+          write-ups, photo sets. One click to join, one click to leave.
+        </p>
         <div className={styles.subscribeForm}>
-          <NewsletterForm variant="card" />
+          <NewsletterForm variant="pill" />
         </div>
       </section>
     </section>

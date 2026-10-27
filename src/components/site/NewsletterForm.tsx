@@ -3,7 +3,7 @@
 import { useState } from "react";
 import styles from "./NewsletterForm.module.scss";
 
-export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "card" }) {
+export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "card" | "pill" }) {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
@@ -38,8 +38,10 @@ export function NewsletterForm({ variant = "inline" }: { variant?: "inline" | "c
     );
   }
 
+  const formClass = variant === "card" ? `${styles.form} ${styles.formCard}` : variant === "pill" ? `${styles.form} ${styles.formPill}` : styles.form;
+
   return (
-    <form className={variant === "card" ? `${styles.form} ${styles.formCard}` : styles.form} onSubmit={onSubmit}>
+    <form className={formClass} onSubmit={onSubmit}>
       <label htmlFor="newsletter-email" className="sr-only">Email address</label>
       <input
         id="newsletter-email"

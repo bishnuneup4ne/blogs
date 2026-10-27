@@ -477,10 +477,10 @@
 
 .arrowArc {
   position: absolute;
-  /* Head must sit just below the header Newsletter button (~135px wide, right-aligned). */
+  /* Beside the right-aligned lede, head aiming up at the header Newsletter button. */
   width: clamp(120px, 14vw, 200px);
-  right: calc(32px + 16px - 0.06 * clamp(120px, 14vw, 200px));
-  top: calc(clamp(44px, 4.5vw, 64px) - 7px);
+  right: calc(32px + clamp(8px, 4vw, 88px) - 0.05 * clamp(120px, 14vw, 200px));
+  top: calc(clamp(44px, 4.5vw, 64px) + 26px);
   color: var(--gray-800);
   pointer-events: none;
 }
@@ -646,16 +646,13 @@
   overflow-x: clip;
 }
 
-/* ---------- Newsletter band — closes the page where the arrow points ---------- */
-.subscribeBand {
-  margin-top: clamp(44px, 5vw, 72px);
+/* ---------- Newsletter — centered blog.google subscribe card ---------- */
+.subscribeCard {
+  margin: clamp(52px, 6vw, 88px) auto clamp(8px, 1vw, 16px);
+  max-width: 720px;
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-  gap: clamp(24px, 4vw, 60px);
-  align-items: center;
-  padding: clamp(28px, 4vw, 48px);
-  border-radius: var(--radius-card);
-  background: var(--gray-50);
+  justify-items: center;
+  text-align: center;
 }
 
 .subscribeKicker {
@@ -665,47 +662,31 @@
   letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--blue-700);
-  margin: 0 0 10px;
+  margin: 0 0 14px;
 }
 
 .subscribeTitle {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: clamp(26px, 3vw, 36px);
+  font-size: clamp(28px, 3.4vw, 40px);
   font-weight: 400;
   letter-spacing: -0.25px;
-  line-height: 1.18;
+  line-height: 1.15;
   color: var(--gray-900);
 }
 
-.subscribeTitleSoft {
-  color: var(--gray-600);
-}
-
 .subscribeText {
-  margin: 14px 0 0;
-  max-width: 46ch;
+  margin: 16px 0 0;
+  max-width: 52ch;
   font-size: 16px;
   line-height: 26px;
   color: var(--gray-700);
 }
 
-.subscribeForm form {
-  max-width: none;
-  align-items: stretch;
-
-  /* label is screen-reader-only; keep it first so input→button order holds */
-  > :global([class*="NewsletterForm-input"]),
-  > :global([class*="NewsletterForm-submit"]) {
-    flex: 1 1 100%;
-    border-radius: var(--radius-16);
-  }
-}
-
-@media (max-width: 900px) {
-  .subscribeBand {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.subscribeForm {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 28px;
 }
 
 @media (max-width: 900px) {
@@ -723,7 +704,8 @@
 
   .arrowArc {
     width: 110px;
-    top: 0;
+    right: calc(32px + clamp(8px, 4vw, 88px) - 0.05 * 110px);
+    top: calc(clamp(44px, 4.5vw, 64px) + 20px);
   }
 }
 
