@@ -418,3 +418,78 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Intro — research-page style statement + newest story */
+.intro {
+  max-width: var(--container);
+  margin: var(--spacer-5) auto 0;
+  padding: 0 var(--container-pad);
+}
+
+.introTop {
+  position: relative;
+  padding-bottom: var(--spacer-4);
+}
+
+.introTitle {
+  font-family: var(--font-ui);
+  font-size: clamp(40px, 6.4vw, 76px);
+  font-weight: 400;
+  letter-spacing: -2px;
+  line-height: 1.04;
+  color: var(--gray-900);
+  text-wrap: balance;
+}
+
+.introAccent {
+  display: block;
+  color: var(--blue-700);
+}
+
+.introLede {
+  margin-top: 22px;
+  max-width: 38ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-700);
+}
+
+.introRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 40px;
+  align-items: start;
+  margin-top: var(--spacer-4);
+  padding-top: var(--spacer-4);
+  border-top: 1px solid var(--gray-200);
+}
+
+.introCopy {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  font-size: 15px;
+  line-height: 26px;
+  color: var(--gray-700);
+
+  p {
+    margin: 0;
+    max-width: 42ch;
+  }
+}
+
+.introKicker {
+  font-family: var(--font-ui);
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  color: var(--gray-900);
+}
+
+@media (max-width: 900px) {
+  .introRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+}

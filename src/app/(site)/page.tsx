@@ -4,7 +4,7 @@ import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/site/sections";
 import { ArrowRight } from "@/components/icons/Icons";
-import { allCategories, getAllPosts, getAlbums, getCategory, getSubscriberCount } from "@/lib/data";
+import { allCategories, getAllPosts, getAlbums, getSubscriberCount } from "@/lib/data";
 import { formatDate, relativeDate } from "@/lib/dates";
 import { getSettings } from "@/lib/settings";
 import styles from "./home.module.scss";
@@ -21,8 +21,6 @@ export default async function HomePage() {
 
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   const [lead, ...rest] = ordered;
-  const secondary = rest.slice(0, 2);
-  const leadCategory = lead ? getCategory(lead.category) : null;
 
   const galleryAlbums =
     albums.length >= 3
@@ -42,60 +40,41 @@ export default async function HomePage() {
         </section>
       ) : null}
 
+      {/* Intro — editorial statement + the single newest story, research-page style */}
       {lead ? (
-        <section className={styles.hero}>
-          <SectionHead title="Latest" href="/blog" linkLabel="All writing" />
-          <div className={styles.heroInner}>
-            <Link href={`/blog/${lead.slug}`} className={styles.lead}>
-              <span className={styles.leadMedia}>
+        <section className={styles.intro}>
+          <div className={styles.introTop}>
+            <h1 className={styles.introTitle}>
+              Notes from my life,
+              <span className={styles.introAccent}>one post at a time.</span>
+            </h1>
+            <p className={styles.introLede}>{settings.identity.tagline}</p>
+          </div>
+          <div className={styles.introRow}>
+            <div className={styles.introCopy}>
+              <h2 className={styles.introKicker}>The newest one</h2>
+              <p>{lead.description}</p>
+              <Link href="/blog" className={`${styles.pastCta} btn btn-outline`}>
+                All writing <ArrowRight width={20} height={20} />
+              </Link>
+            </div>
+            <article className={styles.pastCard}>
+              <Link href={`/blog/${lead.slug}`} className={styles.pastMedia} tabIndex={-1} aria-hidden="true">
                 {lead.cover ? (
-                  <Image
-                    src={lead.cover.src}
-                    alt={lead.cover.alt || lead.title}
-                    fill
-                    priority
-                    sizes="(max-width: 1000px) 100vw, 760px"
-                    className={styles.leadImg}
-                  />
+                  <Image src={lead.cover.src} alt="" fill priority sizes="(max-width: 700px) 100vw, 640px" className={styles.mediaImg} />
                 ) : null}
-              </span>
-              <span className={styles.leadText}>
-                <span className={styles.kicker}>{leadCategory?.name}</span>
-                <h2 className={styles.leadTitle}>{lead.title}</h2>
-                <span className={styles.leadDesc}>{lead.description}</span>
-                <span className={styles.leadMeta}>{relativeDate(lead.date)} · {lead.readingMinutes} min read</span>
-                <span className={styles.leadCta}>
-                  Read more <span aria-hidden="true">→</span>
-                </span>
-              </span>
-            </Link>
-
-            {secondary.length > 0 ? (
-              <ul className={styles.side}>
-                {secondary.map((post, i) => (
-                  <Reveal as="li" key={post.slug} delay={i * 90}>
-                    <Link href={`/blog/${post.slug}`} className={styles.sideCard}>
-                      <span className={styles.sideMedia}>
-                        {post.cover ? (
-                          <Image
-                            src={post.cover.src}
-                            alt=""
-                            fill
-                            sizes="(max-width: 1000px) 100vw, 320px"
-                            className={styles.sideImg}
-                          />
-                        ) : null}
-                      </span>
-                      <span className={styles.sideText}>
-                        <span className={styles.sideTitle}>{post.title}</span>
-                        <span className={styles.sideDesc}>{post.description}</span>
-                        <span className={styles.sideMeta}>{relativeDate(post.date)} · Read more →</span>
-                      </span>
-                    </Link>
-                  </Reveal>
-                ))}
-              </ul>
-            ) : null}
+              </Link>
+              <div className={styles.pastBody}>
+                <h3 className={styles.pastTitle}>
+                  <Link href={`/blog/${lead.slug}`}>{lead.title}</Link>
+                </h3>
+                <p className={styles.pastDesc}>{lead.description}</p>
+                <p className={styles.pastMeta}>{formatDate(lead.date)} · {relativeDate(lead.date)} · {lead.readingMinutes} min read</p>
+                <Link href={`/blog/${lead.slug}`} className={`${styles.pastCta} btn btn-outline`}>
+                  Read article <ArrowRight width={20} height={20} />
+                </Link>
+              </div>
+            </article>
           </div>
         </section>
       ) : null}
@@ -105,7 +84,7 @@ export default async function HomePage() {
         <section className={`${styles.section} ${styles.pastSection}`}>
           <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
           <ul className={styles.pastRow}>
-            {[...posts].sort((a, b) => (a.date < b.date ? 1 : -1)).map((post) => (
+            {[...ordered].slice(3).map((post) => (
               <li key={post.slug}>
                 <article className={styles.pastCard}>
                   <Link href={`/blog/${post.slug}`} className={styles.pastMedia} tabIndex={-1} aria-hidden="true">
