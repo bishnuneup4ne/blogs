@@ -646,6 +646,68 @@
   overflow-x: clip;
 }
 
+/* ---------- Newsletter band — closes the page where the arrow points ---------- */
+.subscribeBand {
+  margin-top: clamp(44px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: clamp(24px, 4vw, 60px);
+  align-items: center;
+  padding: clamp(28px, 4vw, 48px);
+  border-radius: var(--radius-card);
+  background: var(--gray-50);
+}
+
+.subscribeKicker {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--blue-700);
+  margin: 0 0 10px;
+}
+
+.subscribeTitle {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 400;
+  letter-spacing: -0.25px;
+  line-height: 1.18;
+  color: var(--gray-900);
+}
+
+.subscribeTitleSoft {
+  color: var(--gray-600);
+}
+
+.subscribeText {
+  margin: 14px 0 0;
+  max-width: 46ch;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-700);
+}
+
+.subscribeForm form {
+  max-width: none;
+  align-items: stretch;
+
+  /* label is screen-reader-only; keep it first so input→button order holds */
+  > :global([class*="NewsletterForm-input"]),
+  > :global([class*="NewsletterForm-submit"]) {
+    flex: 1 1 100%;
+    border-radius: var(--radius-16);
+  }
+}
+
+@media (max-width: 900px) {
+  .subscribeBand {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
   .missionRow {
     grid-template-columns: minmax(0, 1fr);

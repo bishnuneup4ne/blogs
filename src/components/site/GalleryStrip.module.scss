@@ -61,16 +61,20 @@
   }
 }
 
-/* Folder tiles lead the carousel */
+/* Folder tiles lead the carousel — exactly 3 visible, arrows page through the rest */
+.slide {
+  flex: 0 0 calc((100% - 28px) / 3);
+  scroll-snap-align: start;
+}
+
 .folderTile {
   position: relative;
   display: block;
-  width: clamp(180px, 20vw, 240px);
+  width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius-16);
   overflow: hidden;
   background: var(--gray-100);
-  scroll-snap-align: start;
   transition: box-shadow 180ms ease, transform 180ms ease;
 
   img {
@@ -131,11 +135,22 @@
   background: var(--white);
   color: var(--gray-800);
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease, opacity 150ms ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--gray-100);
     border-color: var(--gray-400);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+@media (max-width: 900px) {
+  .slide {
+    flex-basis: calc((100% - 14px) / 2); /* two visible on tablets */
   }
 }
 
@@ -145,6 +160,10 @@
   }
 
   .thumb {
-    width: 46vw;
+    width: min(62vw, 300px);
+  }
+
+  .slide {
+    flex-basis: 62vw; /* one dominant tile on phones */
   }
 }

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getAllPosts, getAlbums } from "@/lib/data";
+import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
-import { GalleryStrip } from "@/components/site/GalleryStrip";
+import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
-  const [posts, settings, albums] = await Promise.all([getAllPosts(), getSettings(), getAlbums()]);
+  const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   const lead = ordered[0];
   const latest = ordered.slice(1, 7);
@@ -102,13 +102,22 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {albums.length > 0 ? (
-        <div className={styles.photoStrip}>
-          <GalleryStrip
-            folders={albums.map((a) => ({ title: a.title, slug: a.slug, src: a.cover || a.photos.find((p) => p.kind !== "video")?.src || "", count: a.photos.length }))}
-          />
+      <section className={styles.subscribeBand} aria-labelledby="subscribe-heading">
+        <div className={styles.subscribeCopy}>
+          <p className={styles.subscribeKicker}>Newsletter</p>
+          <h2 id="subscribe-heading" className={styles.subscribeTitle}>
+            New notes, once in a while.<br />
+            <span className={styles.subscribeTitleSoft}>Nothing else, ever.</span>
+          </h2>
+          <p className={styles.subscribeText}>
+            A short email whenever something worth keeping lands here — field notes,
+            write-ups, photo sets. One click to join, one click to leave.
+          </p>
         </div>
-      ) : null}
+        <div className={styles.subscribeForm}>
+          <NewsletterForm variant="card" />
+        </div>
+      </section>
     </section>
   );
 }
