@@ -1,7 +1,7 @@
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterSection } from "@/components/site/NewsletterSection";
-import { CategoryLatest, Feature, HeroRail } from "@/components/site/HomeSections";
+import { Feature, HeroRail, StoryCarousel } from "@/components/site/HomeSections";
 import styles from "./home.module.scss";
 export default async function HomePage() {
   const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
@@ -14,18 +14,23 @@ export default async function HomePage() {
   // Featured posts go first (in date order among featured).
   const featuredPosts = byDate.filter((post) => post.featured);
 
-  // Hero section: first featured, then non-featured newest posts. Cap the rail
-  // so the sections below ("Latest stories", "Latest Personal Stories") always
-  // have something to show on a small archive.
-  const heroLimit = Math.min(6, Math.max(1, posts.length - 2));
-  const heroPosts = [...featuredPosts, ...byDate.filter((post) => !post.featured)].slice(0, heroLimit);
-  const heroSet = new Set(heroPosts.map((post) => post.slug));
+  // "Latest stories" is the primary block: it takes up to 6 of the newest
+  // posts. The hero rail fills from whatever remains, so the two never repeat.
+  const latestPosts = byDate.slice(0, 6);
+  const latestSet = new Set(latestPosts.map((post) => post.slug));
 
-  // Latest stories: everything not already in the hero rail, newest first.
-  const latestPosts = byDate.filter((post) => !heroSet.has(post.slug));
+  const heroPosts = [...featuredPosts, ...byDate.filter((post) => !post.featured && !latestSet.has(post.slug))]
+    .slice(0, 6);
 
   // Personal posts from the remaining pool.
   const personalPosts = latestPosts.filter((p) => p.category === "personal");
+
+  // One rail on the home page: hero picks first, then the newest stories.
+  const heroPicked = new Set(heroPosts.map((post) => post.slug));
+  const combined = [
+    ...heroPosts,
+    ...latestPosts.filter((post) => !heroPicked.has(post.slug)),
+  ];
 
   // One post not already in the rail, for the Feature component.
   const featured = latestPosts[0];
@@ -70,28 +75,29 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <HeroRail posts={heroPosts} />
-
-      {/* One latest rail across every topic, then the personal slice. The
-          separate "Latest stories" list was a third copy of the same posts. */}
-      {latestPosts.length > 0 ? (
-        <CategoryLatest
+      {/* One rail: hero picks lead the latest stories, so the section reads as
+          a single block instead of two stacked carousels. */}
+      {combined.length > 0 ? (
+        <StoryCarousel
+          id="latest-rail-heading"
           title="Latest stories"
           subtitle="The newest writing across every topic."
-          posts={latestPosts.slice(0, 6)}
-          moreHref="/blog"
+          posts={combined}
+          href="/blog"
           moreLabel="View more stories"
+          limit={8}
+          featuredSlugs={heroPicked}
         />
       ) : null}
 
       {personalPosts.length > 0 ? (
-        <CategoryLatest
+        <StoryCarousel
+          id="personal-rail-heading"
           title="Latest Personal Stories"
           subtitle="Notes from the life around the work."
-          posts={personalPosts.slice(0, 6)}
-          moreHref="/personal"
+          posts={personalPosts}
+          href="/personal"
           moreLabel="More on Personal"
-          carousel
         />
       ) : null}
 

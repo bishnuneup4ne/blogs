@@ -300,3 +300,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Masthead: copy left, at-a-glance stats right ---------- */
+
+.mastheadGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: end;
+  margin-top: 8px;
+}
+
+.mastheadCopy {
+  min-width: 0;
+}
+
+.mastheadStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-self: end;
+}
+
+.statItem {
+  display: grid;
+  gap: 2px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: var(--gray-50, #f8f9fa);
+  border: 1px solid var(--gray-150, #e8eaed);
+}
+
+.statNum {
+  font-family: var(--font-ui);
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.6px;
+  line-height: 1.05;
+  color: var(--gray-900, #202124);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+  color: var(--gray-600, #5f6368);
+}
+
+@media (max-width: 900px) {
+  .mastheadGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}

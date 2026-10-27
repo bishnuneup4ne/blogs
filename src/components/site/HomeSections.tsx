@@ -146,12 +146,15 @@ export function CategoryLatest({
   posts,
   moreHref,
   moreLabel = "View more",
+  carousel = false,
 }: {
   title: string;
   subtitle?: string;
   posts: Post[];
   moreHref: string;
   moreLabel?: string;
+  /** Lay the stories out as a horizontal rail instead of a stacked list. */
+  carousel?: boolean;
 }) {
   if (posts.length === 0) return null;
   return (
@@ -166,8 +169,8 @@ export function CategoryLatest({
           <ReadArrow />
         </Link>
       </div>
-      <ul className={styles.catList}>
-        {posts.slice(0, 5).map((post) => (
+      <ul className={carousel ? `${styles.catList} ${styles.catRail}` : styles.catList}>
+        {posts.slice(0, 6).map((post) => (
           <li key={post.slug}>
             <Link href={`/blog/${post.slug}`} className={styles.catRow}>
               <span className={styles.catMedia}>
@@ -357,3 +360,135 @@ export function Feature({ post, eyebrow = "Feature" }: { post: Post; eyebrow?: s
   );
 }
 
+
+/* ---------- Personal rail: a real carousel with arrows + progress ---------- */
+
+/* Shared story rail — used by "Latest stories" and "Latest Personal Stories".
+   Arrows page one card at a time; the hairline tracks scroll position. */
+export function StoryCarousel({
+  posts,
+  href,
+  title,
+  subtitle,
+  moreLabel,
+  id,
+  limit = 8,
+  featuredSlugs,
+}: {
+  posts: Post[];
+  href: string;
+  title?: string;
+  subtitle?: string;
+  moreLabel?: string;
+  id: string;
+  limit?: number;
+  /** Posts to give the wider "lead" treatment at the head of the rail. */
+  featuredSlugs?: Set<string>;
+}) {
+  const trackRef = useRef<HTMLUListElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  const sync = useCallback(() => {
+    const t = trackRef.current;
+    if (!t) return;
+    const max = t.scrollWidth - t.clientWidth;
+    const left = t.scrollLeft;
+    setProgress(max <= 0 ? 1 : Math.min(Math.max(left / max, 0), 1));
+    setAtStart(left <= 4);
+    setAtEnd(max <= 0 || left >= max - 4);
+  }, []);
+
+  useEffect(() => {
+    sync();
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, [sync]);
+
+  function go(delta: number) {
+    const t = trackRef.current;
+    if (!t) return;
+    const first = t.children[0] as HTMLElement | undefined;
+    const step = (first?.offsetWidth ?? 320) + 20;
+    t.scrollBy({ left: step * delta, behavior: "smooth" });
+  }
+
+  if (posts.length === 0) return null;
+
+  return (
+    <section className={styles.personal} aria-labelledby={id}>
+      {title ? (
+        <div className={styles.catHead}>
+          <div>
+            <h2 id={id} className={styles.bandTitle}>{title}</h2>
+            {subtitle ? <p className={styles.catSubtitle}>{subtitle}</p> : null}
+          </div>
+          {moreLabel ? (
+            <Link href={href} className={styles.catMore}>
+              {moreLabel}
+              <ReadArrow />
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+
+      <ul className={styles.personalTrack} ref={trackRef} onScroll={sync}>
+        {posts.slice(0, limit).map((post, i) => {
+          // The first story is the lead: copy + button on the left, image on
+          // the right. Everything after it is a normal carousel tile.
+          if (i === 0) {
+            return (
+              <li key={post.slug} className={`${styles.personalItem} ${styles.personalItemHero}`}>
+                <Link href={`/blog/${post.slug}`} className={styles.heroCard}>
+                  <span className={styles.heroCopy}>
+                    <span className={styles.compactEyebrow}>{getCategory(post.category).name}</span>
+                    <span className={styles.heroTitle}>{post.title}</span>
+                    <span className={styles.heroDesc}>{post.description}</span>
+                    <span className={styles.heroCta}>
+                      Read article
+                      <ReadArrow />
+                    </span>
+                  </span>
+                  <span className={styles.heroMedia}>
+                    <Media post={post} sizes="(max-width: 900px) 100vw, 520px" className={styles.coverImg} />
+                  </span>
+                </Link>
+              </li>
+            );
+          }
+          return (
+            <li key={post.slug} className={styles.personalItem}>
+              <Link href={`/blog/${post.slug}`} className={styles.personalCard}>
+                <span className={styles.personalMedia}>
+                  <Media post={post} sizes="(max-width: 760px) 82vw, 340px" className={styles.coverImg} />
+                </span>
+                <span className={styles.personalBody}>
+                  <span className={styles.compactEyebrow}>{getCategory(post.category).name}</span>
+                  <span className={styles.personalTitle}>{post.title}</span>
+                  <span className={styles.compactByline}>
+                    {post.readingMinutes} min read
+                  </span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className={styles.catControls}>
+        <div className={styles.catArrows}>
+          <button type="button" className={styles.catArrow} onClick={() => go(-1)} disabled={atStart} aria-label="Previous stories">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+          <button type="button" className={styles.catArrow} onClick={() => go(1)} disabled={atEnd} aria-label="More stories">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+        </div>
+        <span className={styles.catProgress} aria-hidden="true">
+          <span className={styles.catProgressFill} style={{ transform: `scaleX(${Math.max(progress, 0.12)})` }} />
+        </span>
+      </div>
+    </section>
+  );
+}

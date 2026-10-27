@@ -8,7 +8,9 @@ import { Reveal } from "@/components/ui/Reveal";
 import { UpdateCard } from "./sections";
 import styles from "./LatestSection.module.scss";
 
-const PAGE = 3;
+/* First paint shows `initial`; the explore button adds `step` each time. */
+const DEFAULT_INITIAL = 9;
+const DEFAULT_STEP = 6;
 
 export function LatestSection({
  posts,
@@ -18,6 +20,8 @@ export function LatestSection({
  excludeSlugs = [],
  hideTitle = false,
  markFirst = false,
+ initial = DEFAULT_INITIAL,
+ step = DEFAULT_STEP,
 }: {
  posts: Post[];
  topics: { slug: string; name: string }[];
@@ -26,10 +30,12 @@ export function LatestSection({
  excludeSlugs?: string[];
  hideTitle?: boolean;
  markFirst?: boolean;
+ initial?: number;
+ step?: number;
 }) {
  const [topic, setTopic] = useState("all");
  const [author, setAuthor] = useState("all");
- const [visible, setVisible] = useState(PAGE);
+ const [visible, setVisible] = useState(initial);
 
  const pool = posts;
  const authors = useMemo(() => {
@@ -55,7 +61,7 @@ export function LatestSection({
     <button
      type="button"
      className={`pill ${topic === "all" ? "pill-active" : ""}`}
-     onClick={() => { setTopic("all"); setVisible(PAGE); }}
+     onClick={() => { setTopic("all"); setVisible(initial); }}
      aria-pressed={topic === "all"}
     >
      All News
@@ -65,7 +71,7 @@ export function LatestSection({
       key={t.slug}
       type="button"
       className={`pill ${topic === t.slug ? "pill-active" : ""}`}
-      onClick={() => { setTopic(t.slug); setVisible(PAGE); }}
+      onClick={() => { setTopic(t.slug); setVisible(initial); }}
       aria-pressed={topic === t.slug}
      >
       {t.name}
@@ -79,7 +85,7 @@ export function LatestSection({
       <button
        type="button"
        className={`pill ${author === "all" ? "pill-active" : ""}`}
-       onClick={() => { setAuthor("all"); setVisible(PAGE); }}
+       onClick={() => { setAuthor("all"); setVisible(initial); }}
        aria-pressed={author === "all"}
       >
        Everyone
@@ -89,7 +95,7 @@ export function LatestSection({
         key={name}
         type="button"
         className={`pill ${author === name ? "pill-active" : ""}`}
-        onClick={() => { setAuthor(name); setVisible(PAGE); }}
+        onClick={() => { setAuthor(name); setVisible(initial); }}
         aria-pressed={author === name}
        >
         {name}
@@ -118,7 +124,7 @@ export function LatestSection({
     )}
     {filtered.length > shown.length ? (
      <div className={styles.loadMoreRow}>
-      <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => v + PAGE)}>
+      <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => Math.min(v + step, filtered.length))}>
        Load more stories
        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <path d="m6 9 6 6 6-6" />
@@ -160,7 +166,7 @@ export function LatestSection({
      ) : null}
      {filtered.length > shown.length ? (
       <div className={styles.loadMoreRow}>
-       <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => v + PAGE)}>
+       <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => Math.min(v + step, filtered.length))}>
         Explore more articles
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
          <path d="m6 9 6 6 6-6" />

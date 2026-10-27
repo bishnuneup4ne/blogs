@@ -39,20 +39,41 @@ export default async function PersonalPage() {
             <span aria-current="page">Personal</span>
           </nav>
 
-          <p className={styles.kicker}>Personal</p>
-          <h1 className={styles.title}>
-            The parts of a life that don&apos;t fit in a commit message.
-          </h1>
-          <p className={styles.lede}>
-            Training, trails, photographs, the morning routine. The slow things that keep the fast
-            work honest.
-          </p>
+          <div className={styles.mastheadGrid}>
+            <div className={styles.mastheadCopy}>
+              <p className={styles.kicker}>Personal</p>
+              <h1 className={styles.title}>
+                The parts of a life that don&apos;t fit in a commit message.
+              </h1>
+              <p className={styles.lede}>
+                Training, trails, photographs, the morning routine. The slow things that keep the
+                fast work honest.
+              </p>
 
-          <div className={styles.mastheadActions}>
-            <Link href="/gallery" className="btn btn-primary">
-              Open gallery <span aria-hidden="true">→</span>
-            </Link>
-            <Link href="/personal/blogs" className="btn btn-outline">Personal blogs</Link>
+              <div className={styles.mastheadActions}>
+                <Link href="/gallery" className="btn btn-primary">
+                  Open gallery <span aria-hidden="true">→</span>
+                </Link>
+                <Link href="/personal/blogs" className="btn btn-outline">Personal blogs</Link>
+              </div>
+            </div>
+
+            <div className={styles.mastheadStats} aria-label="At a glance">
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>{writing.length}</span>
+                <span className={styles.statLabel}>stories</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>{albums.length}</span>
+                <span className={styles.statLabel}>{albums.length === 1 ? "album" : "albums"}</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statNum}>
+                  {albums.reduce((n, a) => n + a.photos.length, 0)}
+                </span>
+                <span className={styles.statLabel}>photos</span>
+              </div>
+            </div>
           </div>
         </div>
       </header>

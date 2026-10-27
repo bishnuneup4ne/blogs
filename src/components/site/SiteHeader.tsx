@@ -109,17 +109,32 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     runSearch(query);
   }
 
+  function openSearch() {
+    setDrawer(false);
+    setSearchOpen(true);
+    // Focus after the width transition starts so the caret lands in the box.
+    window.setTimeout(() => searchInputRef.current?.focus(), 60);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    setQuery("");
+    searchButtonRef.current?.focus();
+  }
+
   function toggleDrawer() {
     setSearchOpen(false);
     setDrawer((open) => !open);
   }
 
   function isActive(href: string) {
-    return href === "/"
-      ? pathname === "/"
-      : href === "/blog"
-        ? pathname.startsWith("/blog")
-        : pathname === href || pathname.startsWith(`${href}/`);
+    // /categories is a legacy alias that redirects to /topics; treat them as
+    // one destination so the nav item highlights on both.
+    const canonical = href === "/categories" ? "/topics" : href;
+    const current = pathname === "/categories" ? "/topics" : pathname;
+    if (canonical === "/") return current === "/";
+    if (canonical === "/blog") return current.startsWith("/blog");
+    return current === canonical || current.startsWith(`${canonical}/`);
   }
 
   return (
@@ -127,9 +142,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.brand} aria-label={`${settings.identity.siteName} home`}>
-            <span className={styles.brandMark} aria-hidden="true">{brandInitial}</span>
             <span className={styles.brandText}>
-              <span className={styles.brandKicker}>{settings.identity.authorName}</span>
+              <span className={styles.brandKicker}>News from</span>
               <span className={styles.brandName}>{settings.identity.wordmark}</span>
             </span>
           </Link>
@@ -150,20 +164,34 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           </nav>
 
           <div className={styles.actions}>
-            <button
-              ref={searchButtonRef}
-              type="button"
-              className={styles.searchTrigger}
-              aria-label="Open search"
-              aria-expanded={searchOpen}
-              aria-controls="site-search"
-              aria-keyshortcuts="/"
-              onClick={() => { setDrawer(false); setSearchOpen((open) => !open); }}
-            >
-              <SearchIcon width={18} height={18} />
-              <span className={styles.searchLabel}>Search</span>
-              <kbd className={styles.searchKey} aria-hidden="true">/</kbd>
-            </button>
+            {/* The field expands leftward over the nav so there's room to type. */}
+            <div className={`${styles.searchBox} ${searchOpen ? styles.searchBoxOpen : ""}`}>
+              <form onSubmit={submitSearch} className={styles.searchForm} role="search">
+                <SearchIcon width={20} height={20} className={styles.searchGlyph} />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search stories, topics, and ideas…"
+                  aria-label="Search the site"
+                  autoComplete="off"
+                  tabIndex={searchOpen ? 0 : -1}
+                  className={styles.searchField}
+                />
+              </form>
+              <button
+                ref={searchButtonRef}
+                type="button"
+                className={styles.iconBtn}
+                aria-label={searchOpen ? "Close search" : "Search"}
+                aria-expanded={searchOpen}
+                aria-keyshortcuts="/"
+                onClick={() => (searchOpen ? closeSearch() : openSearch())}
+              >
+                {searchOpen ? <CloseIcon width={20} height={20} /> : <SearchIcon width={20} height={20} />}
+              </button>
+            </div>
             <Link href="/gallery" className={styles.iconBtn} aria-label="Open gallery">
               <ImagesIcon />
             </Link>
@@ -186,41 +214,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             </button>
           </div>
 
-          <div id="site-search" className={`${styles.searchLayer} ${searchOpen ? styles.searchLayerOpen : ""}`} aria-hidden={!searchOpen}>
-            <div className={styles.searchPanel} role="search">
-              <div className={styles.searchTop}>
-                <div>
-                  <p className={styles.searchEyebrow}>THE ARCHIVE</p>
-                  <h2 className={styles.searchTitle}>What are you looking for?</h2>
-                </div>
-                <button type="button" className={styles.searchClose} onClick={() => { setSearchOpen(false); setQuery(""); searchButtonRef.current?.focus(); }} aria-label="Close search" tabIndex={searchOpen ? 0 : -1}>
-                  <CloseIcon width={20} height={20} />
-                </button>
-              </div>
-              <form onSubmit={submitSearch} className={styles.searchForm}>
-                <SearchIcon width={21} height={21} className={styles.searchGlyph} />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search stories, topics, and ideas…"
-                  aria-label="Search the site"
-                  autoComplete="off"
-                  tabIndex={searchOpen ? 0 : -1}
-                />
-                <button type="submit" className={styles.searchSubmit} disabled={!query.trim()}>Search</button>
-              </form>
-              <div className={styles.searchQuick}>
-                <span className={styles.searchQuickLabel}>POPULAR</span>
-                {SEARCH_TERMS.map((term) => (
-                  <button key={term} type="button" className={styles.searchChip} onClick={() => runSearch(term)} tabIndex={searchOpen ? 0 : -1}>
-                    {term}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -233,8 +226,10 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               <Link href="/" className={styles.drawerBrand} aria-label={`${settings.identity.siteName} home`}>
                 <span className={styles.brandMark}>{brandInitial}</span>
                 <span className={styles.drawerBrandText}>
-                  <span className={styles.brandKicker}>{settings.identity.authorName}</span>
-                  <span className={styles.brandName}>{settings.identity.wordmark}</span>
+                  <span className={styles.drawerBrandName}>
+                    <span className={styles.drawerBrandKicker}>News from</span>
+                    <span>{settings.identity.wordmark}</span>
+                  </span>
                 </span>
               </Link>
               <button type="button" className={styles.drawerClose} onClick={() => setDrawer(false)} aria-label="Close menu">
