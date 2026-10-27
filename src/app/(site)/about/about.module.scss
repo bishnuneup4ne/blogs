@@ -50,10 +50,10 @@
   margin-top: 10px;
   max-width: 22ch;
   font-family: var(--font-ui);
-  font-size: clamp(36px, 4.6vw, 56px);
+  font-size: clamp(36px, 4vw, 48px);
   font-weight: 400;
-  letter-spacing: -0.5px;
-  line-height: 1.1;
+  line-height: 1.17;
+  letter-spacing: -0.25px;
   color: var(--gray-900);
   text-wrap: balance;
 }
