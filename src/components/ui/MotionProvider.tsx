@@ -16,7 +16,9 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
   // supersedes the previous tween; a manual wheel/touch cancels it so the
   // animation never fights the user mid-scroll.
   useEffect(() => {
+    let cancelled = false;
     function onClick(event: MouseEvent) {
+      if (cancelled) return;
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       const link = target?.closest<HTMLAnchorElement>('a[href^="#"]');
@@ -56,7 +58,8 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     document.addEventListener("click", onClick);
     window.addEventListener("wheel", cancel, { passive: true });
     window.addEventListener("touchstart", cancel, { passive: true });
-    return () => {
+return () => {
+      cancelled = true;
       document.removeEventListener("click", onClick);
       window.removeEventListener("wheel", cancel);
       window.removeEventListener("touchstart", cancel);

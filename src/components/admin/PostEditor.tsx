@@ -812,104 +812,7 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
         </div>
       );
     case "row": {
-      const patchItems = (items: { src: string; alt: string }[]) => onChange({ ...block, items });
-      const move = (i: number, dir: -1 | 1) => {
-        const j = i + dir;
-        if (j < 0 || j >= block.items.length) return;
-        const next = [...block.items];
-        [next[i], next[j]] = [next[j], next[i]];
-        patchItems(next);
-      };
-      const addFiles = async (files: FileList | null) => {
-        if (!files?.length) return;
-        for (const file of Array.from(files)) {
-          try {
-            const { src } = await api.upload(file);
-            patchItems([...block.items, { src, alt: file.name.replace(/\.[^.]+$/, "") }]);
-          } catch (err) {
-            toast(err instanceof Error ? err.message : `Could not upload ${file.name}`);
-          }
-        }
-      };
-      return (
-        <div className={styles.rowEditor}>
-          <div className={styles.rowGridHead}>
-            <span>{block.items.length} item{block.items.length === 1 ? "" : "s"} — add as many photos or clips as you like</span>
-          </div>
-          <ul className={styles.rowList}>
-            {block.items.map((it, i) => (
-              <li key={i} className={styles.rowItem}>
-                <span className={styles.rowThumb}>
-                  {it.src ? (
-                    /\.mp4|\.webm/i.test(it.src) ? (
-                      <video src={it.src} muted playsInline preload="metadata" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={it.src} alt="" loading="lazy" />
-                    )
-                  ) : (
-                    <span className={styles.rowThumbEmpty}>?</span>
-                  )}
-                </span>
-                <input
-                  className={styles.rowAlt}
-                  value={it.alt}
-                  placeholder={`Caption / alt for #${i + 1}`}
-                  onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))}
-                />
-                <select
-                  aria-label={`Size for item ${i + 1}`}
-                  value={typeof it.size === "string" ? it.size : "auto"}
-                  onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))}
-                >
-                  <option value="auto">Auto</option>
-                  <option value="square">Square</option>
-                  <option value="portrait">Tall</option>
-                  <option value="wide">Wide</option>
-                </select>
-                <span className={styles.rowMoves}>
-                  <button type="button" onClick={() => move(i, -1)} aria-label="Move earlier">↑</button>
-                  <button type="button" onClick={() => move(i, 1)} aria-label="Move later">↓</button>
-                </span>
-                <label className={styles.rowReplace}>
-                  Replace
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                    hidden
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      try {
-                        const { src } = await api.upload(file);
-                        patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src } : x)));
-                      } catch (err) {
-                        toast(err instanceof Error ? err.message : "Upload failed");
-                      }
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-                <button type="button" className={styles.rowRemove} onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))} aria-label={`Remove item ${i + 1}`}>×</button>
-              </li>
-            ))}
-          </ul>
-          <div className={styles.rowFoot}>
-            <label className={`${styles.uploadBtn} ${styles.rowAddBtn}`}>
-              + Add photos or videos
-              <input
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                hidden
-                onChange={(e) => addFiles(e.target.files)}
-              />
-            </label>
-            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Blank slot</button>
-          </div>
-          <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
-        </div>
-      );
+      return <RowBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
     }
     case "video":
       return (
@@ -1025,6 +928,223 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
     }
   }
 }
+
+function RowBlockEditor({ block, onChange, imageOptions }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[] }) {
+  const toast = useToast();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  if (block.type !== "row") return null;
+  const patchItems = (items: { src: string; alt: string }[]) => onChange({ ...block, items });
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= block.items.length) return;
+    const next = [...block.items];
+    [next[i], next[j]] = [next[j], next[i]];
+    patchItems(next);
+  };
+  return (
+    <div className={styles.rowEditor}>
+      <div className={styles.rowGridHead}>
+        <span>{block.items.length} item{block.items.length === 1 ? "" : "s"} — add as many photos or clips as you like</span>
+      </div>
+      <ul className={styles.rowList}>
+        {block.items.map((it, i) => (
+          <li key={i} className={styles.rowItem}>
+            <span className={styles.rowThumb}>
+              {it.src ? (
+                /\.mp4|\.webm/i.test(it.src) ? (
+                  <video src={it.src} muted playsInline preload="metadata" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={it.src} alt="" loading="lazy" />
+                )
+              ) : (
+                <span className={styles.rowThumbEmpty}>?</span>
+              )}
+            </span>
+            <input
+              className={styles.rowAlt}
+              value={it.alt}
+              placeholder={`Caption / alt for #${i + 1}`}
+              onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))}
+            />
+            <select
+              aria-label={`Size for item ${i + 1}`}
+              value={typeof it.size === "string" ? it.size : "auto"}
+              onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))}
+            >
+              <option value="auto">Auto</option>
+              <option value="square">Square</option>
+              <option value="portrait">Tall</option>
+              <option value="wide">Wide</option>
+            </select>
+            <span className={styles.rowMoves}>
+              <button type="button" onClick={() => move(i, -1)} aria-label="Move earlier">↑</button>
+              <button type="button" onClick={() => move(i, 1)} aria-label="Move later">↓</button>
+            </span>
+            <label className={styles.rowReplace}>
+              Replace
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                hidden
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const { src } = await api.upload(file);
+                    patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src } : x)));
+                  } catch (err) {
+                    toast(err instanceof Error ? err.message : "Upload failed");
+                  }
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            <button type="button" className={styles.rowRemove} onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))} aria-label={`Remove item ${i + 1}`}>×</button>
+          </li>
+        ))}
+      </ul>
+      <div className={styles.rowFoot}>
+        <button type="button" className={styles.rowAddBtn} onClick={() => setPickerOpen(true)}>
+          + Add photos or videos
+        </button>
+        <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Blank slot</button>
+        <MediaPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          imageOptions={imageOptions}
+          onPick={(added) => patchItems([...block.items, ...added.filter((a) => a.src)])}
+        />
+      </div>
+      <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
+    </div>
+  );
+}
+
+/* Admin-style popup: pick media via upload, external link, or the library. */
+function MediaPicker({
+  open,
+  onClose,
+  onPick,
+  multiple = true,
+  imageOptions,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (items: { src: string; alt: string }[]) => void;
+  multiple?: boolean;
+  imageOptions: { src: string; label: string }[];
+}) {
+  const toast = useToast();
+  const [tab, setTab] = useState<"upload" | "link" | "library">("upload");
+  const [link, setLink] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  if (!open) return null;
+
+  const finish = (items: { src: string; alt: string }[]) => {
+    if (items.length) onPick(items);
+    setPicked([]);
+    setLink("");
+    onClose();
+  };
+
+  return (
+    <div className={styles.pickerOverlay} role="dialog" aria-modal="true" aria-label="Add photos or videos" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={styles.picker}>
+        <header className={styles.pickerHead}>
+          <h3>Add photos or videos</h3>
+          <button type="button" onClick={onClose} aria-label="Close">×</button>
+        </header>
+        <div className={styles.pickerTabs} role="tablist">
+          {(["upload", "link", "library"] as const).map((t) => (
+            <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? styles.pickerTabOn : styles.pickerTab} onClick={() => setTab(t)}>
+              {t === "upload" ? "Upload" : t === "link" ? "Link" : "Library"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "upload" ? (
+          <label className={styles.pickerDrop}>
+            <input
+              type="file"
+              multiple={multiple}
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+              hidden
+              onChange={async (e) => {
+                const files = e.target.files;
+                if (!files?.length) return;
+                setBusy(true);
+                const out: { src: string; alt: string }[] = [];
+                for (const file of Array.from(files)) {
+                  try {
+                    const { src } = await api.upload(file);
+                    out.push({ src, alt: file.name.replace(/\.[^.]+$/, "") });
+                  } catch (err) {
+                    toast(err instanceof Error ? err.message : `Could not upload ${file.name}`);
+                  }
+                }
+                setBusy(false);
+                finish(out);
+                e.target.value = "";
+              }}
+            />
+            <span>{busy ? "Uploading…" : "Drop files here or click to browse"}</span>
+            <small>Photos (JPG, PNG, WebP, GIF) and clips (MP4, WebM) — hosted in your storage</small>
+          </label>
+        ) : null}
+
+        {tab === "link" ? (
+          <div className={styles.pickerLink}>
+            <input
+              value={link}
+              placeholder="https://example.com/photo.jpg or a video URL…"
+              onChange={(e) => setLink(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = link.trim(); if (/^https?:\/\//i.test(v)) finish([{ src: v, alt: "" }]); } }}
+            />
+            <small>Direct image or video URLs only — YouTube links belong in a Video block.</small>
+            <button
+              type="button"
+              className={styles.pickerGo}
+              disabled={!/^https?:\/\//i.test(link.trim())}
+              onClick={() => finish([{ src: link.trim(), alt: "" }])}
+            >
+              Add link
+            </button>
+          </div>
+        ) : null}
+
+        {tab === "library" ? (
+          <div className={styles.pickerGrid}>
+            {imageOptions.length === 0 ? <p className={styles.pickerEmpty}>Nothing uploaded yet.</p> : null}
+            {imageOptions.map((g) => {
+              const on = picked.includes(g.src);
+              return (
+                <button
+                  key={g.src}
+                  type="button"
+                  className={on ? styles.pickerCellOn : styles.pickerCell}
+                  aria-pressed={on}
+                  onClick={() => setPicked((p) => (p.includes(g.src) ? p.filter((x) => x !== g.src) : multiple ? [...p, g.src] : [g.src]))}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={g.src} alt="" loading="lazy" />
+                </button>
+              );
+            })}
+            <div className={styles.pickerFoot}>
+              <span>{picked.length} selected</span>
+              <button type="button" className={styles.pickerGo} disabled={!picked.length} onClick={() => finish(picked.map((src) => ({ src, alt: "" })))}>
+                Add selected
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 
 function Preview({ draft }: { draft: EditorDraft }) {
   return (
