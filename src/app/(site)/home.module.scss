@@ -472,6 +472,7 @@
 }
 
 .statementTitle {
+  position: relative;
   margin: 0 auto;
   max-width: 1100px;
   display: grid;
@@ -482,6 +483,25 @@
   row-gap: 0;
   letter-spacing: -0.035em;
   color: var(--gray-900);
+}
+
+/* Doodles scattered around the statement, like the research page */
+.doodleButterfly {
+  position: absolute;
+  top: -0.34em;
+  left: 46%;
+  width: clamp(46px, 4.6vw, 76px);
+  height: auto;
+  pointer-events: none;
+}
+
+.doodleSatellite {
+  position: absolute;
+  left: -0.4em;
+  bottom: 0.1em;
+  width: clamp(44px, 4.4vw, 72px);
+  height: auto;
+  pointer-events: none;
 }
 
 .stLine {
@@ -525,72 +545,49 @@
   pointer-events: none;
 }
 
-/* Foot row: lede on the left, actions on the right, hairline above */
-.statementFoot {
-  margin-top: clamp(30px, 3.6vw, 52px);
-  padding-top: clamp(22px, 2.6vw, 34px);
-  border-top: 1px solid var(--gray-150);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(20px, 3vw, 48px);
-  flex-wrap: wrap;
-}
-
+/* Mission line — left-aligned under the statement, like the research page */
 .statementLede {
-  margin: 0;
-  max-width: 52ch;
-  font-size: 18px;
-  line-height: 29px;
+  margin: clamp(30px, 3.6vw, 52px) 0 0;
+  max-width: 62ch;
+  font-size: 19px;
+  line-height: 30px;
   color: var(--gray-700);
 }
 
-.statementActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  flex: none;
-}
-
-/* ---------- Mission row: narrow copy + dark media card ---------- */
-/* ---------- Archive band: copy left, latest-story card right ---------- */
+/* ---------- Archive band: copy left, feature "player" right ---------- */
 .archive {
   display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
-  gap: clamp(28px, 4.5vw, 64px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+  gap: clamp(32px, 5vw, 76px);
   align-items: center;
-  margin-top: clamp(40px, 5vw, 68px);
-  padding: clamp(26px, 3.4vw, 44px);
-  border-radius: var(--radius-card);
-  background: var(--gray-50);
+  margin-top: clamp(48px, 6vw, 88px);
 }
 
 .archiveCopy {
+  position: relative;
   min-width: 0;
+  padding-left: clamp(0px, 3vw, 54px);
 }
 
-.archiveKicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 12px;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.9px;
-  text-transform: uppercase;
-  color: var(--blue-700);
+.archiveCurve {
+  position: absolute;
+  left: 0;
+  top: -6%;
+  width: clamp(46px, 5vw, 76px);
+  height: 112%;
+  color: var(--gray-400);
+  pointer-events: none;
 }
 
 .archiveTitle {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: clamp(30px, 3.4vw, 46px);
+  font-size: clamp(32px, 3.8vw, 52px);
   font-weight: 400;
   letter-spacing: -0.03em;
-  line-height: 1.08;
+  line-height: 1.06;
   color: var(--gray-900);
-  max-width: 16ch;
+  max-width: 18ch;
 }
 
 .archiveTitleSoft {
@@ -599,7 +596,7 @@
 
 .archiveText {
   margin: 18px 0 0;
-  max-width: 44ch;
+  max-width: 54ch;
   font-size: 16px;
   line-height: 27px;
   color: var(--gray-700);
@@ -628,98 +625,107 @@
   }
 }
 
-/* Latest-story card: media on top, clean caption bar underneath */
-.leadCard {
-  display: grid;
-  border-radius: var(--radius-16);
-  overflow: hidden;
-  background: var(--white);
-  box-shadow: 0 20px 48px -34px rgba(32, 33, 36, 0.5);
-  transition: box-shadow 220ms ease, transform 220ms ease;
+.archiveMedia {
+  min-width: 0;
+}
 
-  &:hover {
-    box-shadow: 0 26px 56px -32px rgba(32, 33, 36, 0.55);
-    transform: translateY(-2px);
+/* Feature card dressed as a film player: dark stage, faint grid, wordmark + pill */
+.player {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: #0e0f11;
+  color: #fff;
+}
+
+.playerStill {
+  object-fit: cover;
+  opacity: 0.3;
+  filter: saturate(0.7) contrast(1.05);
+  transition: transform 700ms cubic-bezier(0.2, 0, 0, 1), opacity 300ms ease;
+}
+
+.player:hover .playerStill {
+  transform: scale(1.03);
+  opacity: 0.36;
+}
+
+.playerGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(52, 168, 83, 0.17) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52, 168, 83, 0.17) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(72% 72% at 50% 50%, #000 28%, transparent 80%);
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 28%, transparent 80%);
+  pointer-events: none;
+}
+
+.playerInner {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+  text-align: center;
+}
+
+.playerMark {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-ui);
+  font-size: clamp(22px, 2.7vw, 36px);
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  color: #fff;
+}
+
+.playerPlay {
+  display: inline-flex;
+  width: clamp(28px, 3.4vw, 42px);
+  color: #fff;
+}
+
+.playerPlay svg {
+  width: 100%;
+  height: auto;
+}
+
+.playerPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 28px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--gray-900);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.player:hover .playerPill {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+}
+
+.playerCaption {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--gray-600);
+
+  strong {
+    font-weight: 500;
+    color: var(--gray-900);
   }
 }
 
-.leadMedia {
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 9;
-  background: var(--gray-100);
-  overflow: hidden;
-}
-
-.leadImg {
-  object-fit: cover;
-  transition: transform 600ms cubic-bezier(0.2, 0, 0, 1);
-}
-
-.leadCard:hover .leadImg {
-  transform: scale(1.04);
-}
-
-.leadFallback {
-  position: absolute;
-  inset: 0;
-}
-
-.leadBadge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  padding: 6px 13px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(6px);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--gray-900);
-}
-
-.leadBody {
-  display: grid;
-  gap: 8px;
-  padding: 20px 22px 22px;
-}
-
-.leadMeta {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-  color: var(--gray-500);
-}
-
-.leadTitle {
-  font-family: var(--font-ui);
-  font-size: clamp(20px, 1.9vw, 26px);
-  font-weight: 400;
-  line-height: 1.24;
-  letter-spacing: -0.2px;
-  color: var(--gray-900);
-  text-wrap: balance;
-}
-
-.leadCta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  font-family: var(--font-ui);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--blue-700);
-  transition: gap 180ms ease, color 150ms ease;
-}
-
-.leadCard:hover .leadCta {
-  gap: 12px;
-  color: var(--blue-900);
-}
 
 /* ---------- Photo strip with hand-drawn doodle frame feel ---------- */
 .photoStrip {
@@ -779,11 +785,28 @@
     font-size: clamp(42px, 10.5vw, 68px);
   }
 
-  .statementFoot {
-    align-items: flex-start;
+  .arrowArc {
+    display: none;
   }
 
-  .arrowArc {
+  /* doodles crowd the smaller headline — keep them clear of the text */
+  .doodleButterfly {
+    top: -0.5em;
+    left: auto;
+    right: 4%;
+  }
+
+  .doodleSatellite {
+    left: auto;
+    right: 0;
+    bottom: -0.7em;
+  }
+
+  .archiveCopy {
+    padding-left: 0;
+  }
+
+  .archiveCurve {
     display: none;
   }
 }
@@ -791,7 +814,7 @@
 @media (max-width: 860px) {
   .archive {
     grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
+    gap: 30px;
   }
 
   .archiveTitle {
@@ -818,30 +841,29 @@
     line-height: 1.06;
   }
 
-  .statementFoot {
-    flex-direction: column;
-    gap: 18px;
+  .doodleButterfly,
+  .doodleSatellite {
+    display: none;
   }
 
   .statementLede {
+    margin-top: 26px;
     font-size: 16px;
     line-height: 26px;
-  }
-
-  .statementActions {
-    width: 100%;
-  }
-
-  .archive {
-    padding: 22px 20px 26px;
   }
 
   .archiveTitle {
     font-size: 30px;
   }
 
-  .leadBody {
-    padding: 18px 18px 20px;
+  .playerPill {
+    height: 46px;
+    padding: 0 22px;
+    font-size: 15px;
+  }
+
+  .playerInner {
+    gap: 18px;
   }
 }
 
