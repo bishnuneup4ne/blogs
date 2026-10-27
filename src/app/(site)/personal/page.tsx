@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { CategoryLatest, HeroRail } from "@/components/site/HomeSections";
-import { SectionHead } from "@/components/site/sections";
+import { SectionHead, UpdateCard } from "@/components/site/sections";
 import { Reveal } from "@/components/ui/Reveal";
 import { getAlbums, getPostsByCategory } from "@/lib/data";
 import { shortDate } from "@/lib/dates";
@@ -25,118 +24,113 @@ export default async function PersonalPage() {
     getAlbums(),
   ]);
 
+  // Everything under the Personal topic, newest first.
   const writing = personalPosts;
-  const railPosts = writing.slice(0, 4);
-  const [featured, ...moreAlbums] = albums;
-  const latest = writing[0]?.date;
+  const [featured, ...more] = albums;
+  const latest = writing[0]?.date ?? "2026-10-21";
 
   return (
-    <main className={styles.page}>
-      <header className={styles.hero}>
-        <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
-          <span aria-hidden="true">›</span>
-          <span aria-current="page">Personal</span>
-        </nav>
+    <>
+      <header className={styles.masthead}>
+        <div className={styles.inner}>
+          <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+            <Link href="/">Home</Link>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">Personal</span>
+          </nav>
 
-        <p className={styles.kicker}>Personal</p>
-        <h1 className={styles.title}>
-          The parts of a life that don&apos;t fit in a commit message.
-        </h1>
-        <p className={styles.lede}>
-          Training, trails, photographs, the morning routine. The slow things that keep the fast work honest.
-        </p>
+          <p className={styles.kicker}>Personal</p>
+          <h1 className={styles.title}>
+            The parts of a life that don&apos;t fit in a commit message.
+          </h1>
+          <p className={styles.lede}>
+            Training, trails, photographs, the morning routine. The slow things that keep the fast
+            work honest.
+          </p>
 
-        <div className={styles.heroActions}>
-          <Link href="/gallery" className={styles.primaryCta}>
-            Open gallery
-            <Arrow />
-          </Link>
-          <Link href="/personal/blogs" className={styles.secondaryCta}>
-            Personal blogs
-          </Link>
+          <div className={styles.mastheadActions}>
+            <Link href="/gallery" className="btn btn-primary">
+              Open gallery <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/personal/blogs" className="btn btn-outline">Personal blogs</Link>
+          </div>
         </div>
       </header>
 
-      {railPosts.length > 0 ? <HeroRail posts={railPosts} /> : null}
-
-      {featured ? (
-        <section className={styles.albumBand} aria-labelledby="featured-album">
-          <div className={styles.albumCopy}>
-            <p className={styles.albumEyebrow}>Featured album · {featured.year}</p>
-            <h2 id="featured-album" className={styles.albumTitle}>
-              <Link href={`/gallery/${featured.slug}`}>{featured.title}</Link>
-            </h2>
-            {featured.subtitle ? <p className={styles.albumSub}>{featured.subtitle}</p> : null}
-            {featured.description ? <p className={styles.albumDesc}>{featured.description}</p> : null}
-            <p className={styles.albumMeta}>{featured.photos.length} photos</p>
-            <Link href={`/gallery/${featured.slug}`} className={styles.secondaryCta}>
-              View album
-              <Arrow />
+      <div className={styles.inner}>
+        {featured ? (
+          <section className={styles.feature} aria-labelledby="featured-album-heading">
+            <Link
+              href={`/gallery/${featured.slug}`}
+              className={styles.featureMedia}
+              tabIndex={-1}
+              aria-hidden="true"
+            >
+              {featured.cover ? (
+                <Image
+                  src={featured.cover}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 1000px) 100vw, 720px"
+                  className={styles.featureImg}
+                />
+              ) : null}
             </Link>
-          </div>
-          <Link
-            href={`/gallery/${featured.slug}`}
-            className={styles.albumMedia}
-            tabIndex={-1}
-            aria-hidden="true"
-          >
-            {featured.cover ? (
-              <Image
-                src={featured.cover}
-                alt=""
-                fill
-                priority
-                sizes="(max-width: 1000px) 100vw, 760px"
-                className={styles.albumImg}
-              />
-            ) : null}
-          </Link>
-        </section>
-      ) : null}
 
-      {moreAlbums.length > 0 ? (
-        <section className={styles.section} aria-label="More albums">
-          <SectionHead title="More albums" href="/gallery" linkLabel="All albums" />
-          <ul className={styles.albumGrid}>
-            {moreAlbums.map((album, i) => (
-              <Reveal as="li" key={album.slug} delay={i * 70}>
-                <Link href={`/gallery/${album.slug}`} className={styles.albumCard}>
-                  <span className={styles.cardMedia}>
-                    {album.cover ? (
-                      <Image src={album.cover} alt="" fill sizes="(max-width: 900px) 100vw, 360px" className={styles.cardImg} />
-                    ) : null}
-                  </span>
-                  <span className={styles.cardEyebrow}>Album · {album.year}</span>
-                  <span className={styles.cardTitle}>{album.title}</span>
-                  <span className={styles.cardMeta}>{album.photos.length} photos</span>
-                </Link>
+            <div className={styles.featureText}>
+              <p className={styles.kicker}>Featured album · {featured.year}</p>
+              <h2 id="featured-album-heading" className={styles.featureTitle}>
+                <Link href={`/gallery/${featured.slug}`}>{featured.title}</Link>
+              </h2>
+              {featured.subtitle ? <p className={styles.featureSub}>{featured.subtitle}</p> : null}
+              {featured.description ? <p className={styles.featureDesc}>{featured.description}</p> : null}
+              <p className={styles.featureMeta}>{featured.photos.length} photos</p>
+              <Link href={`/gallery/${featured.slug}`} className={styles.featureCta}>
+                View album <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
+        {more.length > 0 ? (
+          <section className={styles.section} aria-label="More albums">
+            <SectionHead title="More albums" href="/gallery" linkLabel="All albums" />
+            <div className={styles.albumGrid}>
+              {more.map((album, i) => (
+                <Reveal key={album.slug} delay={i * 80}>
+                  <Link href={`/gallery/${album.slug}`} className={styles.albumCard}>
+                    <span className={styles.albumMedia}>
+                      {album.cover ? (
+                        <Image src={album.cover} alt={album.title} fill sizes="(max-width: 900px) 100vw, 420px" className={styles.albumImg} />
+                      ) : null}
+                    </span>
+                    <span className={styles.albumYear}>{album.year}</span>
+                    <span className={styles.albumTitle}>{album.title}</span>
+                    <span className={styles.albumSub}>{album.subtitle || album.description}</span>
+                    <span className={styles.albumMeta}>{album.photos.length} photos</span>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section className={styles.section} aria-label="Personal writing">
+          <SectionHead title="Writing" href="/personal/blogs" linkLabel="All personal blogs" />
+          <div className={styles.postGrid}>
+            {writing.map((post, i) => (
+              <Reveal key={post.slug} delay={i * 80}>
+                <UpdateCard post={post} />
               </Reveal>
             ))}
-          </ul>
+          </div>
         </section>
-      ) : null}
 
-      {writing.length > 0 ? (
-        <CategoryLatest
-          title="Writing"
-          subtitle="Everything filed under Personal, newest first."
-          posts={writing}
-          moreHref="/personal/blogs"
-          moreLabel="All personal blogs"
-        />
-      ) : null}
-
-      <p className={styles.footnote}>
-        {latest ? <>Last updated {shortDate(latest)} · </> : null}
-        <Link href="/about">more about me</Link>
-      </p>
-    </main>
+        <p className={styles.footnote}>
+          Last updated {shortDate(latest)} · <Link href="/about">more about me</Link>
+        </p>
+      </div>
+    </>
   );
 }
-
-const Arrow = () => (
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-);

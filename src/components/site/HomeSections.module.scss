@@ -76,10 +76,10 @@ a:hover .readPill {
   /* Sizes come from the container, never the viewport: the rail lives inside
      the page column, so a viewport-derived lead width overflowed and clipped
      the peek card. The lead leaves room for one peek card + the gap. */
-  /* The active card fills ~90% of the rail so one story owns the screen,
-     with the next card peeking as the cue to move forward. */
-  --peek-w: calc(90% - 20px);
-  --lead-w: calc(90% - 20px);
+  /* A card fills ~78% of the rail: enough room for text + image, and a
+     clear peek of the next story as the cue to move forward. */
+  --peek-w: calc(78% - 20px);
+  --lead-w: calc(78% - 20px);
   display: flex;
   gap: 20px;
   margin: 0;
@@ -102,7 +102,7 @@ a:hover .readPill {
 .heroItem {
   flex: 0 0 var(--peek-w);
   min-width: 0;
-  scroll-snap-align: end;
+  scroll-snap-align: start;
 }
 
 /* The lead card starts at the track's left edge, so it snaps there; the peek
@@ -144,17 +144,6 @@ a:hover .readPill {
   min-width: 0;
 }
 
-/* Peek cards carry their own cover so each slide shows a picture, like
-   blog.google's hero rail. */
-.heroThumb {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 180px;
-  margin-top: 2px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgb(255 255 255 / 45%);
-}
 
 .heroCardLead .heroText {
   flex: 0 0 33%;

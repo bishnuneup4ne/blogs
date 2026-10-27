@@ -79,16 +79,14 @@ export function HeroRail({ posts }: { posts: Post[] }) {
   function go(delta: number) {
     const t = trackRef.current;
     if (!t) return;
-    // Advance exactly one card. offsetLeft is scroll-independent; bounding
-    // rects shift with scroll, which made the step depend on position.
+    // Scroll to the target card's own offset rather than adding a step to the
+    // current position: repeated deltas drifted, because scroll-snap re-settles
+    // the rail between clicks and the "active" card lagged the real position.
     const cards = Array.from(t.children) as HTMLElement[];
-    const idx = Math.min(active, cards.length - 1);
-    const card = cards[idx];
-    if (!card) return;
-    const gap = parseFloat(getComputedStyle(t).columnGap) || 20;
-    const neighbour = cards[idx + delta];
-    const step = neighbour ? Math.abs(neighbour.offsetLeft - card.offsetLeft) : card.offsetWidth + gap;
-    const left = Math.min(Math.max(t.scrollLeft + delta * step, 0), t.scrollWidth - t.clientWidth);
+    const pad = parseFloat(getComputedStyle(t).paddingLeft) || 0;
+    const target = cards[Math.min(Math.max(active + delta, 0), cards.length - 1)];
+    if (!target) return;
+    const left = Math.min(Math.max(target.offsetLeft - pad, 0), t.scrollWidth - t.clientWidth);
     t.scrollTo({ left, behavior: "smooth" });
   }
 
@@ -108,24 +106,14 @@ export function HeroRail({ posts }: { posts: Post[] }) {
                 <span className={styles.heroText}>
                   <span className={styles.heroEyebrow}>{category.name}</span>
                   <span className={styles.heroTitle}>{post.title}</span>
-                  {i === 0 ? (
-                    <>
-                      <span className={styles.heroSummary}>{post.description}</span>
-                      <span className={styles.heroByline}>By {post.author.name}</span>
-                    </>
-                  ) : null}
-                  {i !== 0 ? (
-                    <span className={styles.heroThumb}>
-                      <Media post={post} sizes="(max-width: 900px) 90vw, 311px" className={styles.coverImg} />
-                    </span>
-                  ) : null}
+                  <span className={styles.heroSummary}>{post.description}</span>
+                  <span className={styles.heroByline}>By {post.author.name}</span>
                   <ReadPill />
                 </span>
-                {i === 0 ? (
-                  <span className={styles.heroMedia}>
-                    <Media post={post} sizes="(max-width: 900px) 100vw, 60vw" className={styles.coverImg} />
-                  </span>
-                ) : null}
+                {/* Every card is text-beside-image so paging never changes shape. */}
+                <span className={styles.heroMedia}>
+                  <Media post={post} sizes="(max-width: 900px) 100vw, 60vw" className={styles.coverImg} />
+                </span>
               </Link>
             </li>
           );
