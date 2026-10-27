@@ -2,13 +2,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { getAllPosts, getAlbums } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
+import { GalleryStrip } from "@/components/site/GalleryStrip";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
   const [posts, settings, albums] = await Promise.all([getAllPosts(), getSettings(), getAlbums()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   const lead = ordered[0];
-  const photo = albums.flatMap((a) => a.photos).find((p) => p.kind !== "video");
+  // Newest first: photos carry takenAt; fall back to album order.
+  const galleryPhotos = [...albums.flatMap((a) => a.photos)]
+    .filter((p) => p.kind !== "video")
+    .sort((a, b) => (b.takenAt || "").localeCompare(a.takenAt || ""));
 
   // Statement headline split like blog.google/research: "Word one," floats
   // left, "word two." drops to the right on the next line.
@@ -47,11 +51,15 @@ export default async function HomePage() {
           <svg className={styles.halfCircle} viewBox="0 0 120 120" fill="none" aria-hidden="true">
             <path d="M112 60a52 52 0 1 1-52-52" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
-          <h2 className={styles.missionTitle}>Amplifying human ingenuity</h2>
+          <p className={styles.missionKicker}>The archive</p>
+          <h2 className={styles.missionTitle}>
+            Take it apart.<br />
+            <span className={styles.missionTitleSoft}>Write it down.</span>
+          </h2>
           <p className={styles.missionText}>
-            I write about breaking systems to make them safer, the machines behind the
-            internet, and the hills I keep walking back to. Every post is something I
-            wished existed when I was learning — field notes over polished takes.
+            Malware, machines, mountain light — I break systems to make them safer and
+            photograph the hills I keep walking back to. Every post is the note I wished
+            existed when I was learning: field notes over polished takes.
           </p>
           <Link href="/about" className={styles.plainLink}>
             About me <span aria-hidden="true">→</span>
@@ -83,15 +91,10 @@ export default async function HomePage() {
         ) : null}
       </div>
 
-      {photo ? (
-        <figure className={styles.photoStrip}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photo.src} alt={photo.alt || ""} className={styles.photoStripImg} loading="lazy" />
-          <figcaption className={styles.photoStripCaption}>
-            {photo.caption || "From the camera roll"} ·{" "}
-            <Link href="/gallery">browse the gallery →</Link>
-          </figcaption>
-        </figure>
+      {galleryPhotos.length > 0 ? (
+        <div className={styles.photoStrip}>
+          <GalleryStrip photos={galleryPhotos} />
+        </div>
       ) : null}
     </section>
   );

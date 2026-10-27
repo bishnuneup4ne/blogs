@@ -519,14 +519,28 @@
   }
 }
 
+.missionKicker {
+  margin: 0 0 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--blue-700);
+}
+
 .missionTitle {
   font-family: var(--font-ui);
-  font-size: clamp(26px, 2.4vw, 34px);
+  font-size: clamp(28px, 2.8vw, 38px);
   font-weight: 400;
-  letter-spacing: -0.25px;
-  line-height: 1.2;
+  letter-spacing: -0.5px;
+  line-height: 1.14;
   color: var(--gray-900);
-  max-width: 12ch;
+  max-width: 14ch;
+}
+
+.missionTitleSoft {
+  color: var(--gray-500);
 }
 
 .missionText {
@@ -624,44 +638,7 @@
 
 /* ---------- Photo strip with hand-drawn doodle frame feel ---------- */
 .photoStrip {
-  position: relative;
-  margin: clamp(56px, 8vw, 110px) auto 0;
-  max-width: 900px;
-  text-align: center;
-}
-
-.photoStrip::before {
-  content: "";
-  position: absolute;
-  inset: -16px -22px -10px;
-  border: 1.4px solid var(--gray-400);
-  border-radius: 60% 40% 55% 45% / 45% 60% 40% 55%;
-  transform: rotate(-0.6deg);
-  pointer-events: none;
-}
-
-.photoStripImg {
-  position: relative;
-  width: 100%;
-  display: block;
-  border-radius: var(--radius-card);
-  box-shadow: 0 24px 60px -30px rgba(32, 33, 36, 0.45);
-}
-
-.photoStripCaption {
-  margin-top: 18px;
-  font-size: 14px;
-  color: var(--gray-600);
-
-  a {
-    color: var(--blue-700);
-    font-weight: 500;
-
-    &:hover {
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
-  }
+  margin: clamp(48px, 7vw, 96px) calc(-1 * var(--container-pad)) 0;
 }
 
 @media (max-width: 900px) {
