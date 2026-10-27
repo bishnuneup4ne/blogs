@@ -9,6 +9,7 @@ import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import Link from "next/link";
 import { VideoEmbed } from "./VideoEmbed";
 import styles from "./PostContent.module.scss";
+import { MediaCarousel } from "./MediaCarousel";
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
   const [zoom, setZoom] = useState<number | null>(null);
@@ -115,23 +116,13 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "row": {
               return (
                 <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
-                  <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${block.columns ?? Math.min(block.items.length, 3)}, minmax(0, 1fr))` }}>
-                    {block.items.map((it, j) => {
-                      const myIndex = images.findIndex((img) => img.src === it.src);
-                      const size = typeof it.size === "string" ? it.size : undefined;
-                      return (
-                        <button
-                          key={j}
-                          type="button"
-                          className={`${styles.imageWrap} ${size && size !== "full" ? styles[`rowCell${size[0].toUpperCase()}${size.slice(1)}`] ?? "" : ""}`}
-                          onClick={() => setZoom(myIndex)}
-                          aria-label={`Zoom image: ${it.alt}`}
-                        >
-                          <Image src={it.src} alt={it.alt} width={700} height={size === "portrait" ? 900 : 520} sizes="(max-width: 760px) 48vw, 860px" className={styles.image} />
-                        </button>
-                      );
+                  <MediaCarousel
+                    items={block.items.map((it) => {
+                      const idx = images.findIndex((img) => img.src === it.src);
+                      return { src: it.src, alt: it.alt, index: idx };
                     })}
-                  </div>
+                    onOpen={(i) => setZoom(i)}
+                  />
                   {block.caption ? <figcaption>{block.caption}</figcaption> : null}
                 </figure>
               );

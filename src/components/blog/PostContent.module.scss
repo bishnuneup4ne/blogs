@@ -266,15 +266,7 @@
   .figWide, .figMedium, .figSmall { max-width: 100%; }
 }
 
-.rowGrid {
-  display: grid;
-  gap: 12px;
-
-  .imageWrap {
-    aspect-ratio: 1 / 1;
-    border-radius: var(--radius-16);
-  }
-}
+/* (legacy rowGrid removed — rows render through MediaCarousel) */
 
 .relatedCard {
   display: flex;
