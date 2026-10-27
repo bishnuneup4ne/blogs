@@ -230,7 +230,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               aria-controls="site-search"
               onClick={openSearch}
             >
-              <SearchIcon width={24} height={24} />
+              <SearchIcon width={27} height={27} />
             </button>
             <Link href="/gallery" className={styles.galleryButton} aria-label="Gallery">
               <ImagesIcon />
@@ -249,13 +249,13 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               aria-expanded={drawer}
               aria-label={drawer ? "Close menu" : "Open menu"}
             >
-              {drawer ? <CloseIcon width={24} height={24} /> : <MenuIcon width={24} height={24} />}
+              {drawer ? <CloseIcon width={27} height={27} /> : <MenuIcon width={27} height={27} />}
             </button>
           </div>
 
           <div id="site-search" className={styles.searchLayer} ref={searchLayerRef} aria-hidden={!searchOpen}>
             <form onSubmit={submitSearch} className={styles.searchForm} role="search">
-              <SearchIcon width={22} height={22} className={styles.searchGlyph} />
+              <SearchIcon width={24} height={24} className={styles.searchGlyph} />
               <input
                 ref={searchInputRef}
                 type="search"
@@ -273,7 +273,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 aria-label="Close search"
                 tabIndex={searchOpen ? 0 : -1}
               >
-                <CloseIcon width={22} height={22} />
+                <CloseIcon width={24} height={24} />
               </button>
             </form>
           </div>
@@ -283,7 +283,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       {drawer ? (
         <div ref={drawerRef} className={styles.drawer} role="dialog" aria-modal="true" aria-label="Site menu">
           <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">
-            <SearchIcon width={20} height={20} className={styles.searchGlyph} />
+            <SearchIcon width={22} height={22} className={styles.searchGlyph} />
             <input
               type="search"
               value={query}
@@ -313,7 +313,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
 function ImagesIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
       <rect x="8.5" y="3.5" width="12" height="12" rx="2.5" />
       <path d="M15.5 20.5h-9a2.5 2.5 0 0 1-2.5-2.5v-9" />
       <circle cx="12.8" cy="7.8" r="1.3" />

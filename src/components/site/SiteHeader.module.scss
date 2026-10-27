@@ -39,8 +39,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 40px;
-  min-height: 76px;
+  gap: 48px;
+  min-height: var(--header-h);
 }
 
 /* Wordmark */
@@ -49,9 +49,9 @@
   align-items: center;
   flex: none;
   font-family: var(--font-ui);
-  font-size: 23px;
+  font-size: 31px;
   font-weight: 600;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.8px;
   color: var(--gray-900);
   white-space: nowrap;
 }
@@ -80,7 +80,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -90,11 +90,11 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 44px;
-  padding: 0 16px;
+  height: 54px;
+  padding: 0 20px;
   border-radius: var(--radius-12);
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 500;
   letter-spacing: -0.1px;
   line-height: 24px;
@@ -116,10 +116,10 @@
 .feedLinkActive::after {
   content: "";
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 5px;
-  height: 2px;
+  left: 20px;
+  right: 20px;
+  bottom: 8px;
+  height: 2.5px;
   border-radius: 2px;
   background: var(--gray-900);
 }
@@ -128,7 +128,7 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-left: auto;
   flex: none;
 }
@@ -136,8 +136,8 @@
 .iconButton {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   touch-action: manipulation;
   border-radius: 50%;
   color: var(--gray-700);
@@ -153,14 +153,14 @@
 .cta {
   display: inline-flex;
   align-items: center;
-  height: 46px;
-  margin-left: 4px;
-  padding: 0 26px;
+  height: 58px;
+  margin-left: 6px;
+  padding: 0 34px;
   border-radius: var(--radius-pill);
   background: var(--blue-600);
   color: #fff;
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.1px;
   white-space: nowrap;
@@ -176,13 +176,13 @@
 .burger {
   display: none;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 58px;
+  height: 58px;
   touch-action: manipulation;
   border-radius: 50%;
   background: transparent;
   color: var(--gray-700);
-  padding: 8px;
+  padding: 10px;
 }
 
 .burger:hover {
@@ -204,7 +204,7 @@
   transform: translateY(-50%);
   display: none;
   align-items: center;
-  height: 48px;
+  height: 58px;
   border-radius: var(--radius-pill);
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
@@ -217,7 +217,7 @@
   align-items: center;
   gap: 4px;
   width: 100%;
-  padding: 0 6px 0 18px;
+  padding: 0 8px 0 20px;
 }
 
 .searchGlyph {
@@ -231,15 +231,15 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 16px;
+  font-size: 17px;
   color: var(--gray-900);
 }
 
 .searchClose {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -262,10 +262,10 @@
 /* Mobile drawer */
 .drawer {
   position: fixed;
-  inset: var(--header-h, 76px) 0 0;
+  inset: var(--header-h, 104px) 0 0;
   z-index: 70;
   background: var(--white);
-  padding: 8px var(--container-pad) 48px;
+  padding: 16px var(--container-pad) 48px;
   overflow-y: auto;
   animation: drawerIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
@@ -274,9 +274,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 52px;
+  height: 60px;
   margin: 8px 0 4px;
-  padding: 0 16px;
+  padding: 0 20px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-pill);
   background: var(--gray-50);
@@ -287,17 +287,17 @@
     border: none;
     outline: none;
     background: transparent;
-    font-size: 16px;
+    font-size: 17px;
     color: var(--gray-900);
   }
 }
 
 .drawerLink {
   display: block;
-  padding: 16px 0;
+  padding: 19px 0;
   border-bottom: 1px solid var(--gray-100);
   font-family: var(--font-ui);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 500;
   color: var(--gray-900);
 }
@@ -330,11 +330,14 @@
 }
 
 @media (max-width: 1240px) {
-  .headerInner { gap: 24px; }
-  .wordmark { font-size: 21px; }
+  .headerInner { gap: 28px; }
+  .wordmark { font-size: 26px; }
   .feedLink,
-  .feedLinkActive { font-size: 16px; padding: 0 12px; }
-  .feedLinkActive::after { left: 12px; right: 12px; }
+  .feedLinkActive { font-size: 17px; padding: 0 14px; height: 50px; }
+  .feedLinkActive::after { left: 14px; right: 14px; }
+  .iconButton { width: 52px; height: 52px; }
+  .cta { height: 52px; padding: 0 26px; font-size: 16px; }
+  .galleryButton { height: 50px; }
 }
 
 @media (max-width: 1040px) {
@@ -353,17 +356,19 @@
   /* Thumbs are bigger than icons — give the two header controls room. */
   .iconButton,
   .burger {
-    width: 54px;
-    height: 54px;
+    width: 60px;
+    height: 60px;
   }
+
+  .wordmark { font-size: 24px; }
 }
 
 @media (max-width: 440px) {
-  .burger { padding: 6px; }
+  .burger { padding: 8px; }
 }
 
 @media (max-width: 560px) {
-  .wordmark { font-size: 18px; }
+  .wordmark { font-size: 21px; }
 }
 
 /* Images button — icon only, reveals its label on hover */
@@ -371,8 +376,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0;
-  height: 44px;
-  padding: 0 10px;
+  height: 52px;
+  padding: 0 14px;
   border-radius: var(--radius-circle, 120px);
   color: var(--gray-900);
   background: var(--gray-50);
@@ -391,7 +396,7 @@
   overflow: hidden;
   white-space: nowrap;
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   opacity: 0;
   transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;

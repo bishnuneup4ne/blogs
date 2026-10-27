@@ -4,6 +4,7 @@ import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
+import { formatDate } from "@/lib/dates";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
@@ -24,10 +25,22 @@ export default async function HomePage() {
   }
   const lineOne = words.slice(0, half).join(" ");
   const lineTwo = words.slice(half).join(" ");
+  const latestDate = ordered[0] ? formatDate(ordered[0].date, { long: true }) : "";
 
   return (
     <section className={styles.intro}>
       <div className={styles.statement}>
+        <div className={styles.statementHead}>
+          <p className={styles.statementKicker}>
+            <span className={styles.kickerRule} aria-hidden="true" />
+            Notes worth keeping
+          </p>
+          <p className={styles.statementMeta}>
+            {posts.length} {posts.length === 1 ? "post" : "posts"}
+            {latestDate ? <> · updated {latestDate}</> : null}
+          </p>
+        </div>
+
         <h1 className={styles.statementTitle}>
           <span className={styles.stLine}>
             {lineOne},&nbsp;<span className={styles.dotBlue} aria-hidden="true" />
@@ -36,12 +49,22 @@ export default async function HomePage() {
             {lineTwo}.&nbsp;<span className={styles.dotYellow} aria-hidden="true" />
           </span>
         </h1>
+
         <svg className={styles.arrowArc} viewBox="0 0 220 120" fill="none" aria-hidden="true">
-          {/* Sits beside the lede; tail starts low-left, head at top-right points up at Newsletter */}
+          {/* Tail starts beside the second line, head curves up toward Newsletter */}
           <path d="M118 104C140 56 176 30 208 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           <path d="M196 14 210 26l-17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <p className={styles.statementLede}>{settings.hero.standfirst}</p>
+
+        <div className={styles.statementFoot}>
+          <p className={styles.statementLede}>{settings.hero.standfirst}</p>
+          <div className={styles.statementActions}>
+            <Link href="/blog" className="btn btn-primary">
+              Start reading <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/rss.xml" className="btn btn-outline">RSS feed</Link>
+          </div>
+        </div>
       </div>
 
       <div className={styles.missionRow}>

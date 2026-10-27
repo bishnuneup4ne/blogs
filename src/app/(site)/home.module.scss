@@ -426,23 +426,61 @@
   padding: 0 var(--container-pad) var(--spacer-6);
 }
 
-/* ---------- Statement hero (blog.google/research style) ---------- */
+/* ---------- Statement hero — big type + kicker rail + action foot ---------- */
 .statement {
   position: relative;
-  padding-top: clamp(44px, 4.5vw, 64px);
+  padding-top: clamp(40px, 4vw, 64px);
   overflow-x: clip;
+}
+
+.statementHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(22px, 2.6vw, 38px);
+}
+
+.statementKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--blue-700);
+}
+
+.kickerRule {
+  width: 42px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--blue-600);
+}
+
+.statementMeta {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  color: var(--gray-500);
 }
 
 .statementTitle {
   margin: 0 auto;
-  max-width: 980px;
+  max-width: 1100px;
   display: grid;
   font-family: var(--font-ui);
   font-weight: 400;
-  font-size: clamp(40px, 5.2vw, 72px);
-  line-height: 1.06;
+  font-size: clamp(46px, 6.6vw, 96px);
+  line-height: 1.02;
   row-gap: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   color: var(--gray-900);
 }
 
@@ -459,9 +497,9 @@
 .dotBlue,
 .dotYellow {
   display: inline-block;
-  width: clamp(10px, 1.2vw, 16px);
-  height: clamp(10px, 1.2vw, 16px);
-  margin-left: 10px;
+  width: clamp(13px, 1.5vw, 22px);
+  height: clamp(13px, 1.5vw, 22px);
+  margin-left: 12px;
   border-radius: 50%;
   vertical-align: baseline;
   transform: translateY(-0.16em);
@@ -478,22 +516,40 @@
 .arrowArc {
   position: absolute;
   /* Tail rises beside the yellow dot, head points up at the header Newsletter
-     button. Box sits fully above the lede — no overlap with any text. */
+     button. Box sits fully above the foot row — no overlap with any text. */
   width: clamp(120px, 13vw, 170px);
   height: auto;
   right: clamp(56px, 7vw, 110px);
-  top: calc(clamp(44px, 4.5vw, 64px) + clamp(40px, 4.2vw, 58px));
+  top: calc(clamp(40px, 4vw, 64px) + clamp(52px, 6vw, 96px));
   color: var(--gray-800);
   pointer-events: none;
 }
 
+/* Foot row: lede on the left, actions on the right, hairline above */
+.statementFoot {
+  margin-top: clamp(30px, 3.6vw, 52px);
+  padding-top: clamp(22px, 2.6vw, 34px);
+  border-top: 1px solid var(--gray-150);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(20px, 3vw, 48px);
+  flex-wrap: wrap;
+}
+
 .statementLede {
-  margin: clamp(14px, 1.6vw, 22px) 0 0 auto;
-  max-width: 30ch;
-  padding-right: clamp(8px, 4vw, 88px);
-  font-size: 16px;
-  line-height: 26px;
+  margin: 0;
+  max-width: 52ch;
+  font-size: 18px;
+  line-height: 29px;
   color: var(--gray-700);
+}
+
+.statementActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex: none;
 }
 
 /* ---------- Mission row: narrow copy + dark media card ---------- */
@@ -701,13 +757,15 @@
   }
 
   .statementTitle {
-    font-size: clamp(40px, 11vw, 64px);
+    font-size: clamp(42px, 10.5vw, 68px);
+  }
+
+  .statementFoot {
+    align-items: flex-start;
   }
 
   .arrowArc {
-    width: 110px;
-    right: calc(32px + clamp(8px, 4vw, 88px) - 0.05 * 110px);
-    top: calc(clamp(44px, 4.5vw, 64px) + 20px);
+    display: none;
   }
 }
 
@@ -717,8 +775,31 @@
 }
 
 @media (max-width: 640px) {
-  .arrowArc {
-    display: none;
+  .statementHead {
+    gap: 10px;
+  }
+
+  .kickerRule {
+    width: 28px;
+  }
+
+  .statementTitle {
+    font-size: clamp(38px, 12.5vw, 52px);
+    line-height: 1.06;
+  }
+
+  .statementFoot {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .statementLede {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  .statementActions {
+    width: 100%;
   }
 }
 
