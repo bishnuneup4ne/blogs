@@ -92,10 +92,18 @@ export function ArticleProgress({
         <span ref={fillRef} className={styles.fill} />
       </span>
       <div className={styles.inner}>
-        {/* blog.google puts their "G" mark here; a cover thumbnail is
-            unreadable at 36px, so the site mark takes its place. */}
-        <Link href="/" className={styles.brand} aria-label={siteName || "Home"} tabIndex={-1} aria-hidden="true">
-          {(siteName || "B").trim().charAt(0).toUpperCase()}
+        {/* blog.google puts the publication mark here. This blog shows the
+            story's own cover, which is what readers recognise mid-scroll;
+            it falls back to the author avatar, then a monogram. */}
+        <Link href="/blog" className={styles.brand} aria-label={title} tabIndex={-1} aria-hidden="true">
+          {coverUrl || avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coverUrl || avatarUrl} alt="" className={styles.avatar} width={42} height={42} />
+          ) : (
+            <span className={styles.avatarFallback}>
+              {(siteName || "B").trim().charAt(0).toUpperCase()}
+            </span>
+          )}
         </Link>
         <Link href="/blog" className={styles.title}>{title}</Link>
         <span className={styles.actions}>

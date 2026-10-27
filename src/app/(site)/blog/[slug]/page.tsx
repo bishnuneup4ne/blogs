@@ -66,6 +66,15 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const category = getCategory(post.category);
   const related = await getRelatedPostsDetailed(post, 6);
   const headings = getHeadings(post.blocks);
+  // The reading bar shows a recognisable image for the story: the cover when
+  // set, otherwise the first picture in the body, so it never falls back to
+  // the site avatar for posts without a cover.
+  const bodyImage = post.blocks
+    .flatMap((b) =>
+      b.type === "image" ? [b.src] : b.type === "row" ? b.items.flatMap((it) => (it.kind === "quote" ? [] : [it.src])) : [],
+    )
+    .find((src) => typeof src === "string" && src.length > 0 && !/\.(mp4|webm)(\?|$)/i.test(src));
+  const barImage = post.cover?.src ?? bodyImage;
   const settings = await getSettings();
   const url = `${site.url}/blog/${post.slug}`;
 
@@ -100,7 +109,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           title={post.title}
           shareUrl={url}
           postSlug={post.slug}
-          coverUrl={post.cover?.src}
+          coverUrl={barImage}
           avatarUrl={settings.identity.avatarUrl || undefined}
           siteName={settings.identity.siteName}
         />
