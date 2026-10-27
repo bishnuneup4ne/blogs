@@ -75,6 +75,7 @@ export function PostsTable() {
     setSelected(new Set());
     try {
       await Promise.all(ids.map((id) => api.patch(`/api/admin/posts/${id}`, { status })));
+      toast("Bulk update successful");
     } catch (error) {
       toast(error instanceof Error ? error.message : "Bulk update failed");
     } finally {

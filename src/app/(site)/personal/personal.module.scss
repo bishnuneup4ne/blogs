@@ -270,9 +270,12 @@
     gap: 24px;
   }
 
-  .albumGrid,
+  .albumGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .postGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -290,5 +293,10 @@
   .featureTitle {
     font-size: 26px;
     line-height: 34px;
+  }
+
+  .albumGrid,
+  .postGrid {
+    grid-template-columns: 1fr;
   }
 }

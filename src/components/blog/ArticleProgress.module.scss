@@ -61,6 +61,37 @@
   text-overflow: ellipsis;
 }
 
+/* Author avatar replaces blog.google's Google "G" mark. */
+.brand {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarFallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  background: var(--gray-200);
+}
+
 @media (max-width: 640px) {
   .bar {
     height: 54px;

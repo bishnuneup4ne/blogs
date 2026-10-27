@@ -25,23 +25,29 @@
   padding-top: var(--spacer-3);
 }
 
+/* Mirrors blog.google's article page: a 12-column grid inside a 1440px
+   container. Hero text sits on cols 3–10, body copy on cols 4–9, and media
+   spans the full width of the container. */
 .page {
   position: relative;
-  max-width: 100%;
+  max-width: 1440px;
   margin: 0 auto;
+  padding-inline: 12px;
 }
 
-/* Article stays centered in the viewport; breadcrumb + TOC sit in the right gutter. */
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 720px) minmax(0, 1fr);
-  column-gap: 32px;
-  padding: var(--spacer-2) var(--container-pad) 0;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 12px;
+  padding: var(--spacer-3) 0 0;
 }
 
 .aside {
-  grid-column: 3;
-  grid-row: 1 / span 2;
+  grid-column: 11 / -1;
+  /* Explicit span across all three tracks. A sticky child can only travel
+     inside its containing block, so the aside must be as tall as the whole
+     article grid — otherwise the TOC pins for zero pixels. */
+  grid-row: 1 / span 3;
   justify-self: start;
   align-self: stretch;
   width: 100%;
@@ -55,19 +61,24 @@
   max-width: 280px;
 }
 
+/* Hero block — breadcrumb, title, abstract, byline (cols 3–10) */
 .articleFlow {
-  grid-column: 2;
+  grid-column: 3 / span 8;
   grid-row: 2;
+  min-width: 0;
+}
+
+/* Body block — narrower reading measure (cols 4–9) */
+.bodyArea {
+  grid-column: 4 / span 6;
+  grid-row: 3;
+  margin-top: var(--spacer-6);
   min-width: 0;
 }
 
 .mainCol,
 .contentCol {
   min-width: 0;
-}
-
-.bodyArea {
-  margin-top: var(--spacer-4);
 }
 
 .breadcrumb {
@@ -92,24 +103,22 @@
 }
 
 .title {
-  margin-top: var(--spacer-2);
-  max-width: 780px;
-  margin-inline: auto;
+  margin: 0 0 var(--spacer-3);
   font-family: var(--font-ui);
-  font-size: clamp(36px, 5.2vw, 60px);
+  font-size: clamp(36px, 4.2vw, 60px);
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.25px;
   color: var(--gray-900);
   text-wrap: balance;
 }
 
+/* Abstract sits beside the date — grey-700 meta colour on blog.google. */
 .summaryRow {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
-  gap: 20px;
-  max-width: 720px;
-  margin: var(--spacer-3) auto 0;
+  gap: 16px;
+  margin: 0 0 var(--spacer-3);
 }
 
 .dateBlock {
@@ -117,6 +126,7 @@
   gap: 2px;
   align-content: start;
   font-size: 14px;
+  line-height: 20px;
   color: var(--gray-600);
   padding-top: 2px;
 }
@@ -124,6 +134,7 @@
 .summary {
   font-size: 18px;
   line-height: 28px;
+  letter-spacing: 0;
   color: var(--gray-700);
   max-width: 70ch;
 }
@@ -132,9 +143,8 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  margin-top: var(--spacer-3);
-  padding-bottom: var(--spacer-3);
-  border-bottom: 1px solid var(--gray-200);
+  padding-block: var(--spacer-3);
+  border-top: 1px solid var(--gray-300);
 }
 
 .bylineRow .byline {
@@ -272,20 +282,28 @@
   margin-bottom: 20px;
 }
 
-@media (max-width: 1100px) {
+/* Tablet — collapse to blog.google's 8-column band (hero 1–8, body 2–7). */
+@media (max-width: 1120px) {
   .aside {
     display: none;
   }
-}
 
-
-@media (max-width: 900px) {
-  .page {
-    max-width: 100%;
+  .articleFlow {
+    grid-column: 2 / span 10;
   }
 
-  .grid {
-    column-gap: 0;
+  .bodyArea {
+    grid-column: 3 / span 8;
+  }
+}
+
+@media (max-width: 900px) {
+  .articleFlow {
+    grid-column: 1 / -1;
+  }
+
+  .bodyArea {
+    grid-column: 1 / -1;
   }
 }
 

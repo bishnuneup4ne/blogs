@@ -213,7 +213,7 @@ export function Comments({ slug, embedded = false }: { slug: string; embedded?: 
         </label>
         <label className={styles.honeypot} aria-hidden="true">
           Website
-          <input name="website" tabIndex={-1} autoComplete="off" />
+          <input name="website" tabIndex={-1} autoComplete="off" aria-label="Honeypot field (not interactive)" />
         </label>
         <div className={styles.actions}>
           <button type="submit" className={styles.submit} disabled={sending}>

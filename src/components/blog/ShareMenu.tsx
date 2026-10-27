@@ -59,6 +59,19 @@ export function ShareMenu({ title, url, compact = false }: { title: string; url:
       setCopyState("copied");
       setTimeout(() => setCopyState("idle"), 1800);
     } catch {
+      // Fallback: use textarea selection
+      const textarea = document.createElement("textarea");
+      textarea.value = url;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        // ignored
+      }
+      document.body.removeChild(textarea);
       setCopyState("error");
       setTimeout(() => setCopyState("idle"), 2400);
     }

@@ -3,6 +3,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/env";
+import { slugify } from "@/lib/slug";
 import { normalizeBlocks } from "@/lib/sanitize-rich";
 import { getSettings } from "@/lib/settings";
 import { posts as filePosts } from "@/content/posts";
@@ -43,7 +44,6 @@ interface DbAuthorRow {
 }
 
 function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
-  const author = null as null | { name?: string; role?: string };
   const blocks = normalizeBlocks(row.blocks);
   // Reading time is derived from the actual body so it can never go stale.
   const words = blocks
@@ -62,7 +62,7 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
     tags: row.tags ?? [],
     cover: row.cover_url ? { src: row.cover_url, alt: row.cover_alt ?? "", height: Number(row.cover_height ?? 0) || undefined } : undefined,
     featured: Boolean(row.featured),
-    author: { name: author?.name || authorName, role: author?.role ?? "", avatar: "/avatar.jpg" },
+    author: { name: authorName, role: "", avatar: "/avatar.jpg" },
     blocks,
   };
 }
@@ -197,13 +197,7 @@ export async function allTags(): Promise<TagSummary[]> {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-export function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+;
 
 export function tagSlug(name: string): string {
   return slugify(name);

@@ -87,7 +87,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     ) : null}
 
     <article className={post.cover ? styles.sheet : undefined}>
-      <ArticleProgress title={post.title} shareUrl={url} />
+      <ArticleProgress
+        title={post.title}
+        shareUrl={url}
+        avatarUrl={settings.identity.avatarUrl || undefined}
+        siteName={settings.identity.siteName}
+      />
       <div className={styles.page}>
         <div className={styles.grid}>
           <div className={styles.aside}>
@@ -128,33 +133,33 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <ShareMenu title={post.title} url={url} />
               </div>
             </div>
+          </div>
 
-            <div className={styles.bodyArea}>
-              <div className={styles.contentCol}>
-                <ArticleTools title={post.title} body={blocksToSpeech(post.blocks)} />
+          <div className={styles.bodyArea}>
+            <div className={styles.contentCol}>
+              <ArticleTools title={post.title} body={blocksToSpeech(post.blocks)} />
 
-                <PostContent blocks={post.blocks} />
+              <PostContent blocks={post.blocks} />
 
-                <section className={styles.postedIn} aria-labelledby="posted-in">
-                  <h2 id="posted-in" className={styles.postedTitle}>Posted in:</h2>
-                  <ul className={styles.postedPills}>
-                    <li>
-                      <Link href={`/blog/category/${category.slug}`} className="pill pill-soft">
-                        {category.name}
+              <section className={styles.postedIn} aria-labelledby="posted-in">
+                <h2 id="posted-in" className={styles.postedTitle}>Posted in:</h2>
+                <ul className={styles.postedPills}>
+                  <li>
+                    <Link href={`/blog/category/${category.slug}`} className="pill pill-soft">
+                      {category.name}
+                    </Link>
+                  </li>
+                  {post.tags.map((tag) => (
+                    <li key={tag}>
+                      <Link href={`/blog/tag/${tagSlug(tag)}`} className="pill pill-soft">
+                        {tag}
                       </Link>
                     </li>
-                    {post.tags.map((tag) => (
-                      <li key={tag}>
-                        <Link href={`/blog/tag/${tagSlug(tag)}`} className="pill pill-soft">
-                          {tag}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                  ))}
+                </ul>
+              </section>
 
-                {settings.toggles.comments ? <ArticleDiscussion slug={post.slug} /> : null}
-              </div>
+              {settings.toggles.comments ? <ArticleDiscussion slug={post.slug} /> : null}
             </div>
           </div>
         </div>

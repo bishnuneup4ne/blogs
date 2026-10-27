@@ -110,6 +110,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+  width: 160px;
+  flex: none;
 }
 
 .thumb {
@@ -126,20 +128,26 @@
 
 @media (max-width: 1100px) {
   .album {
-    grid-template-columns: minmax(0, 1fr) 140px;
+    grid-template-columns: minmax(0, 1fr) 160px;
+    gap: 24px 28px;
+    align-items: start;
   }
 
   .albumText {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 1;
   }
 
   .coverLink {
-    grid-column: 1 / -1;
+    grid-column: 1;
+    grid-row: 2;
   }
 
   .thumbs {
+    grid-column: 2;
+    grid-row: 2;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: start;
   }
 }
 
@@ -159,8 +167,16 @@
     gap: 20px;
   }
 
+  .albumText,
+  .coverLink,
+  .thumbs {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .thumbs {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
   }
 }
 

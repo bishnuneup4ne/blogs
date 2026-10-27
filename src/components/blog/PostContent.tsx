@@ -21,7 +21,15 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
         : [],
   );
 
-  let imageIndex = -1;
+  // Position of each single image in the lightbox gallery, keyed by block index.
+  const imageIndexByBlock = new Map<number, number>();
+  let cursor = 0;
+  blocks.forEach((b, i) => {
+    if (b.type === "image") {
+      imageIndexByBlock.set(i, cursor);
+      cursor += 1;
+    }
+  });
 
   return (
     <>
@@ -78,8 +86,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </ul>
               );
             case "image": {
-              imageIndex += 1;
-              const myIndex = imageIndex;
+              const myIndex = imageIndexByBlock.get(index) ?? 0;
               const remote = /^https?:\/\//i.test(block.src) && !block.src.includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
               return (
                 <figure key={key} className={`${styles.figure}${block.width && block.width !== "full" ? ` ${styles[`fig${block.width[0].toUpperCase()}${block.width.slice(1)}`]}` : ""}`}>
@@ -119,7 +126,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   <MediaCarousel
                     items={block.items.map((it) => {
                       const idx = images.findIndex((img) => img.src === it.src);
-                      return { src: it.src, alt: it.alt, index: idx, video: /\.(mp4|webm)(\?|$)/i.test(it.src), size: typeof it.size === "string" ? it.size : undefined };
+                      return { src: it.src, alt: it.alt, index: idx, video: /\.(mp4|webm)(\?|$)/i.test(it.src), size: typeof it.size === "string" ? it.size : undefined, caption: it.alt || block.caption };
                     })}
                     onOpen={(i) => setZoom(i)}
                   />

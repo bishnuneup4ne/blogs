@@ -9,7 +9,17 @@ import styles from "./ArticleProgress.module.scss";
 /* blog.google-style reading progress: a slim bar pinned to the top that fills
    as the article scrolls. It reveals itself (with a slide-down) once the
    headline has scrolled past; until then it stays invisible. */
-export function ArticleProgress({ title, shareUrl }: { title: string; shareUrl: string }) {
+export function ArticleProgress({
+  title,
+  shareUrl,
+  avatarUrl,
+  siteName,
+}: {
+  title: string;
+  shareUrl: string;
+  avatarUrl?: string;
+  siteName?: string;
+}) {
   const fillRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const shownRef = useRef(false);
@@ -78,6 +88,16 @@ export function ArticleProgress({ title, shareUrl }: { title: string; shareUrl: 
         <span ref={fillRef} className={styles.fill} />
       </span>
       <div className={styles.inner}>
+        <Link href="/blog" className={styles.brand} aria-label={siteName ? `${siteName} home` : "Home"}>
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className={styles.avatar} width={32} height={32} />
+          ) : (
+            <span className={styles.avatarFallback} aria-hidden="true">
+              {(siteName || "B").trim().charAt(0).toUpperCase()}
+            </span>
+          )}
+        </Link>
         <Link href="/blog" className={styles.title}>{title}</Link>
         <ShareMenu title={title} url={shareUrl} compact />
       </div>

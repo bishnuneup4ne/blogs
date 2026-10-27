@@ -385,7 +385,7 @@ function ColumnChart({ data, unit }: { data: ChartDatum[]; unit?: string }) {
               {fmt(d.value, unit)}
             </span>
             <span className={styles.colTrack}>
-              <span className={styles.colFill} data-h={pct} {...tipProps(d.label, fmt(d.value, unit), pctOf(d.value, total))} style={{ height: `${pct}%` }} />
+              <span className={styles.colFill} data-h={isNaN(pct) ? 0 : pct} {...tipProps(d.label, fmt(d.value, unit), pctOf(d.value, total))} style={{ height: `${pct}%` }} />
             </span>
             <span className={styles.colLabel}>{d.label}</span>
           </div>
@@ -829,7 +829,7 @@ function FunnelChart({ data, unit }: { data: ChartDatum[]; unit?: string }) {
 }
 
 function ProgressChart({ data, unit }: { data: ChartDatum[]; unit?: string }) {
-  const max = unit === "%" ? Math.max(...data.map((d) => d.value), 100) : Math.max(...data.map((d) => d.value), 1);
+  const max = unit === "%" ? Math.max(...data.map((d) => d.value), 1) : Math.max(...data.map((d) => d.value), 1);
   return (
     <ul className={styles.progressList}>
       {data.map((d, i) => {

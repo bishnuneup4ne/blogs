@@ -15,6 +15,15 @@ export interface LightboxItem {
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
+/* Gallery videos may be stored as YouTube watch/embed/shorts links, which a
+   <video> tag can never play — those need an iframe instead. */
+function parseYouTubeId(raw: string): string | null {
+  const m = raw.match(
+    /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/,
+  );
+  return m ? m[1] : null;
+}
+
 function clamp(v: number, lo: number, hi: number) {
   return Math.min(Math.max(v, lo), hi);
 }
@@ -356,18 +365,31 @@ export function Lightbox({
         onWheel={stageWheel}
       >
         {isVideo ? (
-          <video
-            key={image.src}
-            ref={(node) => { mediaRef.current = node; }}
-            src={image.src}
-            poster={image.poster}
-            controls
-            autoPlay
-            playsInline
-            className={styles.media}
-            aria-label={image.alt}
-            onLoadedData={(e) => e.currentTarget.setAttribute("data-loaded", "")}
-          />
+          parseYouTubeId(image.src) ? (
+            <iframe
+              key={image.src}
+              src={`https://www.youtube-nocookie.com/embed/${parseYouTubeId(image.src)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+              title={image.caption || "Video"}
+              className={`${styles.media} ${styles.embed}`}
+              allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              onLoad={(e) => e.currentTarget.setAttribute("data-loaded", "")}
+            />
+          ) : (
+            <video
+              key={image.src}
+              ref={(node) => { mediaRef.current = node; }}
+              src={image.src}
+              poster={image.poster}
+              controls
+              autoPlay
+              playsInline
+              className={styles.media}
+              aria-label={image.alt}
+              onLoadedData={(e) => e.currentTarget.setAttribute("data-loaded", "")}
+              onError={(e) => e.currentTarget.setAttribute("data-loaded", "")}
+            />
+          )
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img

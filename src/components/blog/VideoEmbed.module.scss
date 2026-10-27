@@ -21,6 +21,21 @@
   }
 }
 
+.file {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-card, 24px);
+  background: #0e0f11;
+}
+
+.figure figcaption {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--gray-600);
+}
+
+/* Poster shown until the reader presses play */
 .facade {
   position: relative;
   display: grid;
@@ -70,18 +85,4 @@
 
 .facade:hover .play {
   transform: scale(1.06);
-}
-
-.file {
-  display: block;
-  width: 100%;
-  border-radius: var(--radius-card, 24px);
-  background: #0e0f11;
-}
-
-.figure figcaption {
-  margin-top: 14px;
-  font-size: 14px;
-  line-height: 22px;
-  color: var(--gray-600);
 }

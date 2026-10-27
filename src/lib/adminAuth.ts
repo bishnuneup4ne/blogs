@@ -4,7 +4,8 @@ import { verifyAdminToken, ADMIN_COOKIE_NAME } from "./adminSession";
 
 export async function isAdminAuthenticated(): Promise<boolean> {
   const cookieStore = await cookies();
-  return verifyAdminToken(cookieStore.get(ADMIN_COOKIE_NAME)?.value);
+  const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+  return token ? verifyAdminToken(token) : false;
 }
 
 export function unauthorizedResponse() {

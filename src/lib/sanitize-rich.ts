@@ -2,7 +2,7 @@ import type { Block, ChartBlock, FlowEdge, FlowNode, FlowNodeShape } from "@/lib
 
 const ALLOWED_TAGS = new Set([
   "a", "p", "br", "strong", "em", "b", "i", "u", "s", "strike", "mark", "sub", "sup", "small", "kbd", "code", "pre", "ul", "ol", "li",
-  "blockquote", "h2", "h3", "h4", "span", "img",
+  "blockquote", "h2", "h3", "h4", "span", "img", "div",
 ]);
 const VOID_TAGS = new Set(["br", "img"]);
 const DROP_CONTENT = new Set([

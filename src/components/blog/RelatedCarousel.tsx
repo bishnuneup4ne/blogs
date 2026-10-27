@@ -64,6 +64,8 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
           };
           window.addEventListener("pointermove", move);
           window.addEventListener("pointerup", up);
+          // Prevent default on mouse down to avoid text selection
+          if (e.pointerType === "mouse") e.preventDefault();
         }}
         onClickCapture={(e) => {
           // Suppress the synthetic click that follows a real mouse-drag only.

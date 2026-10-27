@@ -11,6 +11,61 @@
   min-width: 0;
 }
 
+/* Video tiles get double width and a true 16:9 frame — no letterboxing. */
+.cellVideo {
+  grid-column: span 2;
+}
+
+.cellVideo .item {
+  aspect-ratio: 16 / 9;
+}
+
+/* Autoplaying YouTube tile: the iframe fills the rounded frame, and a
+   transparent layer above it catches clicks so YouTube's own overlays can
+   never be reached. */
+.itemVideo {
+  cursor: zoom-in;
+}
+
+.itemVideo .image,
+.videoFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.videoHit {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+/* Caption only on hover — the tile is busy enough while playing. */
+.videoHit .overlay {
+  opacity: 0;
+}
+
+.videoHit:hover .overlay,
+.videoHit:focus-visible .overlay {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .cellVideo {
+    grid-column: auto;
+  }
+}
+
 .item {
   position: relative;
   display: block;
@@ -146,30 +201,7 @@
   .overlay {
     display: none;
   }
-}
 
-@media (min-width: 769px) {
-  .item {
-    cursor: zoom-in;
-  }
-  .item::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    transition: opacity 200ms ease;
-    pointer-events: none;
-  }
-  .item:hover::after {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .overlay {
-    display: none;
-  }
   .image {
     cursor: pointer;
     user-select: none;
@@ -179,6 +211,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
   }
+
   .image:hover {
     transform: none;
   }
