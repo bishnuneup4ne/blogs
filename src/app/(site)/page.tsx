@@ -34,16 +34,23 @@ export default async function HomePage() {
         </div>
 
         {lead ? (
-          <Link href={`/blog/${lead.slug}`} className={styles.introMedia} aria-label={`Read: ${lead.title}`}>
-            {lead.cover ? (
-              <Image src={lead.cover.src} alt="" fill priority sizes="(max-width: 900px) 100vw, 760px" className={styles.introMediaImg} />
-            ) : null}
-            <span className={styles.introMediaScrim} aria-hidden="true" />
-            <span className={styles.introMediaLabel}>Watch the latest</span>
-            <span className={styles.introMediaCaption}>
-              {lead.title} · {relativeDate(lead.date)}
-            </span>
-          </Link>
+          <article className={styles.pastCard}>
+            <Link href={`/blog/${lead.slug}`} className={styles.pastMedia} tabIndex={-1} aria-hidden="true">
+              {lead.cover ? (
+                <Image src={lead.cover.src} alt="" fill priority sizes="(max-width: 900px) 100vw, 640px" className={styles.mediaImg} />
+              ) : null}
+            </Link>
+            <div className={styles.pastBody}>
+              <h3 className={styles.pastTitle}>
+                <Link href={`/blog/${lead.slug}`}>{lead.title}</Link>
+              </h3>
+              <p className={styles.pastDesc}>{lead.description}</p>
+              <p className={styles.pastMeta}>{relativeDate(lead.date)} · {lead.readingMinutes} min read</p>
+              <Link href={`/blog/${lead.slug}`} className={`${styles.pastCta} btn btn-outline`}>
+                Read article →
+              </Link>
+            </div>
+          </article>
         ) : null}
       </div>
     </section>
