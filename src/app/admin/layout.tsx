@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { FeedbackProvider } from "@/components/admin/Feedback";
 import "./admin.css";
 
 export const dynamic = "force-dynamic";
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <FeedbackProvider>
+      <AdminShell>{children}</AdminShell>
+    </FeedbackProvider>
+  );
 }

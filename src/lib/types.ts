@@ -32,6 +32,9 @@ export type Block =
   | { type: "related"; slug: string; title: string; description?: string; image?: string }
   | { type: "table"; head: string[]; rows: string[][] }
   | { type: "chart"; chart: ChartBlock }
+  | { type: "cta"; label: string; href: string; style?: "primary" | "outline"; note?: string }
+  | { type: "footnote"; text: string }
+  | { type: "jumplinks"; title?: string }
   | { type: "divider" };
 
 export type ChartDatum = { label: string; value: number };

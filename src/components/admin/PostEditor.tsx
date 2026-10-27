@@ -12,6 +12,7 @@ import { EmptyState, StatusChip, statusTone, Switch, Segmented } from "@/compone
 import { formatDate } from "@/lib/dates";
 import { slugify } from "@/lib/slug";
 import { useBlockDrag } from "./BlockCanvas";
+import { BlockInserter, InsertRail, BLOCKS } from "./BlockInserter";
 import blockDragStyles from "./BlockCanvas.module.scss";
 import styles from "./PostEditor.module.scss";
 
@@ -64,6 +65,7 @@ export function PostEditor({ postId }: { postId: string | "new" }) {
   const [isLoading, setIsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const [palette, setPalette] = useState<{ index: number; query: string; active: number } | null>(null);
 
   // Load existing post or start new
   useEffect(() => {
@@ -150,8 +152,23 @@ export function PostEditor({ postId }: { postId: string | "new" }) {
     setSelectedBlock(newBlock);
   }
 
-  function selectBlock(block: Block) {
-    setSelectedBlock(block);
+  /* Insert a block at `index` (replacing the slash-command paragraph) or after
+     it when the current block already has content. */
+  function insertBlockAt(index: number, blockType: string) {
+    setState(prev => {
+      const current = prev.blocks[index];
+      const blank = current?.type === "paragraph" && !(current.data?.text || "").trim();
+      const fresh: Block = { type: blockType, data: {} };
+      const next = [...prev.blocks];
+      if (blank) next.splice(index, 1, fresh);
+      else next.splice(index + 1, 0, fresh);
+      // Keep a paragraph after non-text blocks so typing can continue.
+      if (blockType !== "paragraph" && !blank) next.splice(index + 2, 0, { type: "paragraph", data: { text: "" } });
+      return { ...prev, blocks: next };
+    });
+  }
+
+  function selectBlock(block: Block) {    setSelectedBlock(block);
     // Scroll block into view
     const element = document.querySelector(`.block-container[data-id="${block.data?.id}"]`);
     if (element) {
@@ -242,26 +259,73 @@ export function PostEditor({ postId }: { postId: string | "new" }) {
     table: (b) => ({ type: "table", data: { head: b.data?.head || [], rows: b.data?.rows || [] } }),
     divider: (b) => ({ type: "divider", data: {} }),
     chart: (b) => ({ type: "chart", data: { kind: "column", data: [] } }),
+    row: (b) => ({ type: "row", data: { items: b.data?.items || [], caption: b.data?.caption || "" } }),
+    cta: (b) => ({ type: "cta", data: { label: b.data?.label || "Learn more", href: b.data?.href || "", style: b.data?.style || "primary", note: b.data?.note || "" } }),
+    footnote: (b) => ({ type: "footnote", data: { text: b.data?.text || "" } }),
+    jumplinks: (b) => ({ type: "jumplinks", data: { title: b.data?.title || "In this article" } }),
   };
 
   // Render block component
   const renderBlock = (block: Block) => {
     switch (block.type) {
       case "paragraph": {
+        const idx = state.blocks.findIndex((b: any) => b.data?.id === block.data?.id);
+        const text: string = block.data?.text || "";
+        const slashOpen = palette?.index === idx;
         return (
-          <div className={styles.block} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
-            <div className={styles.handle} onClick={() => selectBlock(block)}>&nbsp;</div>
+          <div className={`${styles.block} ${styles.blockText} ${slashOpen ? styles.blockSlash : ""}`} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
             <textarea
               className={styles.input}
-              value={block.data?.text || ""}
-              onChange={(e) => updateBlock(state.blocks.findIndex((b: any) => b.data?.id === block.data?.id), {
-                type: "paragraph",
-                data: { text: e.target.value },
-              })}
-              placeholder="Start writing..."
+              value={text}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateBlock(idx, { type: "paragraph", data: { text: value } });
+                // "/" at the very start of an empty paragraph opens the palette.
+                if (value === "/") setPalette({ index: idx, query: "", active: 0 });
+                else if (slashOpen) {
+                  if (value.startsWith("/")) setPalette({ index: idx, query: value.slice(1), active: 0 });
+                  else setPalette(null);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (!slashOpen) return;
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setPalette(null);
+                  return;
+                }
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const dir = e.key === "ArrowDown" ? 1 : -1;
+                  setPalette((p) => (p ? { ...p, active: Math.max(0, p.active + dir) } : p));
+                  return;
+                }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const q = (palette?.query || "").toLowerCase();
+                  const list = BLOCKS.filter(
+                    (b) => !q || `${b.label} ${b.hint} ${b.keywords ?? ""} ${b.type}`.toLowerCase().includes(q),
+                  );
+                  const pick = list[palette?.active ?? 0];
+                  if (pick) insertBlockAt(idx, pick.type);
+                  setPalette(null);
+                }
+              }}
+              placeholder="Type “/” for commands, or just start writing…"
               spellCheck="true"
+              rows={Math.max(3, Math.ceil(text.length / 90))}
             />
-            <div className={styles.handle} onClick={() => selectBlock(block)}>&nbsp;</div>
+            {slashOpen ? (
+              <BlockInserter
+                query={palette?.query || ""}
+                activeIndex={palette?.active ?? 0}
+                onActiveChange={(a) => setPalette((p) => (p ? { ...p, active: a } : p))}
+                onPick={(type) => {
+                  insertBlockAt(idx, type);
+                  setPalette(null);
+                }}
+              />
+            ) : null}
           </div>
         );
       }
@@ -378,6 +442,130 @@ export function PostEditor({ postId }: { postId: string | "new" }) {
         return (
           <div className={styles.block} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
             <hr className={styles.divider} />
+          </div>
+        );
+      }
+      case "cta": {
+        const idx = state.blocks.findIndex((b: any) => b.data?.id === block.data?.id);
+        return (
+          <div className={`${styles.block} ${styles.blockCard}`} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
+            <span className={styles.blockTag}>Call to action</span>
+            <div className={styles.fieldRow}>
+              <input
+                className={styles.input}
+                value={block.data?.label || ""}
+                onChange={(e) => updateBlock(idx, { type: "cta", data: { ...block.data, label: e.target.value } })}
+                placeholder="Button label"
+              />
+              <select
+                className={styles.select}
+                value={block.data?.style || "primary"}
+                onChange={(e) => updateBlock(idx, { type: "cta", data: { ...block.data, style: e.target.value } })}
+              >
+                <option value="primary">Filled</option>
+                <option value="outline">Outline</option>
+              </select>
+            </div>
+            <input
+              className={styles.input}
+              value={block.data?.href || ""}
+              onChange={(e) => updateBlock(idx, { type: "cta", data: { ...block.data, href: e.target.value } })}
+              placeholder="https://example.com or /blog/some-post"
+            />
+            <input
+              className={styles.input}
+              value={block.data?.note || ""}
+              onChange={(e) => updateBlock(idx, { type: "cta", data: { ...block.data, note: e.target.value } })}
+              placeholder="Small note beside the button (optional)"
+            />
+          </div>
+        );
+      }
+      case "footnote": {
+        const idx = state.blocks.findIndex((b: any) => b.data?.id === block.data?.id);
+        return (
+          <div className={`${styles.block} ${styles.blockCard}`} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
+            <span className={styles.blockTag}>Footnote</span>
+            <textarea
+              className={styles.input}
+              rows={2}
+              value={block.data?.text || ""}
+              onChange={(e) => updateBlock(idx, { type: "footnote", data: { text: e.target.value } })}
+              placeholder="Source, clarification, or citation…"
+            />
+          </div>
+        );
+      }
+      case "jumplinks": {
+        const idx = state.blocks.findIndex((b: any) => b.data?.id === block.data?.id);
+        return (
+          <div className={`${styles.block} ${styles.blockCard}`} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
+            <span className={styles.blockTag}>Contents</span>
+            <input
+              className={styles.input}
+              value={block.data?.title || ""}
+              onChange={(e) => updateBlock(idx, { type: "jumplinks", data: { title: e.target.value } })}
+              placeholder="In this article"
+            />
+            <p className={styles.blockNote}>
+              Links are generated automatically from your Heading 2 and Heading 3 blocks.
+            </p>
+          </div>
+        );
+      }
+      case "row": {
+        const idx = state.blocks.findIndex((b: any) => b.data?.id === block.data?.id);
+        const items: { src: string; alt: string }[] = block.data?.items || [];
+        return (
+          <div className={`${styles.block} ${styles.blockCard}`} key={block.data?.id} tabIndex={-1} onFocus={() => selectBlock(block)}>
+            <span className={styles.blockTag}>Media carousel · {items.length} item{items.length === 1 ? "" : "s"}</span>
+            <div className={styles.rowStrip}>
+              {items.map((it, n) => (
+                <div key={n} className={styles.rowStripItem}>
+                  {/\.(mp4|webm)(\?|$)/i.test(it.src) ? (
+                    <video src={it.src} muted playsInline preload="metadata" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={it.src} alt={it.alt} />
+                  )}
+                  <button
+                    type="button"
+                    className={styles.rowStripRemove}
+                    onClick={() =>
+                      updateBlock(idx, { type: "row", data: { ...block.data, items: items.filter((_, k) => k !== n) } })
+                    }
+                    aria-label={`Remove item ${n + 1}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <label className={styles.rowStripAdd}>
+                +
+                <input
+                  type="file"
+                  accept="image/*,video/mp4,video/webm"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const { src } = await api.upload(file);
+                      updateBlock(idx, { type: "row", data: { ...block.data, items: [...items, { src, alt: "" }] } });
+                    } catch (err) {
+                      toast(err instanceof Error ? err.message : "Upload failed", "error");
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            <input
+              className={styles.input}
+              value={block.data?.caption || ""}
+              onChange={(e) => updateBlock(idx, { type: "row", data: { ...block.data, caption: e.target.value } })}
+              placeholder="Caption shown under each card"
+            />
           </div>
         );
       }
@@ -518,6 +706,9 @@ export function PostEditor({ postId }: { postId: string | "new" }) {
             />
           ) : null}
         </div>
+
+        {/* Block insert rail */}
+        <InsertRail onPick={(type) => insertBlockAt(state.blocks.length - 1, type)} />
       </div>
 
       {/* Sidebar */}

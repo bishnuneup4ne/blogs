@@ -31,10 +31,17 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
     }
   });
 
+  // Headings for the auto-generated contents block.
+  const headingsSource = blocks.flatMap((b) =>
+    b.type === "h2" || b.type === "h3"
+      ? [{ id: b.id ?? `h-${b.text.slice(0, 16)}`, text: b.text, level: b.type === "h2" ? 2 : 3 }]
+      : [],
+  );
+
   return (
     <>
       <div className={styles.prose}>
-        {blocks.map((block, index) => {
+        {(() => { let footnoteCount = 0; return blocks.map((block, index) => {
           const key = `${block.type}-${index}`;
           switch (block.type) {
             case "p":
@@ -141,7 +148,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedCard}>
                   {block.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={block.image} alt="" className={styles.relatedImg} loading="lazy" />
+                    <img src={block.image} alt={block.title} className={styles.relatedImg} loading="lazy" />
                   ) : null}
                   <span className={styles.relatedBody}>
                     <span className={styles.relatedKicker}>Read next</span>
@@ -175,12 +182,50 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             case "chart":
               return <ChartBlockView key={key} chart={block.chart} />;
+            case "cta":
+              return (
+                <p key={key} className={styles.ctaRow}>
+                  <Link
+                    href={block.href}
+                    className={block.style === "outline" ? `${styles.cta} ${styles.ctaOutline}` : styles.cta}
+                  >
+                    {block.label}
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </Link>
+                  {block.note ? <span className={styles.ctaNote}>{block.note}</span> : null}
+                </p>
+              );
+            case "footnote":
+              footnoteCount += 1;
+              return (
+                <p key={key} className={styles.footnote} id={`fn-${key}`}>
+                  <span className={styles.footnoteIndex}>{footnoteCount}</span>
+                  <span>{block.text}</span>
+                </p>
+              );
+            case "jumplinks": {
+              if (headingsSource.length === 0) return null;
+              return (
+                <nav key={key} className={styles.jumplinks} aria-label={block.title || "In this article"}>
+                  <p className={styles.jumplinksTitle}>{block.title || "In this article"}</p>
+                  <ol>
+                    {headingsSource.map((h) => (
+                      <li key={h.id} data-level={h.level}>
+                        <a href={`#${h.id}`}>{h.text}</a>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              );
+            }
             case "divider":
               return <hr key={key} className={styles.divider} />;
             default:
               return null;
           }
-        })}
+        }); })()}
       </div>
 
       <Lightbox images={images} index={zoom} onClose={() => setZoom(null)} onIndexChange={setZoom} />

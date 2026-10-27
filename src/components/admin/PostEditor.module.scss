@@ -594,3 +594,106 @@
     height: 28px;
   }
 }
+/* ---------- Typed block cards (CTA, footnote, contents, carousel) ---------- */
+.blockCard {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--gray-200, #dadce0);
+  border-radius: 14px;
+  background: var(--white, #fff);
+}
+
+.blockTag {
+  font-family: var(--font-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--gray-500, #80868b);
+}
+
+.blockNote {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--gray-600, #5f6368);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  gap: 10px;
+}
+
+/* Paragraph that hosts the slash palette needs a positioning context. */
+.blockText {
+  position: relative;
+}
+
+.blockSlash {
+  z-index: 30;
+}
+
+/* Media carousel strip inside the editor */
+.rowStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rowStripItem {
+  position: relative;
+  width: 96px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--gray-100, #f1f3f4);
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.rowStripRemove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rowStripAdd {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 72px;
+  border-radius: 10px;
+  border: 1px dashed var(--gray-300, #bdc1c6);
+  color: var(--gray-600, #5f6368);
+  font-size: 22px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--gray-50, #f8f9fa);
+  }
+}
+
+@media (max-width: 720px) {
+  .fieldRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

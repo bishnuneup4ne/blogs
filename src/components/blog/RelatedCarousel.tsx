@@ -84,7 +84,7 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
                   {post.cover ? (
                     <Image
                       src={post.cover.src}
-                      alt=""
+                      alt={post.title}
                       fill
                       sizes="(max-width: 900px) 78vw, 300px"
                       className={styles.img}

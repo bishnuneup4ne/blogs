@@ -141,11 +141,11 @@ export default function AdminMediaPage() {
           {items.map((item) => (
             <figure key={item.src} className={styles.tile}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.src} alt="" className={styles.img} />
+              <img src={item.src} alt={item.name || "Media"} className={styles.img} />
               <figcaption className={styles.meta}>
                 <p className={styles.name}>{item.name}</p>
                 <p className={styles.sub}>
-                  {item.type.split("/")[1].toUpperCase()} · {item.size} · {item.usedBy > 0 ? `${item.usedBy} post${item.usedBy > 1 ? "s" : ""}` : "unused"}
+                  {(item.type?.split("/")[1] ?? "jpeg").toUpperCase()} · {item.size} · {item.usedBy > 0 ? `${item.usedBy} post${item.usedBy > 1 ? "s" : ""}` : "unused"}
                 </p>
                 <div className={styles.actions}>
                   <button

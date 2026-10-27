@@ -1,7 +1,12 @@
 "use client";
 
 import { PostEditor } from "@/components/admin/PostEditor";
+import { FeedbackProvider } from "@/components/admin/Feedback";
 
 export default function NewPostPage() {
-  return <PostEditor postId="new" />;
+  return (
+    <FeedbackProvider>
+      <PostEditor postId="new" />
+    </FeedbackProvider>
+  );
 }

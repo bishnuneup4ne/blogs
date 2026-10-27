@@ -178,7 +178,7 @@ export default function AdminFolderPage() {
         <div className={styles.headCover}>
           {album.cover_url || album.first_photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={album.cover_url || album.first_photo} alt="" />
+            <img src={album.cover_url || album.first_photo} alt={album.cover_url || album.first_photo ? "Album cover" : ""} />
           ) : (
             <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
               <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6c.5 0 .9.2 1.2.6l1 1.4h7.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 17.5Z" />
@@ -273,14 +273,14 @@ export default function AdminFolderPage() {
               {ph.kind === "video" ? (
                 ph.poster_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={ph.poster_url} alt="" className={styles.thumb} loading="lazy" />
+                  <img src={ph.poster_url} alt={ph.alt || "Thumbnail"} className={styles.thumb} loading="lazy" />
                 ) : (
                   <span className={styles.videoBadge} aria-hidden="true">▶</span>
                 )
               ) : (
                 <button type="button" className={styles.zoomBtn} aria-label={`Preview ${ph.caption || `item ${i + 1}`}`} onClick={() => setLightbox(shown.indexOf(ph))}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ph.src} alt="" className={styles.thumb} loading="lazy" />
+                  <img src={ph.src} alt={ph.alt || "Photo"} className={styles.thumb} loading="lazy" />
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="7" />
                     <path d="m20 20-3.5-3.5M11 8v6M8 11h6" />
@@ -414,7 +414,7 @@ function VideoLinkDialog({ albumId, onClose, onAdded }: { albumId: string; onClo
         <div className={styles.previewRow}>
           {detected.thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={detected.thumbnail} alt="" className={styles.previewThumb} />
+            <img src={detected.thumbnail} alt="Video preview" className={styles.previewThumb} />
           ) : null}
           <span>
             <strong>{detected.kind === "youtube" ? "YouTube" : "Vimeo"} video detected</strong>

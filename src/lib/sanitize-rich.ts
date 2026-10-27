@@ -523,6 +523,24 @@ function normaliseBlock(raw: unknown): Block | null {
       const chart = chartBlock(source.chart);
       return chart ? { type, chart } : null;
     }
+    case "cta": {
+      const label = text(source.label, 80)?.trim();
+      const href = safeUrl(String(source.href ?? ""), false);
+      if (!label || !href) return null;
+      return {
+        type,
+        label,
+        href,
+        style: source.style === "outline" ? "outline" : "primary",
+        note: text(source.note, 200) ?? undefined,
+      };
+    }
+    case "footnote": {
+      const body = text(source.text, 800)?.trim();
+      return body ? { type, text: body } : null;
+    }
+    case "jumplinks":
+      return { type, title: text(source.title, 80) ?? undefined };
     case "divider":
       return { type };
     default:

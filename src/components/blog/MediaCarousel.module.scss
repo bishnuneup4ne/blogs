@@ -27,8 +27,11 @@
   /* The track box spans viewport-to-viewport (wrap breakout), so re-add the
      breakout as symmetric padding: first card lands on the text column and
      later cards bleed off-screen right. */
-  padding: 4px min(20vw, 340px);
-  scroll-padding-inline: min(20vw, 340px);
+  /* Track spans viewport-to-viewport; inset both sides by the wrap breakout
+     plus the page gutter so cards line up with the article text. */
+  --gutter: max(calc((100vw - min(100vw, var(--container))) / 2 - 27px), clamp(16px, 2.5vw, 32px));
+  padding: 4px calc(min(20vw, 340px) + var(--gutter));
+  scroll-padding-inline: calc(min(20vw, 340px) + var(--gutter));
   overflow-x: auto;
   scrollbar-width: none;
   scroll-behavior: smooth;
