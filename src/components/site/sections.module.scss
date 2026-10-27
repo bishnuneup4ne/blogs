@@ -15,7 +15,6 @@
   border-radius: var(--radius-card);
   background: var(--gray-50);
   overflow: hidden;
-  min-height: 520px;
   height: 100%;
   transition: background-color 300ms cubic-bezier(0.31, 0.94, 0.34, 1);
 }
@@ -85,11 +84,14 @@
 
 /* "All the Latest" cards */
 .latestCard {
-  display: grid;
-  gap: 14px;
-  padding: 20px;
-  border-radius: var(--radius-16);
-  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 280px;
+  height: 100%;
+  padding: 24px;
+  border-radius: var(--radius-card);
+  background: var(--gray-50);
   transition: background-color 150ms cubic-bezier(0.31, 0.94, 0.34, 1), box-shadow 150ms cubic-bezier(0.31, 0.94, 0.34, 1);
 }
 
@@ -137,10 +139,10 @@
 }
 
 .latestRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
-  gap: 12px;
-  align-items: start;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .latestTitle {
@@ -169,10 +171,11 @@
 
 .latestThumb {
   position: relative;
-  aspect-ratio: 1;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-card);
   overflow: hidden;
-  background: var(--gray-50);
+  background: var(--gray-100);
 }
 
 .latestThumbFallback {

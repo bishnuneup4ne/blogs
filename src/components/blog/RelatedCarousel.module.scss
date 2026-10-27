@@ -50,33 +50,32 @@
   transform: translateY(-2px);
 }
 
-/* Media tile — the image sits inside a coloured shape that changes per card */
+/* Media tile — grey panel with the cover cropped inside a blob mask,
+   like blog.google's "More updates" cards. */
 .media {
   position: relative;
-  display: block;
+  display: grid;
+  place-items: center;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius-16);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-24);
   overflow: hidden;
-  background: var(--blue-50);
+  padding: 8px;
 }
 
-
-.shape0 {
-  background: linear-gradient(135deg, #d3e3fd, #aecbfa);
+.blob {
+  position: relative;
+  display: block;
+  width: 92%;
+  height: 92%;
+  overflow: hidden;
+  background: var(--white);
 }
 
-.shape1 {
-  background: linear-gradient(135deg, #ceead6, #a8dab5);
-}
-
-.shape2 {
-  background: linear-gradient(135deg, #feefc9, #fdd663);
-}
-
-.shape3 {
-  background: linear-gradient(135deg, #fad2cf, #f28b82);
-}
+.blob0 { border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%; }
+.blob1 { border-radius: 58% 42% 46% 54% / 44% 56% 48% 52%; }
+.blob2 { border-radius: 50% 50% 38% 62% / 60% 42% 58% 40%; }
+.blob3 { border-radius: 40% 60% 55% 45% / 48% 58% 42% 52%; }
 
 .img {
   object-fit: cover;
@@ -88,26 +87,18 @@
 }
 
 .body {
-  display: grid;
-  gap: 6px;
-  margin-top: 16px;
-}
-
-.kicker {
-  font-family: var(--font-ui);
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-  line-height: 18px;
-  color: var(--gray-700);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 24px 24px;
 }
 
 .title {
   font-family: var(--font-ui);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 22px;
-  letter-spacing: 0.1px;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: -0.1px;
   color: var(--gray-900);
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -115,16 +106,9 @@
   overflow: hidden;
 }
 
-.hero .title {
-  font-size: 21px;
-  font-weight: 400;
-  line-height: 28px;
-  letter-spacing: -0.1px;
-  -webkit-line-clamp: 2;
-}
-
 .byline {
-  font-size: 13px;
+  margin-top: auto;
+  font-size: 14px;
   line-height: 20px;
   color: var(--gray-600);
 }

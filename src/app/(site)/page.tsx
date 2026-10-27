@@ -73,7 +73,7 @@ export default async function HomePage() {
             {secondary.length > 0 ? (
               <div className={styles.side}>
                 {secondary.map((post, i) => (
-                  <Reveal key={post.slug} delay={i * 90}>
+                  <Reveal as="li" key={post.slug} delay={i * 90}>
                     <Link href={`/blog/${post.slug}`} className={styles.sideCard}>
                       <span className={styles.sideMedia}>
                         {post.cover ? (
@@ -100,7 +100,7 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {enabled("latest") && rest.slice(2).length > 0 ? (
+      {enabled("latest") && rest.length > 2 ? (
         <LatestSection posts={rest.slice(2)} topics={topics} hideTitle variant="grid" />
       ) : null}
 
@@ -108,9 +108,9 @@ export default async function HomePage() {
       {albums.length > 0 ? (
         <section className={styles.section}>
           <SectionHead title="From the gallery" href="/gallery" linkLabel="Open gallery" />
-          <div className={styles.galleryRow}>
+          <ul className={styles.galleryRow}>
             {galleryAlbums.slice(0, 3).map((album, i) => (
-              <Reveal key={album.slug} delay={i * 90}>
+              <Reveal as="li" key={album.slug} delay={i * 90}>
                 <Link href={`/gallery/${album.slug}`} className={styles.galleryCard}>
                   <span className={styles.galleryMedia}>
                     {album.cover ? (
@@ -131,7 +131,7 @@ export default async function HomePage() {
                 </Link>
               </Reveal>
             ))}
-          </div>
+          </ul>
         </section>
       ) : null}
 

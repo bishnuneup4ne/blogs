@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getCategory } from "@/lib/categories";
+import { relativeDate } from "@/lib/dates";
 import type { ScoredPost } from "@/lib/recommend";
 import styles from "./RelatedCarousel.module.scss";
 
-/* blog.google-style browse row: identical grey cards (media tile on a pastel
-   shape, kicker + title + byline) with circular arrows and a progress line. */
+/* blog.google "More updates" row: grey tile with the cover inside a blob
+   mask, title + byline below. Circular arrows and a progress line. */
+const BLOBS = [styles.blob0, styles.blob1, styles.blob2, styles.blob3];
 export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
@@ -72,12 +73,11 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
           }
         }}
       >
-        {items.map(({ post }, i) => {
-          const category = getCategory(post.category);
-          return (
-            <li key={post.slug} className={styles.item}>
-              <Link href={`/blog/${post.slug}`} className={styles.card}>
-                <span className={`${styles.media} ${styles[`shape${i % 4}`]}`}>
+        {items.map(({ post }, i) => (
+          <li key={post.slug} className={styles.item}>
+            <Link href={`/blog/${post.slug}`} className={styles.card}>
+              <span className={styles.media}>
+                <span className={`${styles.blob} ${BLOBS[i % BLOBS.length]}`}>
                   {post.cover ? (
                     <Image
                       src={post.cover.src}
@@ -88,15 +88,16 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
                     />
                   ) : null}
                 </span>
-                <span className={styles.body}>
-                  <span className={styles.kicker}>{category.name}</span>
-                  <span className={styles.title}>{post.title}</span>
-                  <span className={styles.byline}>By {post.author.name}</span>
+              </span>
+              <span className={styles.body}>
+                <span className={styles.title}>{post.title}</span>
+                <span className={styles.byline}>
+                  {relativeDate(post.date)} · {post.readingMinutes} min read
                 </span>
-              </Link>
-            </li>
-          );
-        })}
+              </span>
+            </Link>
+          </li>
+        ))}
       </ul>
 
       <div className={styles.controls}>

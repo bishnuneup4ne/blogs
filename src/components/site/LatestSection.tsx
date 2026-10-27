@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Post } from "@/lib/types";
 import {shortDate, relativeDate} from "@/lib/dates";
 import { Reveal } from "@/components/ui/Reveal";
-import { LatestCard } from "./sections";
+import { UpdateCard } from "./sections";
 import styles from "./LatestSection.module.scss";
 
 const PAGE = 6;
@@ -69,13 +69,13 @@ export function LatestSection({
    <div className={styles.section}>
     {!hideTitle ? <h2 className={styles.gridTitle}>{title}</h2> : null}
     {shown.length > 0 ? (
-     <div className={styles.grid}>
+     <ul className={styles.grid}>
       {shown.map((post, i) => (
-       <Reveal key={post.slug} delay={(i % 3) * 80}>
-        <LatestCard post={post} first={markFirst && i === 0} />
+       <Reveal as="li" key={post.slug} delay={(i % 3) * 80}>
+        <UpdateCard post={post} />
        </Reveal>
       ))}
-     </div>
+     </ul>
     ) : pool.length === 0 ? (
      <p className={styles.empty}>Nothing published yet — the first post will land right here.</p>
     ) : (
@@ -84,7 +84,10 @@ export function LatestSection({
     {filtered.length > shown.length ? (
      <div className={styles.loadMoreRow}>
       <button type="button" className={`${styles.loadMore} btn btn-ghost`} onClick={() => setVisible((v) => v + PAGE)}>
-       Load more stories
+       Explore more articles
+       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6" />
+       </svg>
       </button>
      </div>
     ) : null}
@@ -98,7 +101,7 @@ export function LatestSection({
     {rail}
     <div className={styles.feed}>
      {shown.map((post, i) => (
-      <Reveal key={post.slug} delay={Math.min(i, 3) * 70}>
+      <Reveal as="li" key={post.slug} delay={Math.min(i, 3) * 70}>
       <Link href={`/blog/${post.slug}`} className={styles.feedItem}>
        <div className={styles.feedMedia}>
         {post.cover ? (

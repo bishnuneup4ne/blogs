@@ -34,33 +34,6 @@ export function UpdateCard({ post }: { post: Post }) {
   );
 }
 
-export function LatestCard({ post, first }: { post: Post; first?: boolean }) {
-  const category = getCategory(post.category);
-  return (
-    <article className={styles.latestCard}>
-      <p className={styles.latestKicker}>
-        {first ? <span className={styles.latestBadge}>Latest</span> : null}         <span className={styles.latestDate}>{relativeDate(post.date).toUpperCase()}</span>
-        <span aria-hidden="true"> · </span>
-        <Link href={`/blog/category/${category.slug}`} className={styles.latestCat}>
-          {category.name}
-        </Link>
-      </p>
-      <div className={styles.latestRow}>
-        <h3 className={`${styles.latestTitle}${first ? " " + styles.latestTitleFirst : ""}`}>
-          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-        </h3>
-        <Link href={`/blog/${post.slug}`} className={styles.latestThumb} tabIndex={-1} aria-hidden="true">
-          {post.cover ? (
-            <Image src={post.cover.src} alt="" fill sizes="130px" className={styles.mediaImg} />
-          ) : (
-            <span className={styles.latestThumbFallback}>{post.title.trim().slice(0, 1).toUpperCase()}</span>
-          )}
-        </Link>
-      </div>
-    </article>
-  );
-}
-
 export function FeaturedStory({ post, kicker }: { post: Post; kicker: string }) {
   return (
     <article className={styles.featured}>
