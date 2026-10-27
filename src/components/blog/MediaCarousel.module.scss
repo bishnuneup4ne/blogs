@@ -7,14 +7,14 @@
 
 .track,
 .track[class] {
-  /* Explicit px columns so the strip always overflows and arrows page. */
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: clamp(280px, 44vw, 560px);
-  gap: 18px;
+  /* blog.google media rail: one shared band height; tile width follows the
+     item's own ratio, so mixed photos/videos line up perfectly. */
+  --band-h: min(42vw, 400px);
+  --rail-gap: 16px;
+  --tile-w: calc(var(--band-h) * 1.7778);
+  display: flex;
+  gap: var(--rail-gap);
   scroll-snap-type: x mandatory;
-  transition: none;
-  scroll-padding-inline: clamp(16px, 3vw, 48px);
   list-style: none;
   margin: 0;
   padding: 4px 2px 12px;
@@ -36,6 +36,7 @@
 }
 
 .item {
+  flex: 0 0 var(--tile-w);
   min-width: 0;
   scroll-snap-align: start;
 }
@@ -44,7 +45,8 @@
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: auto;
+  height: var(--band-h);
+  aspect-ratio: 16 / 9;
   padding: 0;
   border: none;
   border-radius: var(--radius-card);
@@ -53,7 +55,23 @@
   cursor: zoom-in;
 }
 
+/* Per-item size overrides from the editor keep the same band height and only
+   change the tile width — heights never differ across the rail. */
+.tilePortrait {
+  aspect-ratio: 3 / 4;
+}
+
+.tileSquare {
+  aspect-ratio: 1 / 1;
+}
+
+.tileWide {
+  aspect-ratio: 21 / 9;
+}
+
 .img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
 }
@@ -115,6 +133,13 @@
   transition: transform 220ms ease;
 }
 
+@media (min-width: 1100px) {
+  .track,
+  .track[class] {
+    --band-h: min(36vw, 380px);
+  }
+}
+
 @media (max-width: 760px) {
   .wrap {
     margin-inline: calc(-1 * clamp(12px, 5vw, 48px));
@@ -123,8 +148,8 @@
 
   .track,
   .track[class] {
-    grid-auto-columns: min(72vw, 440px);
-    gap: 12px;
+    --band-h: min(52vw, 300px);
+    --rail-gap: 12px;
   }
 }
 

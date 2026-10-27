@@ -119,7 +119,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   <MediaCarousel
                     items={block.items.map((it) => {
                       const idx = images.findIndex((img) => img.src === it.src);
-                      return { src: it.src, alt: it.alt, index: idx, video: /\.(mp4|webm)(\?|$)/i.test(it.src) };
+                      return { src: it.src, alt: it.alt, index: idx, video: /\.(mp4|webm)(\?|$)/i.test(it.src), size: typeof it.size === "string" ? it.size : undefined };
                     })}
                     onOpen={(i) => setZoom(i)}
                   />
