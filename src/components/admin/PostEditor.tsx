@@ -829,6 +829,17 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
                 ))}
               </select>
               <input value={it.alt} placeholder="Alt text" onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))} />
+              <select
+                aria-label={`Size for image ${i + 1}`}
+                value={typeof it.size === "string" ? it.size : "full"}
+                style={{ width: 96 }}
+                onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))}
+              >
+                <option value="full">Fill</option>
+                <option value="square">Square</option>
+                <option value="portrait">Tall</option>
+                <option value="wide">Wide</option>
+              </select>
               <label className={styles.uploadBtn}>
                 Upload
                 <input

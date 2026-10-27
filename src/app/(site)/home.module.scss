@@ -623,7 +623,7 @@
   }
 
   .statementTitle {
-    font-size: clamp(42px, 10.5vw, 68px);
+    font-size: clamp(38px, 9vw, 60px);
   }
 
   .arrowArc {
@@ -650,16 +650,16 @@
   .archiveCurve {
     display: none;
   }
-}
 
-@media (max-width: 860px) {
   .archive {
     grid-template-columns: minmax(0, 1fr);
-    gap: 30px;
+    gap: 28px;
+    margin-top: clamp(36px, 5vw, 56px);
   }
 
   .archiveTitle {
     max-width: none;
+    font-size: clamp(28px, 5vw, 40px);
   }
 }
 
@@ -670,8 +670,8 @@
 
 @media (max-width: 640px) {
   .statementTitle {
-    font-size: clamp(38px, 12.5vw, 52px);
-    line-height: 1.06;
+    font-size: clamp(32px, 11vw, 44px);
+    line-height: 1.08;
   }
 
   .doodleButterfly,
@@ -680,13 +680,26 @@
   }
 
   .statementLede {
-    margin-top: 26px;
-    font-size: 16px;
-    line-height: 26px;
+    margin-top: 22px;
+    font-size: 15px;
+    line-height: 24px;
   }
 
   .archiveTitle {
-    font-size: 30px;
+    font-size: 26px;
+  }
+
+  .subscribeCard {
+    margin-top: clamp(36px, 5vw, 56px);
+  }
+
+  .subscribeTitle {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+
+  .subscribeText {
+    font-size: 15px;
+    line-height: 24px;
   }
 }
 
@@ -709,14 +722,15 @@
   min-width: 0;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .latestGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .latestGrid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
 }

@@ -23,7 +23,14 @@ export function VideoEmbed({ url, caption }: { url: string; caption?: string }) 
   if (playing) {
     // Autoplay + rel=0 + modestbranding keeps the player as plain as the
     // provider allows once the reader has opted in.
-    const src = `${external.embedUrl}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    // For YouTube use nocookie + controls=0: the reader already opted in via
+    // our own facade, so autoplay runs and none of Google's chrome (title,
+    // channel, share, settings) ever paints over the frame.
+    const yt = external.kind === "youtube";
+    const base = yt ? external.embedUrl.replace("youtube.com", "youtube-nocookie.com") : external.embedUrl;
+    const src = yt
+      ? `${base}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=0&playsinline=1&iv_load_policy=3&fs=0`
+      : `${base}?autoplay=1&titleless=1&dnt=1`;
     return (
       <figure className={styles.figure}>
         <span className={styles.frame}>

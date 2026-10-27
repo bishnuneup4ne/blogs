@@ -9,7 +9,7 @@ const DROP_CONTENT = new Set([
   "script", "style", "iframe", "object", "embed", "svg", "math", "template",
   "noscript", "textarea", "title", "xmp", "plaintext", "form",
 ]);
-const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line"]);
+const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line", "text-decoration-color", "text-decoration-thickness", "text-underline-offset"]);
 
 /** Keep only whitelisted declarations from an inline style attribute. */
 function safeStyle(value: string): string | null {
@@ -30,6 +30,12 @@ const ALLOWED_ATTRS: Record<string, string[]> = {
   img: ["src", "alt", "width", "height", "title"],
   span: ["style"],
   mark: ["style"],
+  u: ["style"],
+  s: ["style"],
+  strong: ["style"],
+  em: ["style"],
+  b: ["style"],
+  i: ["style"],
 };
 
 const MAX_HTML = 200_000;
@@ -473,14 +479,18 @@ function normaliseBlock(raw: unknown): Block | null {
       return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
     }
     case "row": {
+      const ROW_SIZES = ["full", "square", "portrait", "wide"] as const;
+      type RowItem = { src: string; alt: string; size?: (typeof ROW_SIZES)[number] };
       const rawItems = Array.isArray(source.items) ? source.items.slice(0, 12) : [];
       const items = rawItems
-        .map((it) => {
+        .map((it): RowItem | null => {
           const o = (it ?? {}) as Record<string, unknown>;
           const src = safeUrl(String(o.src ?? ""), true);
-          return src ? { src, alt: text(o.alt, 400) ?? "" } : null;
+          if (!src) return null;
+          const size = (ROW_SIZES as readonly string[]).includes(String(o.size)) ? { size: o.size as (typeof ROW_SIZES)[number] } : {};
+          return { src, alt: text(o.alt, 400) ?? "", ...size };
         })
-        .filter((x): x is { src: string; alt: string } => Boolean(x));
+        .filter((x): x is RowItem => Boolean(x));
       if (items.length < 2) return null;
       const wanted = Math.min(Math.max(Math.round(Number(source.columns)) || items.length, 1), 6);
       const columns = Number.isFinite(wanted) ? wanted : items.length;

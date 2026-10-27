@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { PageHero } from "@/components/site/PageHero";
-import { PostRail } from "@/components/site/PostRail";
+import { RelatedCarousel } from "@/components/blog/RelatedCarousel";
 import { SectionHead } from "@/components/site/sections";
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
@@ -62,7 +62,7 @@ export default async function NewsletterPage() {
             {posts.length} posts on systems, security and the slow things in between — newest first.
           </p>
           {posts.length > 0 ? (
-            <PostRail posts={posts} />
+            <RelatedCarousel items={posts.map((post) => ({ post, score: 0, sharedTags: [] }))} />
           ) : (
             <p className={styles.empty}>No posts are published yet. Check back soon.</p>
           )}

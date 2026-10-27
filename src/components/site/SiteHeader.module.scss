@@ -1,4 +1,4 @@
-/* Site header — flat, generously sized, sticky. No dropdowns. */
+/* Site header — blog.google proportions: 68px tall, flat white, subtle bottom border. */
 
 .shell {
   position: sticky;
@@ -39,7 +39,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   min-height: var(--header-h);
 }
 
@@ -49,9 +49,9 @@
   align-items: center;
   flex: none;
   font-family: var(--font-ui);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.6px;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.4px;
   color: var(--gray-900);
   white-space: nowrap;
 }
@@ -90,36 +90,37 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 48px;
-  padding: 0 17px;
-  border-radius: var(--radius-12);
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: -0.1px;
-  line-height: 24px;
+  letter-spacing: 0.2px;
+  line-height: 20px;
   color: var(--gray-700);
   white-space: nowrap;
   transition: background-color 150ms ease, color 150ms ease;
 }
 
 .feedLink:hover {
-  background: var(--gray-50);
+  background: var(--gray-100);
   color: var(--gray-900);
 }
 
 .feedLinkActive {
   color: var(--gray-900);
-  font-weight: 600;
+  font-weight: 500;
+  background: var(--gray-100);
 }
 
 .feedLinkActive::after {
   content: "";
   position: absolute;
-  left: 17px;
-  right: 17px;
-  bottom: 6px;
-  height: 2.5px;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 3px;
   border-radius: 2px;
   background: var(--gray-900);
 }
@@ -136,8 +137,8 @@
 .iconButton {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 40px;
+  height: 40px;
   touch-action: manipulation;
   border-radius: 50%;
   color: var(--gray-700);
@@ -153,16 +154,16 @@
 .cta {
   display: inline-flex;
   align-items: center;
-  height: 52px;
+  height: 40px;
   margin-left: 4px;
-  padding: 0 30px;
+  padding: 0 20px;
   border-radius: var(--radius-pill);
   background: var(--blue-600);
   color: #fff;
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0.1px;
+  letter-spacing: 0.2px;
   white-space: nowrap;
   transition: background-color 150ms ease, box-shadow 150ms ease;
 }
@@ -176,13 +177,13 @@
 .burger {
   display: none;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 40px;
+  height: 40px;
   touch-action: manipulation;
   border-radius: 50%;
   background: transparent;
   color: var(--gray-700);
-  padding: 9px;
+  padding: 8px;
 }
 
 .burger:hover {
@@ -204,7 +205,7 @@
   transform: translateY(-50%);
   display: none;
   align-items: center;
-  height: 52px;
+  height: 44px;
   border-radius: var(--radius-pill);
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
@@ -217,7 +218,7 @@
   align-items: center;
   gap: 4px;
   width: 100%;
-  padding: 0 8px 0 20px;
+  padding: 0 6px 0 16px;
 }
 
 .searchGlyph {
@@ -231,21 +232,21 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: 17px;
+  font-size: 15px;
   color: var(--gray-900);
 }
 
 .searchClose {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: var(--gray-600);
   cursor: pointer;
-  padding: 6px;
+  padding: 5px;
 }
 
 .searchClose:hover {
@@ -262,7 +263,7 @@
 /* Mobile drawer */
 .drawer {
   position: fixed;
-  inset: var(--header-h, 90px) 0 0;
+  inset: var(--header-h, 68px) 0 0;
   z-index: 70;
   background: var(--white);
   padding: 16px var(--container-pad) 48px;
@@ -274,9 +275,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 56px;
+  height: 48px;
   margin: 8px 0 4px;
-  padding: 0 18px;
+  padding: 0 16px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-pill);
   background: var(--gray-50);
@@ -287,17 +288,17 @@
     border: none;
     outline: none;
     background: transparent;
-    font-size: 17px;
+    font-size: 15px;
     color: var(--gray-900);
   }
 }
 
 .drawerLink {
   display: block;
-  padding: 19px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--gray-100);
   font-family: var(--font-ui);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--gray-900);
 }
@@ -330,14 +331,14 @@
 }
 
 @media (max-width: 1240px) {
-  .headerInner { gap: 24px; }
-  .wordmark { font-size: 23px; }
+  .headerInner { gap: 20px; }
+  .wordmark { font-size: 20px; }
   .feedLink,
-  .feedLinkActive { font-size: 16px; padding: 0 13px; height: 46px; }
-  .feedLinkActive::after { left: 13px; right: 13px; }
-  .iconButton { width: 48px; height: 48px; }
-  .cta { height: 48px; padding: 0 24px; font-size: 15px; }
-  .galleryButton { height: 46px; }
+  .feedLinkActive { font-size: 13px; padding: 0 12px; height: 38px; }
+  .feedLinkActive::after { left: 12px; right: 12px; }
+  .iconButton { width: 38px; height: 38px; }
+  .cta { height: 38px; padding: 0 18px; font-size: 13px; }
+  .galleryButton { height: 38px; }
 }
 
 @media (max-width: 1040px) {
@@ -356,11 +357,11 @@
   /* Thumbs are bigger than icons — give the two header controls room. */
   .iconButton,
   .burger {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
   }
 
-  .wordmark { font-size: 22px; }
+  .wordmark { font-size: 19px; }
 }
 
 @media (max-width: 440px) {
@@ -376,8 +377,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0;
-  height: 48px;
-  padding: 0 13px;
+  height: 40px;
+  padding: 0 12px;
   border-radius: var(--radius-circle, 120px);
   color: var(--gray-900);
   background: var(--gray-50);

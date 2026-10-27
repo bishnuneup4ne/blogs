@@ -66,11 +66,12 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
           window.addEventListener("pointerup", up);
         }}
         onClickCapture={(e) => {
+          // Suppress the synthetic click that follows a real mouse-drag only.
           if (drag.current.moved) {
             e.preventDefault();
             e.stopPropagation();
-            drag.current.moved = false;
           }
+          drag.current.moved = false;
         }}
       >
         {items.map(({ post }, i) => (

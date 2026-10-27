@@ -118,9 +118,16 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   <div className={styles.rowGrid} style={{ gridTemplateColumns: `repeat(${block.columns ?? Math.min(block.items.length, 3)}, minmax(0, 1fr))` }}>
                     {block.items.map((it, j) => {
                       const myIndex = images.findIndex((img) => img.src === it.src);
+                      const size = typeof it.size === "string" ? it.size : undefined;
                       return (
-                        <button key={j} type="button" className={styles.imageWrap} onClick={() => setZoom(myIndex)} aria-label={`Zoom image: ${it.alt}`}>
-                          <Image src={it.src} alt={it.alt} width={700} height={520} sizes="(max-width: 760px) 48vw, 860px" className={styles.image} />
+                        <button
+                          key={j}
+                          type="button"
+                          className={`${styles.imageWrap} ${size && size !== "full" ? styles[`rowCell${size[0].toUpperCase()}${size.slice(1)}`] ?? "" : ""}`}
+                          onClick={() => setZoom(myIndex)}
+                          aria-label={`Zoom image: ${it.alt}`}
+                        >
+                          <Image src={it.src} alt={it.alt} width={700} height={size === "portrait" ? 900 : 520} sizes="(max-width: 760px) 48vw, 860px" className={styles.image} />
                         </button>
                       );
                     })}

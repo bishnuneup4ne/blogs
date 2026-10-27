@@ -3,7 +3,6 @@ import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
 import styles from "./home.module.scss";
-
 export default async function HomePage() {
   const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));

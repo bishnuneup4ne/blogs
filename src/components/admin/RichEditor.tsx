@@ -3,18 +3,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./RichEditor.module.scss";
 
-const TOOLS: { cmd: string; tag: string; label: string; title: string }[] = [
-  { cmd: "bold", tag: "strong", label: "B", title: "Bold (Ctrl+B)" },
-  { cmd: "italic", tag: "em", label: "I", title: "Italic (Ctrl+I)" },
-  { cmd: "underline", tag: "u", label: "U", title: "Underline (Ctrl+U)" },
-  { cmd: "strikeThrough", tag: "s", label: "S", title: "Strikethrough" },
-  { cmd: "foreColor", tag: "", label: "A", title: "Text colour" },
-  { cmd: "hiliteColor", tag: "", label: "H", title: "Highlight colour" },
+type PopupCmd = "foreColor" | "hiliteColor" | "underlineColor" | "strikeColor" | "boldColor" | "italicColor";
+
+const TOOLS: { cmd: string; tag: string; label: string; title: string; color?: PopupCmd }[] = [
+  { cmd: "bold", tag: "strong", label: "B", title: "Bold (Ctrl+B) — ▾ for colour", color: "boldColor" },
+  { cmd: "italic", tag: "em", label: "I", title: "Italic (Ctrl+I) — ▾ for colour", color: "italicColor" },
+  { cmd: "underline", tag: "u", label: "U", title: "Underline (Ctrl+U) — long-press ▾ for colour" , color: "underlineColor" },
+  { cmd: "strikeThrough", tag: "s", label: "S", title: "Strikethrough — long-press ▾ for colour", color: "strikeColor" },
+  { cmd: "foreColor", tag: "", label: "A", title: "Font colour", color: "foreColor" },
+  { cmd: "hiliteColor", tag: "", label: "H", title: "Highlight colour", color: "hiliteColor" },
   { cmd: "link", tag: "a", label: "Link", title: "Add link" },
   { cmd: "removeFormat", tag: "", label: "Clear", title: "Clear formatting" },
 ];
 
 const SWATCHES = ["#d93025", "#e37400", "#f9ab00", "#188038", "#1a73e8", "#9334e6", "#c5221f", "#202124"];
+const COLOR_CMDS: PopupCmd[] = ["foreColor", "hiliteColor", "underlineColor", "strikeColor", "boldColor", "italicColor"];
 
 export function RichEditor({
   value,
@@ -31,7 +34,7 @@ export function RichEditor({
   const lastEmit = useRef<string | null>(null);
   const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
-  const [colorPopup, setColorPopup] = useState<{ x: number; y: number; cmd: "foreColor" | "hiliteColor" } | null>(null);
+  const [colorPopup, setColorPopup] = useState<{ x: number; y: number; cmd: PopupCmd } | null>(null);
 
   // The editor owns its DOM. React must never write innerHTML here: doing so
   // resets the caret to offset 0, which is why clicking mid-paragraph used to
@@ -119,7 +122,7 @@ export function RichEditor({
       selNow?.removeAllRanges();
       selNow?.addRange(saved);
     }
-    if (cmd === "foreColor" || cmd === "hiliteColor") {
+    if (COLOR_CMDS.includes(cmd as PopupCmd)) {
       const sel = window.getSelection();
       let range: Range | null = sel?.rangeCount && !sel.isCollapsed && el.contains(sel.anchorNode) ? sel.getRangeAt(0) : lastRange.current;
       if (!range || range.collapsed) {
@@ -147,7 +150,7 @@ export function RichEditor({
       setColorPopup({
         x: Math.max(8, Math.min(rect.left ?? el.getBoundingClientRect().left, window.innerWidth - 260)),
         y: (rect.bottom ?? el.getBoundingClientRect().top) + 6,
-        cmd,
+        cmd: cmd as PopupCmd,
       });
       return;
     }
@@ -216,6 +219,38 @@ export function RichEditor({
     emit();
   }
 
+  function applyStyledTag(tag: string, style: string) {
+    const el = ref.current;
+    const sel = window.getSelection();
+    const range = sel?.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0) : lastRange.current;
+    if (!el || !range || range.collapsed || !el.contains(range.commonAncestorContainer)) return;
+    const wrapEl = document.createElement(tag);
+    wrapEl.setAttribute("style", style);
+    try {
+      range.surroundContents(wrapEl);
+    } catch {
+      wrapEl.appendChild(range.extractContents());
+      range.insertNode(wrapEl);
+    }
+    sel?.removeAllRanges();
+  }
+
+  function applyLineColor(tag: "u" | "s", color: string) {
+    const el = ref.current;
+    const sel = window.getSelection();
+    const range = sel?.rangeCount ? sel.getRangeAt(0) : lastRange.current;
+    if (!el || !range || range.collapsed || !el.contains(range.commonAncestorContainer)) return;
+    const wrapEl = document.createElement(tag);
+    wrapEl.setAttribute("style", `text-decoration-line: ${tag === "u" ? "underline" : "line-through"}; text-decoration-color: ${color};`);
+    try {
+      range.surroundContents(wrapEl);
+    } catch {
+      wrapEl.appendChild(range.extractContents());
+      range.insertNode(wrapEl);
+    }
+    sel?.removeAllRanges();
+  }
+
   function applyColor(color: string) {
     const el = ref.current;
     if (!el || !colorPopup) return;
@@ -228,7 +263,17 @@ export function RichEditor({
     }
     try {
       document.execCommand("styleWithCSS", false, "true");
-      document.execCommand(colorPopup.cmd, false, colorPopup.cmd === "hiliteColor" ? color : color);
+      if (colorPopup.cmd === "foreColor" || colorPopup.cmd === "hiliteColor") {
+        document.execCommand(colorPopup.cmd, false, color);
+      } else if (colorPopup.cmd === "underlineColor" || colorPopup.cmd === "strikeColor") {
+        // Underline / strikethrough with a custom line colour: native
+        // underlineColor isn't supported anywhere reliable, so wrap the
+        // selection manually in a styled <u>/<s>.
+        applyLineColor(colorPopup.cmd === "underlineColor" ? "u" : "s", color);
+      } else {
+        // Bold / italic tinted with a font colour.
+        applyStyledTag(colorPopup.cmd === "boldColor" ? "strong" : "em", `color: ${color}`);
+      }
     } catch {
       /* older browsers */
     }
@@ -239,25 +284,41 @@ export function RichEditor({
   return (
     <div className={styles.wrap}>
       <div className={styles.toolbar} role="toolbar" aria-label="Text formatting">
-        {TOOLS.map((t) => (
-          <button
-            key={t.cmd}
-            type="button"
-            title={t.title}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const sel = window.getSelection();
-              if (sel?.rangeCount && !sel.getRangeAt(0).collapsed && ref.current?.contains(sel.anchorNode)) {
-                lastRange.current = sel.getRangeAt(0).cloneRange();
-              }
-            }}
-            onClick={(e) => run(t.cmd, { x: e.clientX, y: e.clientY })}
-            className={`${styles.tool} ${active[t.cmd] ? styles.toolOn : ""}`}
-            aria-pressed={Boolean(active[t.cmd])}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TOOLS.map((t) => {
+          const saveSel = (e: React.MouseEvent) => {
+            e.preventDefault();
+            const sel = window.getSelection();
+            if (sel?.rangeCount && !sel.getRangeAt(0).collapsed && ref.current?.contains(sel.anchorNode)) {
+              lastRange.current = sel.getRangeAt(0).cloneRange();
+            }
+          };
+          return (
+            <span key={t.cmd} className={styles.toolGroup}>
+              <button
+                type="button"
+                title={t.title}
+                onMouseDown={saveSel}
+                onClick={(e) => run(t.cmd, { x: e.clientX, y: e.clientY })}
+                className={`${styles.tool} ${active[t.cmd] ? styles.toolOn : ""}`}
+                aria-pressed={Boolean(active[t.cmd])}
+              >
+                {t.label}
+              </button>
+              {t.color && t.cmd !== "foreColor" && t.cmd !== "hiliteColor" ? (
+                <button
+                  type="button"
+                  className={styles.caret}
+                  aria-label={`${t.label} colour`}
+                  title={`${t.label} colour`}
+                  onMouseDown={saveSel}
+                  onClick={(e) => run(t.color!, { x: e.clientX, y: e.clientY })}
+                >
+                  ▾
+                </button>
+              ) : null}
+            </span>
+          );
+        })}
       </div>
       {colorPopup ? (
         <div className={styles.swatches} style={{ left: colorPopup.x, top: colorPopup.y }} role="menu" aria-label="Pick a colour">

@@ -1,6 +1,6 @@
 const ALLOWED = new Set(["A", "STRONG", "EM", "B", "I", "U", "S", "STRIKE", "MARK", "SUB", "SUP", "SMALL", "KBD", "CODE", "BR"]);
 const ALLOWED_ATTR = new Set(["href", "style"]);
-const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line"]);
+const SAFE_STYLE_PROPS = new Set(["color", "background-color", "text-decoration-line", "text-decoration-color", "text-decoration-thickness", "text-underline-offset"]);
 
 function safeStyle(value: string): string {
   return value

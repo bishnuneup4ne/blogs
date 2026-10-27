@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Post } from "@/lib/types";
-import {shortDate, relativeDate} from "@/lib/dates";
+import {relativeDate} from "@/lib/dates";
 import { Reveal } from "@/components/ui/Reveal";
 import { UpdateCard } from "./sections";
 import styles from "./LatestSection.module.scss";
