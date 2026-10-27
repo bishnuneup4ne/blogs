@@ -39,7 +39,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 48px;
+  gap: 40px;
   min-height: var(--header-h);
 }
 
@@ -49,9 +49,9 @@
   align-items: center;
   flex: none;
   font-family: var(--font-ui);
-  font-size: 31px;
+  font-size: 26px;
   font-weight: 600;
-  letter-spacing: -0.8px;
+  letter-spacing: -0.6px;
   color: var(--gray-900);
   white-space: nowrap;
 }
@@ -90,11 +90,11 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 54px;
-  padding: 0 20px;
+  height: 48px;
+  padding: 0 17px;
   border-radius: var(--radius-12);
   font-family: var(--font-ui);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: -0.1px;
   line-height: 24px;
@@ -116,9 +116,9 @@
 .feedLinkActive::after {
   content: "";
   position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 8px;
+  left: 17px;
+  right: 17px;
+  bottom: 6px;
   height: 2.5px;
   border-radius: 2px;
   background: var(--gray-900);
@@ -128,7 +128,7 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-left: auto;
   flex: none;
 }
@@ -136,8 +136,8 @@
 .iconButton {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   touch-action: manipulation;
   border-radius: 50%;
   color: var(--gray-700);
@@ -153,14 +153,14 @@
 .cta {
   display: inline-flex;
   align-items: center;
-  height: 58px;
-  margin-left: 6px;
-  padding: 0 34px;
+  height: 52px;
+  margin-left: 4px;
+  padding: 0 30px;
   border-radius: var(--radius-pill);
   background: var(--blue-600);
   color: #fff;
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: 0.1px;
   white-space: nowrap;
@@ -176,13 +176,13 @@
 .burger {
   display: none;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   touch-action: manipulation;
   border-radius: 50%;
   background: transparent;
   color: var(--gray-700);
-  padding: 10px;
+  padding: 9px;
 }
 
 .burger:hover {
@@ -204,7 +204,7 @@
   transform: translateY(-50%);
   display: none;
   align-items: center;
-  height: 58px;
+  height: 52px;
   border-radius: var(--radius-pill);
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
@@ -238,8 +238,8 @@
 .searchClose {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -262,7 +262,7 @@
 /* Mobile drawer */
 .drawer {
   position: fixed;
-  inset: var(--header-h, 104px) 0 0;
+  inset: var(--header-h, 90px) 0 0;
   z-index: 70;
   background: var(--white);
   padding: 16px var(--container-pad) 48px;
@@ -274,9 +274,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 60px;
+  height: 56px;
   margin: 8px 0 4px;
-  padding: 0 20px;
+  padding: 0 18px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-pill);
   background: var(--gray-50);
@@ -297,7 +297,7 @@
   padding: 19px 0;
   border-bottom: 1px solid var(--gray-100);
   font-family: var(--font-ui);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--gray-900);
 }
@@ -330,14 +330,14 @@
 }
 
 @media (max-width: 1240px) {
-  .headerInner { gap: 28px; }
-  .wordmark { font-size: 26px; }
+  .headerInner { gap: 24px; }
+  .wordmark { font-size: 23px; }
   .feedLink,
-  .feedLinkActive { font-size: 17px; padding: 0 14px; height: 50px; }
-  .feedLinkActive::after { left: 14px; right: 14px; }
-  .iconButton { width: 52px; height: 52px; }
-  .cta { height: 52px; padding: 0 26px; font-size: 16px; }
-  .galleryButton { height: 50px; }
+  .feedLinkActive { font-size: 16px; padding: 0 13px; height: 46px; }
+  .feedLinkActive::after { left: 13px; right: 13px; }
+  .iconButton { width: 48px; height: 48px; }
+  .cta { height: 48px; padding: 0 24px; font-size: 15px; }
+  .galleryButton { height: 46px; }
 }
 
 @media (max-width: 1040px) {
@@ -356,19 +356,19 @@
   /* Thumbs are bigger than icons — give the two header controls room. */
   .iconButton,
   .burger {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
   }
 
-  .wordmark { font-size: 24px; }
+  .wordmark { font-size: 22px; }
 }
 
 @media (max-width: 440px) {
-  .burger { padding: 8px; }
+  .burger { padding: 7px; }
 }
 
 @media (max-width: 560px) {
-  .wordmark { font-size: 21px; }
+  .wordmark { font-size: 19px; }
 }
 
 /* Images button — icon only, reveals its label on hover */
@@ -376,8 +376,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0;
-  height: 52px;
-  padding: 0 14px;
+  height: 48px;
+  padding: 0 13px;
   border-radius: var(--radius-circle, 120px);
   color: var(--gray-900);
   background: var(--gray-50);
@@ -396,7 +396,7 @@
   overflow: hidden;
   white-space: nowrap;
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   opacity: 0;
   transition: max-width 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease;

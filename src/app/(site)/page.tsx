@@ -4,6 +4,8 @@ import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
+import { ArrowRight } from "@/components/icons/Icons";
+import { getCategory } from "@/lib/categories";
 import { formatDate } from "@/lib/dates";
 import styles from "./home.module.scss";
 
@@ -67,50 +69,61 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <div className={styles.missionRow}>
-        <div className={styles.missionCopy}>
-          <svg className={styles.halfCircle} viewBox="0 0 120 120" fill="none" aria-hidden="true">
-            <path d="M112 60a52 52 0 1 1-52-52" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <p className={styles.missionKicker}>The archive</p>
-          <h2 className={styles.missionTitle}>
+      <section className={styles.archive} aria-labelledby="archive-heading">
+        <div className={styles.archiveCopy}>
+          <p className={styles.archiveKicker}>
+            <span className={styles.kickerRule} aria-hidden="true" />
+            The archive
+          </p>
+          <h2 id="archive-heading" className={styles.archiveTitle}>
             Take it apart.<br />
-            <span className={styles.missionTitleSoft}>Write it down.</span>
+            <span className={styles.archiveTitleSoft}>Write it down.</span>
           </h2>
-          <p className={styles.missionText}>
+          <p className={styles.archiveText}>
             Malware, machines, mountain light — I break systems to make them safer and
             photograph the hills I keep walking back to. Every post is the note I wished
             existed when I was learning: field notes over polished takes.
           </p>
-          <Link href="/about" className={styles.plainLink}>
-            About me <span aria-hidden="true">→</span>
-          </Link>
+          <div className={styles.archiveActions}>
+            <Link href="/about" className="btn btn-outline">
+              About me <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/topics" className={styles.archivePlain}>
+              Browse topics <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </div>
 
         {lead ? (
-          <Link href={`/blog/${lead.slug}`} className={styles.scrimCard}>
-            {lead.cover ? (
-              <Image
-                src={lead.cover.src}
-                alt={lead.cover.alt || lead.title}
-                fill
-                priority
-                sizes="(max-width: 900px) 100vw, 720px"
-                className={styles.scrimImg}
-              />
-            ) : null}
-            <span className={styles.scrimBody}>
-              <span className={styles.scrimKicker}>Latest</span>
-              <span className={styles.scrimTitle}>{lead.title}</span>
-              <span className={styles.scrimCta} aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14m0 0-6-6m6 6-6 6" />
-                </svg>
+          <Link href={`/blog/${lead.slug}`} className={styles.leadCard}>
+            <span className={styles.leadMedia}>
+              {lead.cover ? (
+                <Image
+                  src={lead.cover.src}
+                  alt={lead.cover.alt || lead.title}
+                  fill
+                  priority
+                  sizes="(max-width: 900px) 100vw, 720px"
+                  className={styles.leadImg}
+                />
+              ) : (
+                <span className={`${styles.leadFallback} pastel-${getCategory(lead.category).pastel}`} />
+              )}
+              <span className={styles.leadBadge}>Latest story</span>
+            </span>
+
+            <span className={styles.leadBody}>
+              <span className={styles.leadMeta}>
+                {getCategory(lead.category).name} · {lead.readingMinutes} min read
+              </span>
+              <span className={styles.leadTitle}>{lead.title}</span>
+              <span className={styles.leadCta}>
+                Read story <ArrowRight width={18} height={18} />
               </span>
             </span>
           </Link>
         ) : null}
-      </div>
+      </section>
 
       {latest.length > 0 ? (
         <section className={styles.latestSection} aria-labelledby="latest-heading">
