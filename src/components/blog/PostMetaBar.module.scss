@@ -3,7 +3,6 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: var(--spacer-3);
 }
 
 /* Listen control — icon + label + duration, like blog.google's audio pill. */
@@ -11,8 +10,8 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  min-height: 52px;
-  padding: 8px 20px 8px 14px;
+  min-height: 44px;
+  padding: 5px 18px 5px 6px;
   border: 1px solid var(--gray-200);
   border-radius: 999px;
   background: var(--white);

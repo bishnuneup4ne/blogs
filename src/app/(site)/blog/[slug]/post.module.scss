@@ -143,9 +143,19 @@
 .bylineRow {
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
   padding-block: var(--spacer-3);
   border-top: 1px solid var(--gray-300);
+}
+
+/* Listen + Share sit together on the right edge of the byline. */
+.bylineActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .bylineRow .byline {

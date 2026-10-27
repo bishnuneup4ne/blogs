@@ -144,15 +144,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       </p>
                     </div>
                   </div>
-                  <ShareMenu title={post.title} url={url} />
+                  <div className={styles.bylineActions}>
+                    <ArticleTools title={post.title} body={blocksToSpeech(post.blocks)} />
+                    <ShareMenu title={post.title} url={url} />
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className={styles.bodyArea}>
               <div className={styles.contentCol}>
-                <ArticleTools title={post.title} body={blocksToSpeech(post.blocks)} />
-
                 <PostContent blocks={post.blocks} />
 
                 <section className={styles.postedIn} aria-labelledby="posted-in">

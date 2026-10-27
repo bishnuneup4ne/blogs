@@ -46,23 +46,8 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
       : [],
   );
 
-  // Contents/In this article section at top
-  const hasContents = headingsSource.length > 0;
-
   return (
     <>
-      {hasContents && (
-        <div className={styles.contentsTop} aria-label="In this article">
-          <p className={styles.contentsTitle}>In this article</p>
-          <ol className={styles.contentsChips}>
-            {headingsSource.map((h) => (
-              <li key={h.id} data-level={h.level}>
-                <a href={`#${h.id}`}>{h.text}</a>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
       <div className={styles.prose}>
         {(() => { let footnoteCount = 0; return blocks.map((block, index) => {
           const key = `${block.type}-${index}`;
