@@ -477,12 +477,56 @@
 
 .arrowArc {
   position: absolute;
-  /* Beside the right-aligned lede, head aiming up at the header Newsletter button. */
-  width: clamp(120px, 14vw, 200px);
-  right: calc(32px + clamp(8px, 4vw, 88px) - 0.05 * clamp(120px, 14vw, 200px));
-  top: calc(clamp(44px, 4.5vw, 64px) + 26px);
+  /* Tail rises beside the yellow dot, head points up at the header Newsletter
+     button. Box sits fully above the lede — no overlap with any text. */
+  width: clamp(120px, 13vw, 170px);
+  height: auto;
+  right: clamp(56px, 7vw, 110px);
+  top: calc(clamp(44px, 4.5vw, 64px) + clamp(40px, 4.2vw, 58px));
   color: var(--gray-800);
   pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .arrowArc {
+    display: none;
+  }
 }
 
 .statementLede {

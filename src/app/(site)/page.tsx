@@ -38,7 +38,7 @@ export default async function HomePage() {
         </h1>
         <svg className={styles.arrowArc} viewBox="0 0 220 120" fill="none" aria-hidden="true">
           {/* Sits beside the lede; tail starts low-left, head at top-right points up at Newsletter */}
-          <path d="M8 112C46 34 138 8 208 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M118 104C140 56 176 30 208 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           <path d="M196 14 210 26l-17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <p className={styles.statementLede}>{settings.hero.standfirst}</p>
@@ -103,7 +103,6 @@ export default async function HomePage() {
       ) : null}
 
       <section className={styles.subscribeCard} aria-labelledby="subscribe-heading">
-        <p className={styles.subscribeKicker}>Newsletter</p>
         <h2 id="subscribe-heading" className={styles.subscribeTitle}>
           Get the latest from bishnuneup4ne
         </h2>

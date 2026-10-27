@@ -324,3 +324,54 @@ textarea,
 .skip-link {
   font-family: var(--font-ui);
 }
+
+/* Photos start black-and-white; colour returns on hover/focus/tap. The
+   lightbox shows full colour (it is the "maximised" view). */
+[class*="__image"],
+[class*="__img"],
+[class*="__mediaImg"],
+[class*="__introMediaImg"],
+[class*="__scrimImg"],
+[class*="__relatedImg"],
+[class*="thumb"] img,
+[class*="folderTile"] img {
+  filter: grayscale(1);
+  transition: filter 450ms ease;
+}
+
+@media (hover: hover) {
+  [class*="__image"]:hover,
+  [class*="__img"]:hover,
+  [class*="__mediaImg"]:hover,
+  [class*="__introMediaImg"]:hover,
+  [class*="__scrimImg"]:hover,
+  [class*="thumb"]:hover img,
+  [class*="folderTile"]:hover img,
+  a:hover > [class*="__image"],
+  a:hover [class*="__img"],
+  a:hover [class*="__mediaImg"],
+  a:hover [class*="__scrimImg"],
+  button:hover [class*="__image"],
+  figure:hover [class*="__image"] {
+    filter: grayscale(0);
+  }
+}
+
+/* Taps keep it colourful while pressed / focused. */
+[class*="__image"]:active,
+[class*="__img"]:active,
+[class*="__mediaImg"]:active,
+[class*="__scrimImg"]:active,
+a:focus-visible [class*="__image"],
+a:focus-visible [class*="__img"],
+a:focus-visible [class*="__mediaImg"],
+a:focus-visible [class*="__scrimImg"] {
+  filter: grayscale(0);
+}
+
+/* Maximised in the lightbox — always colour. */
+[class*="Lightbox"] img,
+[class*="Lightbox"] video,
+[class*="Lightbox"] [class*="thumb"] img {
+  filter: none;
+}
