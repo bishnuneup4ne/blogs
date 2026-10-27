@@ -136,6 +136,27 @@ export default async function HomePage() {
         </section>
       ) : null}
 
+      {posts.length > 1 ? (
+        <section className={styles.section}>
+          <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
+          <ul className={styles.pastRow}>
+            {posts.slice(-6).reverse().map((post) => (
+              <li key={post.slug}>
+                <Link href={`/blog/${post.slug}`} className={styles.pastChip}>
+                  {post.cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.cover.src} alt="" className={styles.pastThumb} loading="lazy" />
+                  ) : (
+                    <span className={styles.pastFallback}>{post.title.trim().slice(0, 1).toUpperCase()}</span>
+                  )}
+                  <span className={styles.pastTitle}>{post.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {settings.toggles.newsletter && enabled("newsletter") ? (
         <NewsletterSection name={settings.identity.siteName.split(" ")[0]} authorName={settings.identity.authorName} avatarUrl={settings.identity.avatarUrl} subscriberCount={subscriberCount} />
       ) : null}
