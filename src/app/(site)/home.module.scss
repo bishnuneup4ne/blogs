@@ -429,7 +429,7 @@
 /* ---------- Statement hero (blog.google/research style) ---------- */
 .statement {
   position: relative;
-  padding-top: clamp(56px, 6.5vw, 96px);
+  padding-top: clamp(44px, 4.5vw, 64px);
   overflow-x: clip;
 }
 
@@ -440,8 +440,8 @@
   font-family: var(--font-ui);
   font-weight: 400;
   font-size: clamp(40px, 5.2vw, 72px);
-  line-height: 1.08;
-  row-gap: 4px;
+  line-height: 1.06;
+  row-gap: 0;
   letter-spacing: -0.03em;
   color: var(--gray-900);
 }
@@ -452,6 +452,7 @@
 
 .stLineRight {
   justify-self: end;
+  margin-top: -0.18em; /* interlock the two lines like blog.google */
   padding-right: clamp(8px, 4vw, 72px);
 }
 
@@ -476,9 +477,9 @@
 
 .arrowArc {
   position: absolute;
-  top: -6px;
+  top: 4px;
   right: clamp(0px, 3vw, 48px);
-  width: clamp(120px, 16vw, 230px);
+  width: clamp(110px, 13vw, 190px);
   transform: scaleX(-1); /* flipped: tail at right, head aims up-left at Newsletter */
   color: var(--gray-800);
   pointer-events: none;
