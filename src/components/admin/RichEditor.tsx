@@ -63,10 +63,45 @@ export function RichEditor({
     setActive(next);
   }, []);
 
-  function run(cmd: string) {
+  function rememberSelection() {
+    const sel = window.getSelection();
+    if (sel?.rangeCount && !sel.isCollapsed && ref.current?.contains(sel.anchorNode)) {
+      lastRange.current = sel.getRangeAt(0).cloneRange();
+    }
+  }
+
+  function run(cmd: string, point?: { x: number; y: number }) {
     const el = ref.current;
     if (!el) return;
     el.focus();
+    // Clicking inside nested inline tags can park the caret on the container
+    // element, where arrow keys do nothing. Re-derive it from the click point.
+    const sel0 = window.getSelection();
+    const r0 = sel0?.rangeCount ? sel0.getRangeAt(0) : null;
+    if (point && r0 && r0.collapsed && r0.startContainer === el) {
+      const doc = document as Document & { caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null };
+      const hit = doc.caretPositionFromPoint?.(point.x, point.y);
+      if (hit) {
+        const nr = document.createRange();
+        nr.setStart(hit.offsetNode, hit.offset);
+        nr.collapse(true);
+        sel0?.removeAllRanges();
+        sel0?.addRange(nr);
+      }
+    }
+    // Restore a live selection that survived the mousedown preventDefault.
+    {
+      const live = window.getSelection();
+      if (live?.rangeCount && !live.isCollapsed && el.contains(live.anchorNode)) {
+        lastRange.current = live.getRangeAt(0).cloneRange();
+      }
+    }
+    // Restore the last real selection if clicking the toolbar collapsed it.
+    const selAtStart = window.getSelection();
+    if (lastRange.current && (!selAtStart || !selAtStart.rangeCount || selAtStart.isCollapsed)) {
+      selAtStart?.removeAllRanges();
+      selAtStart?.addRange(lastRange.current);
+    }
     // Re-select the last range the user made inside this editor. Clicking a
     // toolbar button can collapse or move the live selection between blocks,
     // which is why formatting sometimes "did nothing".
@@ -79,15 +114,25 @@ export function RichEditor({
     if (cmd === "mark" || cmd === "underline" || cmd === "strikeThrough") {
       const tag = cmd === "mark" ? "mark" : cmd === "underline" ? "u" : "s";
       const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      let range = sel.getRangeAt(0);
-      if (range.collapsed) return;
+      let range = sel?.rangeCount ? sel.getRangeAt(0) : null;
+      if (!range || range.collapsed) range = lastRange.current;
+      if (!range || range.collapsed) return;
+      if (sel) { sel.removeAllRanges(); sel.addRange(range); }
       if (!el.contains(range.commonAncestorContainer)) {
         // Selection drifted outside this editor — fall back to its whole text.
         range = document.createRange();
         range.selectNodeContents(el);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+      // If a shift+arrow keyboard selection exists, extend via the native API —
+      // manual surround sometimes no-ops when start/end sit in different nodes.
+      const selNow = window.getSelection();
+      if (selNow?.rangeCount) {
+        const live = selNow.getRangeAt(0);
+        if (!live.collapsed && el.contains(live.commonAncestorContainer)) {
+          range = live;
+        }
       }
       const existing = range.commonAncestorContainer.parentElement?.closest(tag);
       if (existing && el.contains(existing)) {
@@ -105,7 +150,7 @@ export function RichEditor({
           wrapEl.appendChild(range.extractContents());
           range.insertNode(wrapEl);
         }
-        sel.removeAllRanges();
+        sel?.removeAllRanges();
       }
     } else if (cmd === "link") {
       const sel = window.getSelection();
@@ -139,8 +184,14 @@ export function RichEditor({
             key={t.cmd}
             type="button"
             title={t.title}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => run(t.cmd)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const sel = window.getSelection();
+              if (sel?.rangeCount && !sel.getRangeAt(0).collapsed && ref.current?.contains(sel.anchorNode)) {
+                lastRange.current = sel.getRangeAt(0).cloneRange();
+              }
+            }}
+            onClick={(e) => run(t.cmd, { x: e.clientX, y: e.clientY })}
             className={`${styles.tool} ${active[t.cmd] ? styles.toolOn : ""}`}
             aria-pressed={Boolean(active[t.cmd])}
           >
@@ -165,8 +216,14 @@ export function RichEditor({
           }
           emit();
         }}
-        onKeyUp={refreshActive}
-        onMouseUp={refreshActive}
+        onKeyUp={() => {
+          refreshActive();
+          rememberSelection();
+        }}
+        onMouseUp={() => {
+          refreshActive();
+          rememberSelection();
+        }}
         onFocus={refreshActive}
         dangerouslySetInnerHTML={{ __html: value || "" }}
       />

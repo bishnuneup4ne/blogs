@@ -66,7 +66,7 @@ function toPayload(d: EditorDraft) {
     cover_height: d.coverHeight,
     date: d.date,
     reading_minutes: d.readingMinutes,
-    blocks: d.blocks,
+    blocks: d.blocks.map(({ __k, ...rest }: Block & { __k?: string }) => rest),
     featured: d.featured,
   };
 }
@@ -174,7 +174,7 @@ export function PostEditor({ postId }: { postId: string }) {
       return;
     }
     api.get<{ post: ApiPost }>(`/api/admin/posts/${postId}`)
-      .then((data) => { if (alive) { setExisting(data.post); setDraft(toDraft(data.post)); } })
+      .then((data) => { if (alive) { setExisting(data.post); setDraft({ ...toDraft(data.post), blocks: toDraft(data.post).blocks.map((b) => ({ ...b, __k: Math.random().toString(36).slice(2) })) as unknown as Block[] }); } })
       .catch((e) => alive && setLoadError(e instanceof Error ? e.message : "Failed to load"));
     return () => { alive = false; };
   }, [postId]);
@@ -233,7 +233,7 @@ export function PostEditor({ postId }: { postId: string }) {
     setDraft((d) => {
       if (!d) return d;
       const next = [...d.blocks];
-      next.splice(i + 1, 0, newBlock(type));
+      next.splice(i + 1, 0, { ...newBlock(type), __k: Math.random().toString(36).slice(2) } as unknown as Block);
       return { ...d, blocks: next };
     });
     setAddOpen(null);
@@ -419,7 +419,7 @@ export function PostEditor({ postId }: { postId: string }) {
             ) : (
               <div className={styles.blocks}>
                 {draft.blocks.map((block, i) => (
-                  <div key={i} className={styles.block}>
+                  <div key={(block as { __k?: string }).__k ?? `b${i}`} className={styles.block}>
                     <div className={styles.blockGutter}>
                       <button type="button" className={styles.gutterBtn} onClick={() => moveBlock(i, -1)} aria-label="Move block up">↑</button>
                       <button type="button" className={styles.gutterBtn} onClick={() => moveBlock(i, 1)} aria-label="Move block down">↓</button>
@@ -448,7 +448,7 @@ export function PostEditor({ postId }: { postId: string }) {
                 <button
                   type="button"
                   className={styles.addBlock}
-                  onClick={() => setDraft({ ...draft, blocks: [...draft.blocks, newBlock("p")] })}
+                  onClick={() => setDraft({ ...draft, blocks: [...draft.blocks, { ...newBlock("p"), __k: Math.random().toString(36).slice(2) } as unknown as Block] })}
                 >
                   + Add block
                 </button>
