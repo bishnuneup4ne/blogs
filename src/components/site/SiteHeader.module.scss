@@ -37,16 +37,18 @@
 }
 
 .header {
-  max-width: var(--container, 1440px);
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 var(--container-pad, 32px);
+  padding: 0 clamp(20px, 4vw, 56px);
 }
 
 .headerInner {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 28px;
+  /* Wordmark and nav sit as one cluster on the left, like blog.google —
+     a small gap, not a wide spread. */
+  gap: 18px;
   height: var(--header-h, 72px);
 }
 
@@ -54,10 +56,44 @@
 
 .brand {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
+  gap: 7px;
   flex: none;
   min-width: 0;
   text-decoration: none;
+}
+
+/* "News from <name>" on one line, like blog.google's masthead. The kicker is
+   lighter and the wordmark carries the weight. */
+.brandText {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.brandKicker {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+  line-height: 1.15;
+  color: var(--gray-700, #3c4043);
+  white-space: nowrap;
+}
+
+.brandName {
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  color: var(--gray-900, #202124);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity 140ms ease;
 }
 
 .brandMark {
@@ -80,35 +116,8 @@
   background: var(--blue-700, #1967d2);
 }
 
-.brandText {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
 
-.brandKicker {
-  font-family: var(--font-ui);
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gray-500, #80868b);
-  white-space: nowrap;
-}
 
-.brandName {
-  overflow: hidden;
-  font-family: var(--font-ui);
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-  color: var(--gray-900, #202124);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: opacity 140ms ease;
-}
 
 .brand:hover .brandName {
   opacity: 0.7;
@@ -136,7 +145,7 @@
 .navLink {
   display: inline-flex;
   align-items: center;
-  height: 40px;
+  height: 38px;
   padding: 0 14px;
   border-radius: var(--radius-pill, 999px);
   font-family: var(--font-ui);
@@ -154,9 +163,13 @@
   color: var(--gray-900, #202124);
 }
 
-.navLinkActive {
+/* Active gets a filled pill AND a heavier weight, so it never reads as a
+   hover artefact next to plain neighbouring links. */
+.navLinkActive,
+.navLinkActive:hover {
   color: var(--gray-900, #202124);
-  background: var(--gray-100, #f1f3f4);
+  background: var(--gray-150, #e8eaed);
+  font-weight: 600;
 }
 
 /* ---------- Actions ---------- */
@@ -398,6 +411,13 @@
 
 /* Below this width the bar keeps brand + actions only; navigation moves
    into the drawer. */
+@media (max-width: 1100px) {
+  /* The divider separates wordmark from nav — hide it when the nav goes. */
+  .divider {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .nav {
     display: none;
@@ -408,9 +428,29 @@
   }
 }
 
+@media (max-width: 700px) {
+  /* Search collapses to its icon so the bar fits a 390px screen. */
+  .searchLabel,
+  .searchKey {
+    display: none;
+  }
+
+  .searchTrigger {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+  }
+}
+
 @media (max-width: 560px) {
   .brandName {
     font-size: 19px;
+  }
+
+  .brandKicker {
+    display: none;
   }
 
   .cta {
@@ -564,15 +604,6 @@
   font-weight: 600;
 }
 
-.brandKicker {
-  overflow: hidden;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  line-height: 1.2;
-  color: var(--gray-600, #5f6368);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .drawerClose {
   display: grid;
@@ -689,4 +720,22 @@
 .searchChip:hover {
   background: var(--gray-50, #f8f9fa);
   border-color: var(--gray-400, #9aa0a6);
+}
+
+/* Drawer lockup: same "News from <name>" line, sized for the sheet. */
+.drawerBrandName {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  white-space: nowrap;
+}
+
+.drawerBrandKicker {
+  font-weight: 400;
+  color: var(--gray-700, #3c4043);
 }

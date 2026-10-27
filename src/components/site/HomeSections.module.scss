@@ -76,8 +76,10 @@ a:hover .readPill {
   /* Sizes come from the container, never the viewport: the rail lives inside
      the page column, so a viewport-derived lead width overflowed and clipped
      the peek card. The lead leaves room for one peek card + the gap. */
-  --peek-w: 311px;
-  --lead-w: calc(100% - var(--peek-w) - 20px);
+  /* The active card fills ~90% of the rail so one story owns the screen,
+     with the next card peeking as the cue to move forward. */
+  --peek-w: calc(90% - 20px);
+  --lead-w: calc(90% - 20px);
   display: flex;
   gap: 20px;
   margin: 0;
@@ -118,8 +120,8 @@ a:hover .readPill {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 568px;
-  padding: 24px;
+  height: clamp(480px, 44vw, 620px);
+  padding: 26px;
   border-radius: var(--radius-card, 24px);
   background-color: var(--card-bg, var(--gray-100));
   background-image: var(--grad-card, none);
@@ -147,9 +149,9 @@ a:hover .readPill {
 .heroThumb {
   position: relative;
   flex: 1 1 auto;
-  min-height: 120px;
+  min-height: 180px;
   margin-top: 2px;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   background: rgb(255 255 255 / 45%);
 }
@@ -850,10 +852,9 @@ a:hover .compactMedia .coverImg {
 
 @media (max-width: 640px) {
   .heroTrack {
-    /* One full-width card per view: the lead-minus-peek split leaves the lead
-       ~15% wide and squeezes the peek card to one character per line. */
-    --peek-w: 100%;
-    --lead-w: 100%;
+    /* One card per view with a sliver of the next as the affordance. */
+    --peek-w: calc(88% - 12px);
+    --lead-w: calc(88% - 12px);
   }
 
   .heroCard,
