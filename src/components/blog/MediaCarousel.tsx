@@ -6,7 +6,9 @@ import styles from "./MediaCarousel.module.scss";
 
 /* blog.google media rail: big rounded tiles that bleed off the right edge,
    joined arrow pill + progress line. Any tile click opens the lightbox. */
-export function MediaCarousel({ items, onOpen }: { items: { src: string; alt: string; index: number }[]; onOpen: (lightboxIndex: number) => void }) {
+export interface CarouselItem { src: string; alt: string; index: number; video?: boolean }
+
+export function MediaCarousel({ items, onOpen }: { items: CarouselItem[]; onOpen: (lightboxIndex: number) => void }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
   const [progress, setProgress] = useState(0);
@@ -27,10 +29,19 @@ export function MediaCarousel({ items, onOpen }: { items: { src: string; alt: st
   function go(delta: number) {
     const t = trackRef.current;
     if (!t) return;
-    const first = t.children[0] as HTMLElement | undefined;
-    const step = (first?.offsetWidth ?? 280) + 16;
-    // Page by one visible row worth of tiles for a premium carousel feel.
+    const step = t.clientWidth * 0.9;
     t.scrollBy({ left: step * delta, behavior: "smooth" });
+    // Animate the tile entering from the direction we paged toward.
+    requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        const idx = Math.round(t.scrollLeft / ((t.children[0] as HTMLElement)?.offsetWidth ?? 300 + 16));
+        const el = t.children[Math.max(0, Math.min(idx, t.children.length - 1))] as HTMLElement | undefined;
+        if (!el) return;
+        el.classList.remove(styles.slideRight, styles.slideLeft);
+        void el.offsetWidth;
+        el.classList.add(delta > 0 ? styles.slideRight : styles.slideLeft);
+      }, 320);
+    });
   }
 
   if (items.length === 0) return null;
@@ -74,15 +85,20 @@ export function MediaCarousel({ items, onOpen }: { items: { src: string; alt: st
       >
         {items.map((it, i) => (
           <li key={i} className={styles.item} style={{ "--peek": i === 0 && items.length > 1 ? "1" : "0" } as React.CSSProperties}>
-            <button type="button" className={styles.tile} onClick={() => it.index >= 0 && onOpen(it.index)} aria-label={`Zoom image: ${it.alt}`}>
-              <Image
-                src={it.src}
-                alt={it.alt}
-                width={1200}
-                height={750}
-                sizes="(max-width: 760px) 86vw, (max-width: 1100px) 70vw, 62vw"
-                className={styles.img}
-              />
+            <button type="button" className={styles.tile} onClick={() => it.index >= 0 && onOpen(it.index)} aria-label={it.video ? `Play video: ${it.alt}` : `Zoom image: ${it.alt}`}>
+              {it.video ? (
+                <video src={it.src} muted playsInline preload="metadata" className={styles.img} poster="" />
+              ) : (
+                <Image
+                  src={it.src}
+                  alt={it.alt}
+                  width={1200}
+                  height={800}
+                  sizes="(max-width: 760px) 78vw, 56vw"
+                  className={styles.img}
+                />
+              )}
+              {it.video ? <span className={styles.playBadge} aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg></span> : null}
             </button>
           </li>
         ))}

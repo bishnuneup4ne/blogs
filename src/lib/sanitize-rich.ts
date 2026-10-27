@@ -481,7 +481,7 @@ function normaliseBlock(raw: unknown): Block | null {
     case "row": {
       const ROW_SIZES = ["full", "square", "portrait", "wide"] as const;
       type RowItem = { src: string; alt: string; size?: (typeof ROW_SIZES)[number] };
-      const rawItems = Array.isArray(source.items) ? source.items.slice(0, 12) : [];
+      const rawItems = Array.isArray(source.items) ? source.items.slice(0, 60) : [];
       const items = rawItems
         .map((it): RowItem | null => {
           const o = (it ?? {}) as Record<string, unknown>;

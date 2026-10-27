@@ -813,96 +813,100 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
       );
     case "row": {
       const patchItems = (items: { src: string; alt: string }[]) => onChange({ ...block, items });
+      const move = (i: number, dir: -1 | 1) => {
+        const j = i + dir;
+        if (j < 0 || j >= block.items.length) return;
+        const next = [...block.items];
+        [next[i], next[j]] = [next[j], next[i]];
+        patchItems(next);
+      };
+      const addFiles = async (files: FileList | null) => {
+        if (!files?.length) return;
+        for (const file of Array.from(files)) {
+          try {
+            const { src } = await api.upload(file);
+            patchItems([...block.items, { src, alt: file.name.replace(/\.[^.]+$/, "") }]);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : `Could not upload ${file.name}`);
+          }
+        }
+      };
       return (
-        <div className={styles.imageWrap}>
-          <span style={{ fontSize: 12, color: "#5f6368" }}>Images side by side (2 or more) — perfect for a strip of photos in one moment.</span>
-          {block.items.map((it, i) => (
-            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {it.src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.src} alt="" style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 8 }} />
-              ) : null}
-              <select value={it.src} onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src: e.target.value } : x)))}>
-                <option value="">Choose an image…</option>
-                {imageOptions.map((g) => (
-                  <option key={g.src} value={g.src}>{g.label}</option>
-                ))}
-              </select>
-              <input value={it.alt} placeholder="Alt text" onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))} />
-              <select
-                aria-label={`Size for image ${i + 1}`}
-                value={typeof it.size === "string" ? it.size : "full"}
-                style={{ width: 96 }}
-                onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))}
-              >
-                <option value="full">Fill</option>
-                <option value="square">Square</option>
-                <option value="portrait">Tall</option>
-                <option value="wide">Wide</option>
-              </select>
-              <label className={styles.uploadBtn}>
-                Upload
+        <div className={styles.rowEditor}>
+          <div className={styles.rowGridHead}>
+            <span>{block.items.length} item{block.items.length === 1 ? "" : "s"} — add as many photos or clips as you like</span>
+          </div>
+          <ul className={styles.rowList}>
+            {block.items.map((it, i) => (
+              <li key={i} className={styles.rowItem}>
+                <span className={styles.rowThumb}>
+                  {it.src ? (
+                    /\.mp4|\.webm/i.test(it.src) ? (
+                      <video src={it.src} muted playsInline preload="metadata" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={it.src} alt="" loading="lazy" />
+                    )
+                  ) : (
+                    <span className={styles.rowThumbEmpty}>?</span>
+                  )}
+                </span>
                 <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  hidden
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      const { src } = await api.upload(file);
-                      patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src } : x)));
-                    } catch (err) {
-                      toast(err instanceof Error ? err.message : "Upload failed");
-                    }
-                    e.target.value = "";
-                  }}
+                  className={styles.rowAlt}
+                  value={it.alt}
+                  placeholder={`Caption / alt for #${i + 1}`}
+                  onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, alt: e.target.value } : x)))}
                 />
-              </label>
-              <button type="button" onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))}>×</button>
-            </div>
-          ))}
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Add image</button>
-            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }, { src: "", alt: "" }])}>+ Add 2</button>
-          </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "#5f6368" }}>Per row</span>
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onChange({ ...block, columns: n })}
-                style={{
-                  fontSize: 12, padding: "4px 10px", borderRadius: 999,
-                  border: (block.columns ?? Math.min(block.items.length, 3)) === n ? "1px solid #1a73e8" : "1px solid #dadce0",
-                  background: (block.columns ?? Math.min(block.items.length, 3)) === n ? "#e8f0fe" : "transparent",
-                  color: (block.columns ?? Math.min(block.items.length, 3)) === n ? "#1967d2" : "#3c4043", cursor: "pointer",
-                }}
-              >
-                {n} across
-              </button>
+                <select
+                  aria-label={`Size for item ${i + 1}`}
+                  value={typeof it.size === "string" ? it.size : "auto"}
+                  onChange={(e) => patchItems(block.items.map((x, idx) => (idx === i ? { ...x, size: e.target.value } : x)))}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="square">Square</option>
+                  <option value="portrait">Tall</option>
+                  <option value="wide">Wide</option>
+                </select>
+                <span className={styles.rowMoves}>
+                  <button type="button" onClick={() => move(i, -1)} aria-label="Move earlier">↑</button>
+                  <button type="button" onClick={() => move(i, 1)} aria-label="Move later">↓</button>
+                </span>
+                <label className={styles.rowReplace}>
+                  Replace
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                    hidden
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const { src } = await api.upload(file);
+                        patchItems(block.items.map((x, idx) => (idx === i ? { ...x, src } : x)));
+                      } catch (err) {
+                        toast(err instanceof Error ? err.message : "Upload failed");
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <button type="button" className={styles.rowRemove} onClick={() => patchItems(block.items.filter((_, idx) => idx !== i))} aria-label={`Remove item ${i + 1}`}>×</button>
+              </li>
             ))}
+          </ul>
+          <div className={styles.rowFoot}>
+            <label className={`${styles.uploadBtn} ${styles.rowAddBtn}`}>
+              + Add photos or videos
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                hidden
+                onChange={(e) => addFiles(e.target.files)}
+              />
+            </label>
+            <button type="button" className={styles.linkBtn} onClick={() => patchItems([...block.items, { src: "", alt: "" }])}>+ Blank slot</button>
           </div>
-          <label className={styles.uploadBtn}>
-            Upload an image into this row
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              hidden
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file || block.items.length >= 4) return;
-                try {
-                  const { src } = await api.upload(file);
-                  patchItems([...block.items, { src, alt: file.name.replace(/\.[^.]+$/, "") }]);
-                } catch (err) {
-                  toast(err instanceof Error ? err.message : "Upload failed");
-                }
-                e.target.value = "";
-              }}
-            />
-          </label>
           <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
         </div>
       );
