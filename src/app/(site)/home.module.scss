@@ -429,7 +429,7 @@
 /* ---------- Statement hero (blog.google/research style) ---------- */
 .statement {
   position: relative;
-  padding-top: clamp(40px, 5vw, 64px);
+  padding-top: clamp(56px, 6.5vw, 96px);
   overflow-x: clip;
 }
 
@@ -476,9 +476,10 @@
 
 .arrowArc {
   position: absolute;
-  top: 6px;
+  top: -6px;
   right: clamp(0px, 3vw, 48px);
   width: clamp(120px, 16vw, 230px);
+  transform: scaleX(-1); /* flipped: tail at right, head aims up-left at Newsletter */
   color: var(--gray-800);
   pointer-events: none;
 }
@@ -640,7 +641,7 @@
 
 /* ---------- Photo strip with hand-drawn doodle frame feel ---------- */
 .photoStrip {
-  margin: clamp(48px, 7vw, 96px) calc(-1 * var(--container-pad)) 0;
+  margin: clamp(32px, 4vw, 52px) calc(-1 * var(--container-pad)) 0;
   overflow-x: clip;
 }
 
@@ -676,7 +677,7 @@
 
 /* ---------- Latest grid — 3 uniform cards per row ---------- */
 .latestSection {
-  margin-top: clamp(48px, 7vw, 96px);
+  margin-top: clamp(32px, 4vw, 52px);
 }
 
 .latestGrid {

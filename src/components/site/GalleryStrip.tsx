@@ -12,10 +12,10 @@ interface FolderRef { title: string; slug: string; src: string; count: number }
 
 export function GalleryStrip({ photos, folders = [] }: { photos: GalleryPhoto[]; folders?: FolderRef[] }) {
   const images = photos.filter((p) => p.kind !== "video");
-  const [featured, ...rest] = images;
+  const [first, ...rest] = images;
   const trackRef = useRef<HTMLUListElement>(null);
   const [zoom, setZoom] = useState<number | null>(null);
-  if (!featured) return null;
+  if (!first) return null;
 
   const items: LightboxItem[] = images.map((p) => ({ src: p.src, alt: p.alt, caption: p.caption }));
 
@@ -28,26 +28,8 @@ export function GalleryStrip({ photos, folders = [] }: { photos: GalleryPhoto[];
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.featureRow}>
-        <button type="button" className={styles.feature} onClick={() => setZoom(0)} aria-label={`Open photo: ${featured.caption || "featured"}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={featured.src} alt={featured.alt} className={styles.featureImg} />
-          <span className={styles.featureShade} aria-hidden="true">
-            <span className={styles.featureCaption}>{featured.caption}</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 12h14m0 0-6-6m6 6-6 6" />
-            </svg>
-          </span>
-        </button>
-        <Link href="/gallery" className={`${styles.browseCta} btn btn-ghost`}>
-          Browse the gallery
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h14m0 0-6-6m6 6-6 6" />
-          </svg>
-        </Link>
-      </div>
 
-      {rest.length > 0 ? (
+      {images.length > 0 ? (
         <div className={styles.stripWrap}>
           <ul ref={trackRef} className={styles.track}>
             {folders.filter((f) => f.src).map((f) => (
@@ -62,9 +44,9 @@ export function GalleryStrip({ photos, folders = [] }: { photos: GalleryPhoto[];
                 </Link>
               </li>
             ))}
-            {rest.map((p, i) => (
+            {images.map((p, i) => (
               <li key={p.id}>
-                <button type="button" className={styles.thumb} onClick={() => setZoom(i + 1)} aria-label={`Open photo: ${p.caption || `frame ${i + 2}`}`}>
+                <button type="button" className={styles.thumb} onClick={() => setZoom(i)} aria-label={`Open photo: ${p.caption || `frame ${i + 1}`}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.src} alt={p.alt} loading="lazy" />
                 </button>
