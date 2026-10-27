@@ -614,6 +614,43 @@
   color: var(--gray-700);
 }
 
+.featureBox {
+  margin-top: 16px;
+
+  .toggleRow {
+    align-items: flex-start;
+    margin-top: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    background: var(--gray-25);
+
+    input {
+      margin-top: 2px;
+      width: 17px;
+      height: 17px;
+      accent-color: #1a73e8;
+    }
+
+    span {
+      display: grid;
+      gap: 3px;
+    }
+
+    strong {
+      font-size: 14px;
+      color: var(--gray-900);
+    }
+
+    em {
+      font-style: normal;
+      font-size: 12.5px;
+      line-height: 18px;
+      color: var(--gray-600);
+    }
+  }
+}
+
 .tagWrap {
   display: flex;
   flex-wrap: wrap;

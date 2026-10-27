@@ -3,6 +3,7 @@ import { db } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/env";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
 import { getSettings } from "@/lib/settings";
+import { sendWelcomeEmail } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Enter a valid email address." }, { status: 400 });
   }
   if (!hasSupabase()) return NextResponse.json({ ok: true, offline: true });
+  const { data: before } = await db.from("fn_subscribers").select("status").eq("email", email).maybeSingle();
   const { error } = await db
     .from("fn_subscribers")
     .upsert({ email, status: "subscribed", source: "Newsletter form" }, { onConflict: "email" });
   if (error) return NextResponse.json({ ok: false, error: "Something went wrong. Try again." }, { status: 500 });
+  // Welcome mail only for genuinely new/re-subscribed readers, not repeats.
+  if (before?.status !== "subscribed") sendWelcomeEmail(email);
   return NextResponse.json({ ok: true });
 }

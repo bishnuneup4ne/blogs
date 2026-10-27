@@ -3,7 +3,7 @@ import { db } from "@/lib/supabase/server";
 import { hasSupabase } from "@/lib/env";
 import { rateLimit, requestIp } from "@/lib/rate-limit";
 import { verifyUnsubscribeToken } from "@/lib/unsubscribe";
-import { site } from "@/lib/site";
+import { sendGoodbyeEmail } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -28,15 +28,6 @@ export async function POST(request: Request) {
   const { error } = await db.from("fn_subscribers").update({ status: "unsubscribed" }).eq("email", email);
   if (error) return NextResponse.json({ error: "Could not update the subscription." }, { status: 500 });
   // Red-strip confirmation so the reader knows it actually happened.
-  import("@/app/api/admin/send-email/route")
-    .then(({ sendSiteEmail }) =>
-      sendSiteEmail({
-        to: email,
-        tone: "red",
-        subject: "You've been unsubscribed",
-        html: `<p>Hello,</p><p>You have been unsubscribed from <strong>bishnuneup4ne</strong>. No further emails will be sent to this address.</p><p>Changed your mind? You can subscribe again any time at <a href="${site.url}/newsletter">${site.url.replace(/^https?:\/\//, "")}</a>.</p>`,
-      }),
-    )
-    .catch(() => {});
+  sendGoodbyeEmail(email);
   return NextResponse.json({ ok: true });
 }

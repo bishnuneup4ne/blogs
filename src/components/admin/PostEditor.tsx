@@ -9,8 +9,9 @@ import { useToast } from "@/components/admin/Feedback";
 import { StatusChip, statusTone } from "@/components/admin/kit";
 import type { Block, ChartBlock as ChartBlockType, FlowEdge, FlowNode, FlowNodeShape } from "@/lib/types";
 import { ChartBlockView, FLOW_SHAPE_OPTIONS } from "@/components/blog/ChartBlock";
-import { sanitizeInlineHtml } from "@/admin/sanitize";
+
 import { RichEditor } from "./RichEditor";
+import { PostContent } from "@/components/blog/PostContent";
 import styles from "./PostEditor.module.scss";
 
 const slugifyTitle = (v: string) =>
@@ -254,6 +255,14 @@ export function PostEditor({ postId }: { postId: string }) {
         : await api.patch<{ post: ApiPost }>(`/api/admin/posts/${next.id}`, toPayload(next));
       setExisting(data.post);
       setDraft({ ...toDraft(data.post) });
+      if (next.featured && next.status === "published") {
+        // One lead story only — un-feature everything else.
+        try {
+          await api.post("/api/admin/posts/unfeature-others", { id: data.post.id });
+        } catch {
+          /* cosmetic; retry on next save */
+        }
+      }
       setSaved(next.status === "published" ? "Published" : "Saved");
       toast(next.status === "published" ? "Post published" : "Post saved", "success");
       setTimeout(() => setSaved(null), 1800);
@@ -517,10 +526,15 @@ function SettingsPanel({
         </label>
       </div>
 
-      <label className={styles.toggleRow}>
-        <input type="checkbox" checked={draft.featured} onChange={(e) => patch({ featured: e.target.checked })} />
-        Feature on the homepage
-      </label>
+      <div className={styles.featureBox}>
+        <label className={styles.toggleRow}>
+          <input type="checkbox" checked={draft.featured} onChange={(e) => patch({ featured: e.target.checked })} />
+          <span>
+            <strong>Feature on the homepage</strong>
+            <em>The lead story in the big hero card at bishnuneupane13.com.np — only one post is featured at a time; featuring this one quietly un-features the rest.</em>
+          </span>
+        </label>
+      </div>
 
       <div className={styles.formGrid}>
         <label className={styles.formField}>
@@ -980,55 +994,8 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
 function Preview({ draft }: { draft: EditorDraft }) {
   return (
     <div className={styles.preview}>
-      <p className={styles.previewKicker}>Preview</p>
-      {draft.blocks.map((block, i) => {
-        switch (block.type) {
-          case "chart":
-            return <ChartBlockView key={i} chart={block.chart} />;
-          case "h2":
-            return <h2 key={i}>{block.text}</h2>;
-          case "h3":
-            return <h3 key={i}>{block.text}</h3>;
-          case "p":
-            return <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeInlineHtml(block.html) }} />;
-          case "quote":
-            return (
-              <blockquote key={i}>
-                {block.html}
-                {block.cite ? <cite> — {block.cite}</cite> : null}
-              </blockquote>
-            );
-          case "callout":
-            return <aside key={i} className={styles.previewCallout}>{block.title ? <strong>{block.title} </strong> : null}{block.html}</aside>;
-          case "list":
-            return block.ordered ? (
-              <ol key={i}>{block.items.map((x, j) => <li key={j}>{x}</li>)}</ol>
-            ) : (
-              <ul key={i}>{block.items.map((x, j) => <li key={j}>{x}</li>)}</ul>
-            );
-          case "code":
-            return <pre key={i} className={styles.previewCode}>{block.code}</pre>;
-          case "image":
-            return block.src ? (
-              <figure key={i}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={block.src} alt={block.alt} />
-                {block.caption ? <figcaption>{block.caption}</figcaption> : null}
-              </figure>
-            ) : null;
-          case "table":
-            return (
-              <table key={i}>
-                <thead><tr>{block.head.map((h, j) => <th key={j}>{h}</th>)}</tr></thead>
-                <tbody>{block.rows.map((r, j) => <tr key={j}>{r.map((c, k) => <td key={k}>{c}</td>)}</tr>)}</tbody>
-              </table>
-            );
-          case "divider":
-            return <hr key={i} />;
-          default:
-            return null;
-        }
-      })}
+      <p className={styles.previewKicker}>Preview — rendered exactly like the live site</p>
+      <PostContent blocks={draft.blocks} />
     </div>
   );
 }

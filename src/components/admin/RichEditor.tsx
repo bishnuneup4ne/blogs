@@ -26,12 +26,15 @@ export function RichEditor({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const lastEmit = useRef(value);
+  const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
 
   // Sync external value without stealing focus/caret mid-typing.
   useEffect(() => {
     const el = ref.current;
-    if (el && value !== lastEmit.current) {
+    if (!el) return;
+    const focused = el === document.activeElement || el.contains(document.activeElement);
+    if (!focused && value !== lastEmit.current) {
       el.innerHTML = value || "";
       lastEmit.current = value;
     }
@@ -64,19 +67,46 @@ export function RichEditor({
     const el = ref.current;
     if (!el) return;
     el.focus();
-    if (cmd === "mark") {
+    // Re-select the last range the user made inside this editor. Clicking a
+    // toolbar button can collapse or move the live selection between blocks,
+    // which is why formatting sometimes "did nothing".
+    const saved = lastRange.current;
+    const selNow = window.getSelection();
+    if (saved && (!selNow || selNow.rangeCount === 0 || selNow.isCollapsed)) {
+      selNow?.removeAllRanges();
+      selNow?.addRange(saved);
+    }
+    if (cmd === "mark" || cmd === "underline" || cmd === "strikeThrough") {
+      const tag = cmd === "mark" ? "mark" : cmd === "underline" ? "u" : "s";
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed) return;
-      const range = sel.getRangeAt(0);
-      if (!el.contains(range.commonAncestorContainer)) return;
-      const mark = document.createElement("mark");
-      try {
-        range.surroundContents(mark);
-      } catch {
-        mark.appendChild(range.extractContents());
-        range.insertNode(mark);
+      if (!sel || sel.rangeCount === 0) return;
+      let range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      if (!el.contains(range.commonAncestorContainer)) {
+        // Selection drifted outside this editor — fall back to its whole text.
+        range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
-      sel.removeAllRanges();
+      const existing = range.commonAncestorContainer.parentElement?.closest(tag);
+      if (existing && el.contains(existing)) {
+        const parent = existing.parentNode;
+        if (parent) {
+          while (existing.firstChild) parent.insertBefore(existing.firstChild, existing);
+          parent.removeChild(existing);
+          parent.normalize();
+        }
+      } else {
+        const wrapEl = document.createElement(tag);
+        try {
+          range.surroundContents(wrapEl);
+        } catch {
+          wrapEl.appendChild(range.extractContents());
+          range.insertNode(wrapEl);
+        }
+        sel.removeAllRanges();
+      }
     } else if (cmd === "link") {
       const sel = window.getSelection();
       const currentHref = (() => {
@@ -128,7 +158,13 @@ export function RichEditor({
         data-placeholder={placeholder}
         style={{ minHeight }}
         onInput={emit}
-        onBlur={emit}
+        onBlur={() => {
+          const sel = window.getSelection();
+          if (sel?.rangeCount && !sel.getRangeAt(0).collapsed && ref.current?.contains(sel.anchorNode)) {
+            lastRange.current = sel.getRangeAt(0).cloneRange();
+          }
+          emit();
+        }}
         onKeyUp={refreshActive}
         onMouseUp={refreshActive}
         onFocus={refreshActive}
