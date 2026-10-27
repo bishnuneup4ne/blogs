@@ -59,7 +59,13 @@ export default function AdminMediaPage() {
       kind: "uploads" as const,
       usedBy: state.posts.filter((p) => p.cover === file.src).length,
     }));
-    const all = [...gallery, ...uploads];
+    // Same file can exist as a gallery photo AND an upload row — show it once.
+    type MediaItem = (typeof gallery)[number] | (typeof uploads)[number];
+    const seen = new Map<string, MediaItem>();
+    for (const item of [...uploads, ...gallery]) {
+      if (!seen.has(item.src)) seen.set(item.src, item);
+    }
+    const all = [...seen.values()];
     const q = query.trim().toLowerCase();
     return all
       .filter((i) => (tab === "all" ? true : i.kind === tab))
