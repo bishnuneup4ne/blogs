@@ -72,6 +72,9 @@ a:hover .readPill {
   padding: 0 0 4px;
   list-style: none;
   overflow-x: auto;
+  /* Snap to the natural resting position: the lead card's left edge sits at
+     the track start, every peek card 311px later. `start` + mandatory snapped
+     every card to the left edge, so one click jumped a whole page. */
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   scroll-behavior: smooth;
@@ -85,6 +88,12 @@ a:hover .readPill {
 .heroItem {
   flex: 0 0 var(--peek-w);
   min-width: 0;
+  scroll-snap-align: end;
+}
+
+/* The lead card starts at the track's left edge, so it snaps there; the peek
+   cards snap their own left edge into view one at a time. */
+.heroItemLead {
   scroll-snap-align: start;
 }
 
@@ -115,14 +124,26 @@ a:hover .readPill {
 
 .heroText {
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
 }
 
+/* Peek cards carry their own cover so each slide shows a picture, like
+   blog.google's hero rail. */
+.heroThumb {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 120px;
+  margin-top: 2px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 45%);
+}
+
 .heroCardLead .heroText {
-  flex-basis: 33%;
+  flex: 0 0 33%;
   padding: 8px 8px 8px 4px;
 }
 
@@ -757,61 +778,9 @@ a:hover .compactMedia .coverImg {
 
 /* ---------- Newsletter band ---------- */
 
-.newsBand {
-  position: relative;
-  margin-block: 64px;
-  padding: clamp(28px, 4vw, 56px);
-  border-radius: var(--radius-card, 24px);
-  background: linear-gradient(120deg, #eef2ff 0%, #f4f6ff 55%, #fdfbf3 100%);
-  overflow: hidden;
-  isolation: isolate;
-}
 
-.newsBandBlob {
-  position: absolute;
-  right: -8%;
-  top: -60%;
-  width: 46%;
-  aspect-ratio: 1;
-  border-radius: 50% 50% 44% 56% / 52% 46% 54% 48%;
-  background: #fbf3d9;
-  opacity: 0.85;
-  z-index: -1;
-}
 
-.newsBandInner {
-  max-width: 720px;
-}
 
-.newsBandTitle {
-  margin: 0 0 10px;
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-.newsBandText {
-  margin: 0 0 20px;
-  font-size: 15px;
-  line-height: 24px;
-  color: var(--gray-700);
-}
-
-.newsBandForm {
-  max-width: 560px;
-}
-
-.newsBandNote {
-  margin: 16px 0 0;
-  font-size: 12.5px;
-  color: var(--gray-600);
-
-  a {
-    color: var(--blue-700);
-  }
-}
 
 /* ---------- Responsive ---------- */
 

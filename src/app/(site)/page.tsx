@@ -1,15 +1,19 @@
-import { getAllPosts } from "@/lib/data";
+import { getAllPosts, getSubscriberCount } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
-import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { CategoryLatest, Feature, HeroRail, NewsletterBand, ThreeUp } from "@/components/site/HomeSections";
+import { NewsletterSection } from "@/components/site/NewsletterSection";
+import { CategoryLatest, Feature, HeroRail, ThreeUp } from "@/components/site/HomeSections";
 import styles from "./home.module.scss";
 export default async function HomePage() {
-  const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
+  const [posts, settings, subscriberCount] = await Promise.all([
+    getAllPosts(),
+    getSettings(),
+    getSubscriberCount(),
+  ]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   // blog.google home: featured rail → 3-up → "The latest" feed → quick tip.
   // Exactly one "latest" block on the page.
-  const heroPosts = ordered.slice(0, 5);
-  const moreUpdates = ordered.slice(5, 8);
+  const heroPosts = ordered.slice(0, 6);
+  const moreUpdates = ordered.slice(6, 9);
   // One "latest" per category (5 stories + View more), never a mixed list.
   // Exclude what the first block already shows, so the two never repeat.
   const personalPosts = ordered.filter(
@@ -81,9 +85,13 @@ export default async function HomePage() {
 
       {featured ? <Feature post={featured} /> : null}
 
-      <NewsletterBand siteName={settings.identity.siteName}>
-        <NewsletterForm variant="pill" />
-      </NewsletterBand>
+      {settings.toggles.newsletter ? (
+        <NewsletterSection
+          name={settings.identity.authorName}
+          avatarUrl={settings.identity.avatarUrl || undefined}
+          subscriberCount={subscriberCount}
+        />
+      ) : null}
     </section>
   );
 }

@@ -118,7 +118,11 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     const node = drawerRef.current;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const frame = requestAnimationFrame(() => node?.querySelector<HTMLElement>("a, button, input")?.focus());
+    const frame = requestAnimationFrame(() => {
+      const initial = node?.querySelector<HTMLElement>('[aria-label="Close menu"]');
+      const first = initial ?? node?.querySelector<HTMLElement>("a, button, input");
+      first?.focus();
+    });
 
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Tab" || !node) return;
@@ -166,6 +170,23 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (
+        searchLayerRef.current?.contains(target) ||
+        searchButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      closeSearch(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchOpen]);
 
   useEffect(() => {
@@ -399,9 +420,28 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           aria-label="Site menu"
         >
           <div className={styles.drawerInner}>
-            <div className={styles.drawerHead}>
-              <p className={styles.drawerEyebrow}>Menu</p>
-              <span className={styles.drawerHint}>Use Esc to close</span>
+            <div className={styles.drawerTop}>
+              <Link
+                href="/"
+                className={styles.drawerBrand}
+                aria-label={`${settings.identity.siteName} home`}
+              >
+                <span className={styles.brandMark} aria-hidden="true">
+                  {brandInitial}
+                </span>
+                <span className={styles.drawerBrandText}>
+                  <span className={styles.brandKicker}>{settings.identity.authorName}</span>
+                  <span className={styles.brandName}>{settings.identity.wordmark}</span>
+                </span>
+              </Link>
+              <button
+                type="button"
+                className={styles.drawerClose}
+                onClick={() => setDrawer(false)}
+                aria-label="Close menu"
+              >
+                <CloseIcon width={22} height={22} />
+              </button>
             </div>
 
             <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">

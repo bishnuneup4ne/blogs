@@ -79,12 +79,17 @@ export function HeroRail({ posts }: { posts: Post[] }) {
   function go(delta: number) {
     const t = trackRef.current;
     if (!t) return;
-    const next = Math.min(Math.max(active + delta, 0), posts.length - 1);
-    const el = t.children[next] as HTMLElement | undefined;
-    if (!el) return;
-    const pad = parseFloat(getComputedStyle(t).paddingLeft) || 0;
-    const start = el.getBoundingClientRect().left - t.getBoundingClientRect().left + t.scrollLeft - pad;
-    t.scrollTo({ left: Math.min(Math.max(start, 0), t.scrollWidth - t.clientWidth), behavior: "smooth" });
+    // Advance exactly one card. offsetLeft is scroll-independent; bounding
+    // rects shift with scroll, which made the step depend on position.
+    const cards = Array.from(t.children) as HTMLElement[];
+    const idx = Math.min(active, cards.length - 1);
+    const card = cards[idx];
+    if (!card) return;
+    const gap = parseFloat(getComputedStyle(t).columnGap) || 20;
+    const neighbour = cards[idx + delta];
+    const step = neighbour ? Math.abs(neighbour.offsetLeft - card.offsetLeft) : card.offsetWidth + gap;
+    const left = Math.min(Math.max(t.scrollLeft + delta * step, 0), t.scrollWidth - t.clientWidth);
+    t.scrollTo({ left, behavior: "smooth" });
   }
 
   if (posts.length === 0) return null;
@@ -95,7 +100,7 @@ export function HeroRail({ posts }: { posts: Post[] }) {
         {posts.map((post, i) => {
           const category = getCategory(post.category);
           return (
-            <li key={post.slug} className={styles.heroItem}>
+            <li key={post.slug} className={`${styles.heroItem}${i === 0 ? ` ${styles.heroItemLead}` : ""}`}>
               <Link
                 href={`/blog/${post.slug}`}
                 className={`${styles.heroCard} pastel-${category.pastel}${i === 0 ? ` ${styles.heroCardLead}` : ""}`}
@@ -108,6 +113,11 @@ export function HeroRail({ posts }: { posts: Post[] }) {
                       <span className={styles.heroSummary}>{post.description}</span>
                       <span className={styles.heroByline}>By {post.author.name}</span>
                     </>
+                  ) : null}
+                  {i !== 0 ? (
+                    <span className={styles.heroThumb}>
+                      <Media post={post} sizes="(max-width: 900px) 90vw, 311px" className={styles.coverImg} />
+                    </span>
                   ) : null}
                   <ReadPill />
                 </span>
@@ -127,7 +137,7 @@ export function HeroRail({ posts }: { posts: Post[] }) {
             <button type="button" onClick={() => go(-1)} disabled={active <= 0} aria-label="Previous stories">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
             </button>
-            <button type="button" onClick={() => go(1)} disabled={max > 0 && active >= posts.length - 1} aria-label="Next stories">
+            <button type="button" onClick={() => go(1)} disabled={max > 0 && progress >= 0.999} aria-label="Next stories">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
             </button>
           </span>
@@ -359,23 +369,3 @@ export function Feature({ post, eyebrow = "Feature" }: { post: Post; eyebrow?: s
   );
 }
 
-/* ---------- Newsletter band (blog.google) ---------- */
-
-export function NewsletterBand({ siteName, children }: { siteName: string; children: React.ReactNode }) {
-  return (
-    <section className={styles.newsBand} aria-label="Newsletter">
-      <span className={styles.newsBandBlob} aria-hidden="true" />
-      <div className={styles.newsBandInner}>
-        <h2 className={styles.newsBandTitle}>Get the latest news from {siteName} in your inbox</h2>
-        <p className={styles.newsBandText}>
-          Sign up for product updates, field notes and photo sets as they land.
-        </p>
-        <div className={styles.newsBandForm}>{children}</div>
-        <p className={styles.newsBandNote}>
-          Your information will be used in accordance with <Link href="/privacy">the privacy policy</Link>. You may
-          opt out at any time.
-        </p>
-      </div>
-    </section>
-  );
-}

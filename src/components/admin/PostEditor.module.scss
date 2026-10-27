@@ -14,9 +14,10 @@
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  height: 100dvh;
+  /* Grow with the document; the page (not an inner pane) does the scrolling. */
+  min-height: 100dvh;
   margin: -32px -24px;
-  overflow: hidden;
+  overflow: visible;
   background:
     radial-gradient(1100px 460px at 18% -12%, #edf4ff 0%, transparent 62%),
     var(--surface);
@@ -27,7 +28,9 @@
 /* ---------- Command bar ---------- */
 
 .commandBar {
-  position: relative;
+  /* Stays pinned while the document scrolls underneath. */
+  position: sticky;
+  top: 0;
   z-index: 30;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -311,34 +314,21 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 348px;
+  grid-template-columns: minmax(0, 1fr) 336px;
   min-height: 0;
 }
 
 .canvas {
   min-width: 0;
-  overflow-y: auto;
-  padding: 36px 44px 80px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
-
-  &::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border: 3px solid transparent;
-    border-radius: 999px;
-    background: var(--line-strong);
-    background-clip: content-box;
-  }
+  /* The whole workspace scrolls with the page — an inner scrollbox meant two
+     scrollbars on screen and a visible track beside the settings panel. */
+  padding: 28px 32px 120px;
 }
 
 .paper {
-  max-width: 848px;
-  min-height: calc(100% - 8px);
+  max-width: 804px;
   margin: 0 auto;
-  padding: 52px 60px 34px;
+  padding: 44px 52px 36px;
   border: 1px solid #f0f1f3;
   border-radius: 28px;
   background: var(--paper);
@@ -1257,20 +1247,35 @@
 /* ---------- Details rail ---------- */
 
 .sideRail {
-  min-height: 0;
+  /* Sticks under the action bar while the document scrolls past it. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: calc(100dvh - 64px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-left: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.72);
+  background: #fbfcfe;
   scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-color: transparent transparent;
+
+  /* Track stays invisible until you actually hover the panel. */
+  &:hover {
+    scrollbar-color: var(--line-strong) transparent;
+  }
 
   &::-webkit-scrollbar {
-    width: 9px;
+    width: 10px;
   }
 
   &::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 999px;
+    background: transparent;
+    background-clip: content-box;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
     background: var(--line-strong);
     background-clip: content-box;
   }
@@ -1513,6 +1518,12 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
+  /* Keep the panel short — the picker scrolls instead of pushing the whole
+     settings column down by hundreds of pixels. */
+  max-height: 168px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 
 .coverItem,

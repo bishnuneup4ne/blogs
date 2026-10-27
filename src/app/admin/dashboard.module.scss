@@ -8,9 +8,9 @@
 .stat {
   position: relative;
   display: grid;
-  gap: 7px;
+  gap: 4px;
   overflow: hidden;
-  padding: 22px;
+  padding: 18px 20px;
   border-radius: var(--studio-radius);
   background: var(--card-bg, var(--white));
   border: 1px solid transparent;
@@ -52,10 +52,10 @@
   position: relative;
   z-index: 1;
   font-family: var(--font-ui);
-  font-size: 40px;
+  font-size: 32px;
   font-weight: 400;
-  letter-spacing: -0.2px;
-  line-height: 1;
+  letter-spacing: -0.4px;
+  line-height: 1.1;
   color: var(--gray-900);
 }
 
