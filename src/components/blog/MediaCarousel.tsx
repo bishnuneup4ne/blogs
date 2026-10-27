@@ -28,7 +28,8 @@ export function MediaCarousel({ items, onOpen }: { items: { src: string; alt: st
     const t = trackRef.current;
     if (!t) return;
     const first = t.children[0] as HTMLElement | undefined;
-    const step = (first?.offsetWidth ?? 420) + 20;
+    const step = (first?.offsetWidth ?? 280) + 16;
+    // Page by one visible row worth of tiles for a premium carousel feel.
     t.scrollBy({ left: step * delta, behavior: "smooth" });
   }
 
