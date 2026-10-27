@@ -1,15 +1,14 @@
-import { getAllPosts, getSubscriberCount } from "@/lib/data";
+import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { CategoryLatest, Feature, HeroRail, ThreeUp } from "@/components/site/HomeSections";
 import styles from "./home.module.scss";
 export default async function HomePage() {
-  const [posts, settings, subscriberCount] = await Promise.all([
-    getAllPosts(),
-    getSettings(),
-    getSubscriberCount(),
-  ]);
-  const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+  const [posts, settings] = await Promise.all([getAllPosts(), getSettings()]);
+  // Featured first for the rail, but everything else stays newest-first so
+  // "Latest stories" never jumps back in time behind a featured post.
+  const byDate = [...posts].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const ordered = [...byDate.filter((p) => p.featured), ...byDate.filter((p) => !p.featured)];
   // blog.google home: featured rail → 3-up → "The latest" feed → quick tip.
   // Exactly one "latest" block on the page.
   const heroPosts = ordered.slice(0, 6);
@@ -86,11 +85,7 @@ export default async function HomePage() {
       {featured ? <Feature post={featured} /> : null}
 
       {settings.toggles.newsletter ? (
-        <NewsletterSection
-          name={settings.identity.authorName}
-          avatarUrl={settings.identity.avatarUrl || undefined}
-          subscriberCount={subscriberCount}
-        />
+        <NewsletterSection name={settings.identity.authorName} />
       ) : null}
     </section>
   );

@@ -35,7 +35,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const category = categories.find((c) => c.slug === slug);
   if (!category) notFound();
 
-  const posts = await getPostsByCategory(category.slug as any);
+  const posts = await getPostsByCategory(category.slug);
   const lead = posts[0];
   const rest = posts.slice(1);
   const topics = categories.map((c) => ({ slug: c.slug, name: c.name }));
