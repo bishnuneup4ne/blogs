@@ -750,7 +750,7 @@ export function PostEditor({ postId }: { postId: string }) {
                             </svg>
                           </button>
                         </div>
-                        <div className={styles.blockBody}>
+                        <div className={styles.blockBody} data-block-type={block.type}>
                           <BlockEditor
                             block={block}
                             onChange={(b) => patchBlock(i, b)}
@@ -1239,6 +1239,39 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
             placeholder="Attribution (optional)"
             onChange={(e) => onChange({ ...block, cite: e.target.value })}
           />
+          <div className={styles.rowQuoteMeta}>
+            <select
+              aria-label="Quote style"
+              value={block.variant ?? "bar"}
+              onChange={(e) => onChange({ ...block, variant: e.target.value as "bar" | "card" })}
+            >
+              <option value="bar">Style: left bar</option>
+              <option value="card">Style: author card</option>
+            </select>
+            <select
+              aria-label="Quote size"
+              value={block.size ?? "md"}
+              onChange={(e) => {
+                const v = e.target.value;
+                onChange({ ...block, size: v === "md" ? undefined : (v as "sm" | "lg") });
+              }}
+            >
+              <option value="sm">Size: small</option>
+              <option value="md">Size: medium</option>
+              <option value="lg">Size: large</option>
+            </select>
+          </div>
+          <label className={styles.quoteColor}>
+            Background
+            <input
+              type="color"
+              value={block.bg ?? (block.variant === "card" ? "#eef2ff" : "#ffffff")}
+              onChange={(e) => onChange({ ...block, bg: e.target.value })}
+            />
+            {block.bg ? (
+              <button type="button" onClick={() => onChange({ ...block, bg: undefined })}>Reset</button>
+            ) : null}
+          </label>
         </div>
       );
     case "callout":
@@ -1314,60 +1347,7 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
         </div>
       );
     case "image":
-      return (
-        <div className={styles.imageWrap}>
-          {block.src ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={block.src} alt={block.alt} className={styles.imagePreview} />
-          ) : null}
-          <select value={imageOptions.some((g) => g.src === block.src) || !block.src ? block.src : ""} onChange={(e) => onChange({ ...block, src: e.target.value })}>
-            <option value="">Choose an image…</option>
-            {imageOptions.map((g) => (
-              <option key={g.src} value={g.src}>{g.label}</option>
-            ))}
-          </select>
-          <input value={block.src} placeholder="…or paste any image URL" onChange={(e) => onChange({ ...block, src: e.target.value.trim() })} />
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "#5f6368" }}>Size</span>
-            {(["full", "wide", "medium", "small"] as const).map((sz) => (
-              <button
-                key={sz}
-                type="button"
-                onClick={() => onChange({ ...block, width: sz })}
-                style={{
-                  fontSize: 12, padding: "4px 10px", borderRadius: 999, textTransform: "capitalize",
-                  border: (block.width ?? "full") === sz ? "1px solid #1a73e8" : "1px solid #dadce0",
-                  background: (block.width ?? "full") === sz ? "#e8f0fe" : "transparent",
-                  color: (block.width ?? "full") === sz ? "#1967d2" : "#3c4043", cursor: "pointer",
-                }}
-              >
-                {sz}
-              </button>
-            ))}
-          </div>
-          <label className={styles.uploadBtn}>
-            Upload image
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              hidden
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                try {
-                  const { src } = await api.upload(file);
-                  onChange({ ...block, src });
-                } catch (err) {
-                  toast(err instanceof Error ? err.message : "Upload failed");
-                }
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <input value={block.alt} placeholder="Alt text (required)" onChange={(e) => onChange({ ...block, alt: e.target.value })} />
-          <input value={block.caption ?? ""} placeholder="Caption" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
-        </div>
-      );
+      return <MediaBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
     case "row": {
       return <RowBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
     }
@@ -1498,6 +1478,107 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
       );
     }
   }
+}
+
+/* Image block that also accepts video: a YouTube/Vimeo link or an uploaded
+   MP4/WebM renders as a video, everything else as a photo. */
+function MediaBlockEditor({
+  block,
+  onChange,
+  imageOptions,
+}: {
+  block: Extract<Block, { type: "image" }>;
+  onChange: (b: Block) => void;
+  imageOptions: { src: string; label: string }[];
+}) {
+  const toast = useToast();
+  const src = block.src ?? "";
+  const isVideoFile = /\.(mp4|webm)(\?|$)/i.test(src);
+  const provider = src.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/);
+  const isVimeo = /vimeo\.com\/\d{6,}/i.test(src);
+  const kind: "empty" | "image" | "video" | "external" =
+    !src ? "empty" : isVideoFile ? "video" : provider || isVimeo ? "external" : "image";
+
+  async function upload(file: File) {
+    try {
+      const { src: url } = await api.upload(file);
+      onChange({ ...block, src: url });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Upload failed");
+    }
+  }
+
+  return (
+    <div className={styles.imageWrap}>
+      {kind === "video" ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video src={src} className={styles.imagePreview} controls muted playsInline preload="metadata" />
+      ) : kind === "external" ? (
+        <div className={styles.embedPreview}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5.5v13l11-6.5z" />
+          </svg>
+          <span>{provider ? "YouTube video" : "Vimeo video"} — plays inline on the site</span>
+        </div>
+      ) : kind === "image" ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={block.alt ?? ""} className={styles.imagePreview} />
+      ) : null}
+
+      <select
+        value={imageOptions.some((g) => g.src === src) || !src ? src : ""}
+        onChange={(e) => onChange({ ...block, src: e.target.value })}
+      >
+        <option value="">Choose an image…</option>
+        {imageOptions.map((g) => (
+          <option key={g.src} value={g.src}>{g.label}</option>
+        ))}
+      </select>
+      <input
+        value={src}
+        placeholder="…or paste an image, YouTube/Vimeo link, or MP4 URL"
+        onChange={(e) => onChange({ ...block, src: e.target.value.trim() })}
+      />
+      <div className={styles.uploadRow}>
+        <label className={styles.uploadBtn}>
+          Upload image
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void upload(file);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <label className={styles.uploadBtn}>
+          Upload video
+          <input
+            type="file"
+            accept="video/mp4,video/webm"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void upload(file);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+      <input
+        value={block.alt ?? ""}
+        placeholder={kind === "image" ? "Alt text (required)" : "Caption / title for screen readers"}
+        onChange={(e) => onChange({ ...block, alt: e.target.value })}
+      />
+      <input
+        value={block.caption ?? ""}
+        placeholder="Caption"
+        onChange={(e) => onChange({ ...block, caption: e.target.value })}
+      />
+    </div>
+  );
 }
 
 function RowBlockEditor({ block, onChange, imageOptions }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[] }) {

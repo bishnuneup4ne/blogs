@@ -1748,12 +1748,14 @@
   inset: 0;
   z-index: 80;
   display: grid;
-  align-items: start;
+  align-items: center;      /* centred in the viewport, not pushed from the top */
   justify-items: center;
-  padding: 11vh 20px 20px;
-  background: rgba(32, 33, 36, 0.42);
-  backdrop-filter: blur(4px);
-  animation: overlayIn 160ms ease;
+  padding: 24px;
+  /* No backdrop-filter: blurring a full-screen layer forced a repaint of the
+     whole viewport on every keystroke, which is what made this feel laggy. */
+  background: rgba(32, 33, 36, 0.45);
+  animation: overlayIn 140ms ease;
+  will-change: opacity;
 }
 
 @keyframes overlayIn {
@@ -1764,13 +1766,24 @@
 .paletteDialog {
   display: flex;
   flex-direction: column;
-  width: min(620px, 100%);
-  max-height: min(72vh, 720px);
+  width: min(560px, 100%);
+  max-height: min(76vh, 620px);
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 20px;
   background: var(--paper);
-  box-shadow: 0 32px 80px rgba(32, 33, 36, 0.4);
-  animation: paletteIn 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Cheaper shadow: one soft layer instead of a 80px blur spread. */
+  box-shadow: 0 18px 48px -12px rgba(32, 33, 36, 0.34);
+  animation: paletteIn 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* `contain` and `will-change: transform` both create a containing block,
+     which would trap the fixed overlay. Keep the hint on the overlay only. */
+  contain: paint;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paletteOverlay,
+  .paletteDialog {
+    animation: none;
+  }
 }
 
 @keyframes paletteIn {
@@ -2243,7 +2256,6 @@
   place-items: center;
   padding: 20px;
   background: rgba(32, 33, 36, 0.5);
-  backdrop-filter: blur(4px);
 }
 
 .picker {
@@ -2252,8 +2264,9 @@
   overflow: auto;
   border-radius: 22px;
   background: #fff;
-  box-shadow: 0 28px 72px rgba(32, 33, 36, 0.38);
-  animation: pickerIn 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  box-shadow: 0 18px 44px -12px rgba(32, 33, 36, 0.32);
+  animation: pickerIn 170ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  contain: layout paint;
 }
 
 @keyframes pickerIn {
@@ -2755,4 +2768,122 @@
   font-size: 12px;
   line-height: 17px;
   color: var(--gray-600, #5f6368);
+}
+
+/* ---------- Per-block-type skins ----------
+   Each editor block gets a quiet left accent so the canvas reads as a stack
+   of distinguishable parts rather than one wall of grey inputs. */
+
+.blockBody {
+  position: relative;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+/* Quote & callout: tinted panels. */
+.blockBody[data-block-type="quote"] {
+  padding: 4px 0 4px 14px;
+  border-left: 3px solid var(--blue-200, #aecbfa);
+  border-radius: 0 10px 10px 0;
+}
+
+.blockBody[data-block-type="callout"] {
+  padding: 10px 12px;
+  border-left: 3px solid var(--yellow-500, #fbbc04);
+  border-radius: 0 12px 12px 0;
+  background: var(--yellow-50, #fef7e0);
+}
+
+/* Code: dark language chip + monospace shell. */
+.blockBody[data-block-type="code"] {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f6f8fa;
+  border: 1px solid var(--line-strong, #dadce0);
+}
+
+/* Media blocks: dashed drop-zone feel. */
+.blockBody[data-block-type="image"],
+.blockBody[data-block-type="row"],
+.blockBody[data-block-type="video"] {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed var(--line-strong, #dadce0);
+  background: #fbfcfe;
+}
+
+/* Tables and charts: white cards with a hairline. */
+.blockBody[data-block-type="table"],
+.blockBody[data-block-type="chart"] {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line, #e8eaed);
+  background: #fff;
+}
+
+/* Headings: no chrome at all — they should look like document headings. */
+.blockBody[data-block-type="h2"],
+.blockBody[data-block-type="h3"] {
+  padding: 2px 0;
+}
+
+/* CTA, footnote, contents: small tinted cards. */
+.blockBody[data-block-type="cta"],
+.blockBody[data-block-type="footnote"],
+.blockBody[data-block-type="jumplinks"] {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--blue-50, #e8f0fe);
+}
+
+/* ---------- Media block (image or video) ---------- */
+.uploadRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.embedPreview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--gray-100, #f1f3f4);
+  font-family: var(--font-ui, sans-serif);
+  font-size: 13px;
+  color: var(--gray-700, #3c4043);
+}
+
+/* Quote block: background swatch + reset beside the colour input. */
+.quoteColor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+
+  input[type="color"] {
+    width: 30px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: none;
+    cursor: pointer;
+  }
+
+  button {
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--white);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
 }

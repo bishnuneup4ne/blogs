@@ -116,14 +116,56 @@ function escapeAttr(value: string): string {
   return value.replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function safeUrl(raw: string, image = false): string | null {
+function safeUrl(raw: string, image = false, allowedHostnames: Set<string> | null = null): string | null {
   const value = raw.trim();
   if (!value || /[\u0000-\u001f\u007f\s]/.test(value)) return null;
   const lower = value.toLowerCase();
-  if (lower.startsWith("https://") || lower.startsWith("http://")) return value;
-  if (!image && (lower.startsWith("mailto:") || value.startsWith("#"))) return value;
+  // Allow relative paths and data URLs unconditionally.
   if (value.startsWith("/") && !value.startsWith("//")) return value;
+  if (value.startsWith("data:")) return value;
+  // Pasted links often carry stray spaces/newlines (e.g. from a share sheet).
+  const compact = value.replace(/\s+/g, "");
+  if (lower.startsWith("https://") || lower.startsWith("http://")) {
+    let parsed: URL;
+    try {
+      parsed = new URL(compact);
+    } catch {
+      return null;
+    }
+    // Explicit allowlist (Next.js remotePatterns) wins when present.
+    if (allowedHostnames && allowedHostnames.size > 0) {
+      return allowedHostnames.has(parsed.hostname) ? compact : null;
+    }
+    // Otherwise, when Supabase is configured, only its storage host is allowed.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      try {
+        if (parsed.hostname !== new URL(supabaseUrl).hostname) return null;
+      } catch {
+        /* malformed env — fall through */
+      }
+    }
+    return compact;
+  }
+  if (!image && (lower.startsWith("mailto:") || value.startsWith("#"))) return value;
   return null;
+}
+
+/** Get the set of allowed hostnames for Next.js image optimization, derived from the Supabase URL. */
+function getAllowedImageHostnames(): Set<string> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return new Set();
+  try {
+    const url = new URL(supabaseUrl);
+    return new Set([url.hostname]);
+  } catch {
+    return new Set();
+  }
+}
+
+/** Image URLs must also resolve to an allowed host. */
+export function safeImageUrl(value: string): string | null {
+  return safeUrl(value, true, getAllowedImageHostnames());
 }
 
 function cleanAttrs(tag: string, attrs: [string, string][]): string[] {
@@ -150,10 +192,6 @@ function cleanAttrs(tag: string, attrs: [string, string][]): string[] {
     }
   }
   return out;
-}
-
-export function safeImageUrl(value: string): string | null {
-  return safeUrl(value, true);
 }
 
 export function sanitizeRichText(html: string, maxLength = MAX_HTML): string {
@@ -447,18 +485,24 @@ function normaliseBlock(raw: unknown): Block | null {
   switch (type) {
     case "p":
       return { type, html: sanitizeRichText(String(source.html ?? "")) };
-    case "h2": {
-      const heading = text(source.text, 300) ?? "";
-      if (!heading) return null;
-      return { type, text: heading, id: slug(text(source.id, 120) || heading) };
-    }
+    case "h2":
     case "h3": {
       const heading = text(source.text, 300) ?? "";
-      if (!heading) return null;
-      return { type, text: heading, id: slug(text(source.id, 120) || heading) };
+      // An empty heading is a placeholder the author hasn't typed into yet —
+      // dropping it here failed the whole save with "content blocks invalid".
+      const id = slug(text(source.id, 120) || heading) || `h-${Math.random().toString(36).slice(2, 8)}`;
+      return { type, text: heading, id };
     }
-    case "quote":
-      return { type, html: sanitizeRichText(String(source.html ?? "")), cite: text(source.cite, 300) };
+    case "quote": {
+      const variant = source.variant === "card" ? "card" : source.variant === "bar" ? "bar" : undefined;
+      // Only simple hex/rgb values — anything else could smuggle `url(...)`.
+      const bg = typeof source.bg === "string" && /^#[0-9a-f]{3,8}$/i.test(source.bg.trim()) ? source.bg.trim() : undefined;
+      const size = source.size === "sm" || source.size === "lg" ? source.size : undefined;
+      return {
+        type, html: sanitizeRichText(String(source.html ?? "")), cite: text(source.cite, 300),
+        ...(variant ? { variant } : {}), ...(bg ? { bg } : {}), ...(size ? { size } : {}),
+      };
+    }
     case "callout": {
       const tone = source.tone === "tip" || source.tone === "warning" ? source.tone : "note";
       return { type, tone, title: text(source.title, 200), html: sanitizeRichText(String(source.html ?? "")) };
@@ -498,13 +542,17 @@ function normaliseBlock(raw: unknown): Block | null {
           return { src, alt: text(o.alt, 400) ?? "", ...size };
         })
         .filter((x): x is RowItem => Boolean(x));
-      if (items.length < 2) return null;
+      // One item is a valid single-card row; an empty row is what should fail.
+      if (items.length < 1) return null;
       const wanted = Math.min(Math.max(Math.round(Number(source.columns)) || items.length, 1), 6);
       const columns = Number.isFinite(wanted) ? wanted : items.length;
       return { type, items, columns, caption: text(source.caption, 600) };
     }
     case "video": {
-      const url = safeUrl(String(source.url ?? ""));
+      // Videos are embedded or played from their own host (YouTube, Vimeo,
+      // Supabase), so the image allowlist must not apply here — enforcing it
+      // silently dropped every non-Supabase clip and failed the whole save.
+      const url = safeUrl(String(source.url ?? ""), false, new Set());
       if (!url) return null;
       const poster = source.poster ? safeUrl(String(source.poster), true) : null;
       const autoplay = Boolean(source.autoplay);

@@ -29,7 +29,7 @@ export type Block =
   | { type: "p"; html: string }
   | { type: "h2"; text: string; id: string }
   | { type: "h3"; text: string; id: string }
-  | { type: "quote"; html: string; cite?: string }
+  | { type: "quote"; html: string; cite?: string; variant?: "bar" | "card"; bg?: string; size?: "sm" | "md" | "lg" }
   | { type: "callout"; tone: "note" | "tip" | "warning"; title?: string; html: string }
   | { type: "code"; lang: string; filename?: string; code: string }
   | { type: "list"; ordered: boolean; items: string[] }

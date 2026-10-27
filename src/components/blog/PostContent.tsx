@@ -70,13 +70,21 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   </a>
                 </h3>
               );
-            case "quote":
+            case "quote": {
+              // Two looks: a left rule ("bar") or a filled author card ("card").
+              const variant = block.variant === "card" ? styles.quoteCard : styles.quoteBar;
+              const size = block.size === "sm" ? styles.quoteSm : block.size === "lg" ? styles.quoteLg : "";
               return (
-                <figure key={key} className={styles.quote}>
+                <figure
+                  key={key}
+                  className={`${styles.quote} ${variant} ${size}`.trim()}
+                  style={block.bg ? { ["--quote-bg" as string]: block.bg } : undefined}
+                >
                   <blockquote dangerouslySetInnerHTML={{ __html: block.html }} />
-                  {block.cite ? <figcaption>{block.cite}</figcaption> : null}
+                  {block.cite ? <QuoteAttribution cite={block.cite} /> : null}
                 </figure>
               );
+            }
             case "callout":
               return (
                 <aside key={key} className={`${styles.callout} ${styles[block.tone]}`}>
@@ -102,6 +110,11 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             case "image": {
               const myIndex = imageIndexByBlock.get(index) ?? 0;
+              // The same block also carries video: a YouTube/Vimeo link or a
+              // direct MP4/WebM renders as a player instead of a photo.
+              if (/\.(mp4|webm)(\?|$)/i.test(block.src) || /(?:youtube(?:-nocookie)?\.com|youtu\.be|vimeo\.com)/i.test(block.src)) {
+                return <VideoEmbed key={key} url={block.src} caption={block.caption} />;
+              }
               const remote = /^https?:\/\//i.test(block.src) && !block.src.includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
               return (
                 <figure key={key} className={`${styles.figure}${block.width && block.width !== "full" ? ` ${styles[`fig${block.width[0].toUpperCase()}${block.width.slice(1)}`]}` : ""}`}>
@@ -268,4 +281,19 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
 
 function defaultTitle(tone: "note" | "tip" | "warning") {
   return tone === "note" ? "Note" : tone === "tip" ? "Tip" : "Heads up";
+}
+
+/* Quote credit, blog.google style: "By Name" on one line and the role under
+   it. Accepts "Name, Role", "Name — Role", or "Name|Role" in the cite field. */
+function QuoteAttribution({ cite }: { cite: string }) {
+  const value = cite.trim();
+  const split = value.split(/\s*(?:\||—|–|,\s)\s*/, 2);
+  const name = split[0]?.trim() || value;
+  const role = split[1]?.trim();
+  return (
+    <figcaption className={styles.quoteBy}>
+      <span className={styles.quoteByName}>By {name}</span>
+      {role ? <span className={styles.quoteByRole}>{role}</span> : null}
+    </figcaption>
+  );
 }
