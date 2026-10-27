@@ -12,6 +12,12 @@
 .updateCard {
   display: flex;
   flex-direction: column;
+  width: 100%;
+
+  > * {
+    align-self: stretch;
+    min-width: 100%;
+  }
   border-radius: var(--radius-card);
   background: var(--gray-50);
   overflow: hidden;

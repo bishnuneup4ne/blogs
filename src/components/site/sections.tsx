@@ -56,10 +56,10 @@ export function FeaturedStory({ post, kicker }: { post: Post; kicker: string }) 
   );
 }
 
-export function SectionHead({ title, href, linkLabel }: { title: string; href?: string; linkLabel?: string }) {
+export function SectionHead({ title, href, linkLabel }: { title?: string; href?: string; linkLabel?: string }) {
   return (
     <div className={styles.sectionHead}>
-      <h2 className="section-title">{title}</h2>
+      {title ? <h2 className="section-title">{title}</h2> : <span />}
       {href ? (
         <Link href={href} className={styles.sectionLink}>
           {linkLabel ?? "See all"}

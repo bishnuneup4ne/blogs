@@ -5,7 +5,6 @@ import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
 import { ArrowRight } from "@/components/icons/Icons";
-import { formatDate } from "@/lib/dates";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
@@ -26,22 +25,10 @@ export default async function HomePage() {
   }
   const lineOne = words.slice(0, half).join(" ");
   const lineTwo = words.slice(half).join(" ");
-  const latestDate = ordered[0] ? formatDate(ordered[0].date, { long: true }) : "";
 
   return (
     <section className={styles.intro}>
       <div className={styles.statement}>
-        <div className={styles.statementHead}>
-          <p className={styles.statementKicker}>
-            <span className={styles.kickerRule} aria-hidden="true" />
-            Notes worth keeping
-          </p>
-          <p className={styles.statementMeta}>
-            {posts.length} {posts.length === 1 ? "post" : "posts"}
-            {latestDate ? <> · updated {latestDate}</> : null}
-          </p>
-        </div>
-
         <h1 className={styles.statementTitle}>
           <span className={styles.stLine}>
             {lineOne},&nbsp;<span className={styles.dotBlue} aria-hidden="true" />
@@ -81,14 +68,6 @@ export default async function HomePage() {
             from, and photographing the hills I keep walking back to. The goal is a
             write-up that is more than a log: a partner to whoever reads it next.
           </p>
-          <div className={styles.archiveActions}>
-            <Link href="/about" className="btn btn-outline">
-              About me <span aria-hidden="true">→</span>
-            </Link>
-            <Link href="/topics" className={styles.archivePlain}>
-              Browse topics <span aria-hidden="true">→</span>
-            </Link>
-          </div>
         </div>
 
         <div className={styles.archiveMedia}>
@@ -106,33 +85,19 @@ export default async function HomePage() {
               ) : null}
               <span className={styles.playerGrid} aria-hidden="true" />
               <span className={styles.playerInner}>
-                <span className={styles.playerMark}>
-                  {settings.identity.wordmark}
-                  <span className={styles.playerPlay} aria-hidden="true">
-                    <svg width="20" height="14" viewBox="0 0 20 14" fill="currentColor">
-                      <rect width="20" height="14" rx="3.4" />
-                      <path d="M8 4.1l4.4 2.9L8 9.9V4.1z" fill="#0e0f11" />
-                    </svg>
-                  </span>
-                </span>
+                <span className={styles.playerTitle}>{lead.title}</span>
                 <span className={styles.playerPill}>
                   Read the story <ArrowRight width={18} height={18} />
                 </span>
               </span>
             </Link>
           ) : null}
-
-          {lead ? (
-            <p className={styles.playerCaption}>
-              Latest story · <strong>{lead.title}</strong>
-            </p>
-          ) : null}
         </div>
       </section>
 
       {latest.length > 0 ? (
-        <section className={styles.latestSection} aria-labelledby="latest-heading">
-          <SectionHead title="Latest" href="/blog" linkLabel="All posts" />
+        <section className={styles.latestSection} aria-label="Latest posts">
+          <SectionHead href="/blog" linkLabel="All posts" />
           <ul className={styles.latestGrid}>
             {latest.map((post) => (
               <li key={post.slug} className={styles.latestCell}>

@@ -16,6 +16,30 @@
   padding-bottom: var(--spacer-6);
 }
 
+/* Text left, optional header image right */
+.mastheadGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: end;
+}
+
+.mastheadCopy {
+  min-width: 0;
+}
+
+.mastheadMedia {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-card);
+  background: var(--gray-100);
+}
+
+.mastheadImg {
+  object-fit: cover;
+  border-radius: var(--radius-card);
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -226,6 +250,20 @@
     line-height: 26px;
     color: var(--gray-600);
     max-width: 62ch;
+  }
+}
+
+@media (max-width: 900px) {
+  .mastheadGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  /* image drops below the copy and goes landscape */
+  .mastheadMedia {
+    grid-row: 2;
+    aspect-ratio: 4 / 3;
+    max-height: 420px;
   }
 }
 
