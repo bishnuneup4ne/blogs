@@ -3,8 +3,9 @@ import Image from "next/image";
 import { NewsletterSection } from "@/components/site/NewsletterSection";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHead } from "@/components/site/sections";
+import { ArrowRight } from "@/components/icons/Icons";
 import { allCategories, getAllPosts, getAlbums, getCategory, getSubscriberCount } from "@/lib/data";
-import { relativeDate } from "@/lib/dates";
+import { formatDate, relativeDate } from "@/lib/dates";
 import { getSettings } from "@/lib/settings";
 import styles from "./home.module.scss";
 
@@ -32,23 +33,6 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Past posts — compact text index, first thing on the page */}
-      {posts.length > 1 ? (
-        <section className={`${styles.section} ${styles.pastSection}`}>
-          <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
-          <ul className={styles.pastRow}>
-            {[...rest.slice(2), ...(lead ? [lead] : []), ...secondary].sort((a, b) => (a.date < b.date ? 1 : -1)).map((post) => (
-              <li key={post.slug}>
-                <Link href={`/blog/${post.slug}`} className={styles.pastChip}>
-                  <span className={styles.pastTitle}>{post.title}</span>
-                  <span className={styles.pastDate}>{relativeDate(post.date)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
       {!lead ? (
         <section className={styles.empty}>
           <p className={styles.emptyKicker}>The archive</p>
@@ -113,6 +97,36 @@ export default async function HomePage() {
               </ul>
             ) : null}
           </div>
+        </section>
+      ) : null}
+
+      {/* Past posts — full list below the hero, same card language */}
+      {posts.length > 1 ? (
+        <section className={`${styles.section} ${styles.pastSection}`}>
+          <SectionHead title="Past posts" href="/blog" linkLabel="All posts" />
+          <ul className={styles.pastRow}>
+            {[...posts].sort((a, b) => (a.date < b.date ? 1 : -1)).map((post) => (
+              <li key={post.slug}>
+                <article className={styles.pastCard}>
+                  <Link href={`/blog/${post.slug}`} className={styles.pastMedia} tabIndex={-1} aria-hidden="true">
+                    {post.cover ? (
+                      <Image src={post.cover.src} alt="" fill sizes="(max-width: 700px) 100vw, 380px" className={styles.mediaImg} />
+                    ) : null}
+                  </Link>
+                  <div className={styles.pastBody}>
+                    <h3 className={styles.pastTitle}>
+                      <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                    </h3>
+                    <p className={styles.pastDesc}>{post.description}</p>
+                    <p className={styles.pastMeta}>{formatDate(post.date)} · {relativeDate(post.date)} · {post.readingMinutes} min read</p>
+                    <Link href={`/blog/${post.slug}`} className={`${styles.pastCta} btn btn-outline`}>
+                      Read article <ArrowRight width={20} height={20} />
+                    </Link>
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
