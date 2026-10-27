@@ -41,8 +41,6 @@ export interface SiteSettings {
     title: string;
     lede: string;
     quote: string;
-    portraitUrl: string;
-    portraitAlt: string;
     focus: string[];
     story: string[];
     now: AboutEntry[];
@@ -92,8 +90,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     title: "Cybersecurity enthusiast. Low-level hacker. Compulsive note-taker.",
     lede: "I'm Bishnu, 18, from Kathmandu, Nepal. I spend most of my time around cybersecurity — reverse engineering binaries, studying malware, penetration testing web applications, and going one layer below the abstraction. I also build with AI in the loop, using it to prototype tools and move faster without switching off my brain. I study Computer Engineering (BE CE) at NCIT College, Nepal, and this site is where the breaking, building and documenting meet.",
     quote: "The best way to understand a system is to break it, read the pieces, and write down what you learned.",
-    portraitUrl: "/avatar.jpg",
-    portraitAlt: "Bishnu Neupane",
     focus: ["Malware analysis", "Reverse engineering", "Penetration testing", "Low-level systems", "AI-assisted development"],
     story: [
       "I'm a cybersecurity enthusiast with a bad habit of asking what sits underneath the abstraction. Malware, reverse engineering, penetration testing, low-level systems — the work changes, but the method is the same: take the thing apart, find the assumptions holding it together, and document the path back.",
@@ -223,11 +219,6 @@ function normaliseSettings(raw: SiteSettings, base: SiteSettings): SiteSettings 
         title: safeText(a.title, b.title, 200),
         lede: safeText(a.lede, b.lede, 1500),
         quote: safeText(a.quote, b.quote, 500),
-        portraitUrl:
-          typeof a.portraitUrl === "string" && !a.portraitUrl.trim()
-            ? ""
-            : safeLink(a.portraitUrl, b.portraitUrl),
-        portraitAlt: safeText(a.portraitAlt, b.portraitAlt, 160),
         focus: textArr(a.focus, b.focus),
         story: textArr(a.story, b.story),
         now: entryArr(a.now, b.now),

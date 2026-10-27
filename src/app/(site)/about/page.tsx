@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { ContactForm } from "@/components/site/ContactForm";
 import { getSettings } from "@/lib/settings";
+import { site } from "@/lib/site";
 import styles from "./about.module.scss";
 
 const description =
@@ -29,40 +29,23 @@ export default async function AboutPage() {
             <span aria-current="page">About</span>
           </nav>
 
-          <div className={styles.mastheadGrid}>
-            <div className={styles.mastheadCopy}>
-              <p className={styles.kicker}>{a.kicker}</p>
-              <h1 className={styles.title}>{a.title}</h1>
-              <p className={styles.lede}>{a.lede}</p>
+          <p className={styles.kicker}>{a.kicker}</p>
+          <h1 className={styles.title}>{a.title}</h1>
+          <p className={styles.lede}>{a.lede}</p>
 
-              {a.focus.length > 0 ? (
-                <ul className={styles.focus} aria-label="Areas of focus">
-                  {a.focus.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              ) : null}
+          {a.focus.length > 0 ? (
+            <ul className={styles.focus} aria-label="Areas of focus">
+              {a.focus.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
 
-              {a.quote ? <blockquote className={styles.quote}>&ldquo;{a.quote}&rdquo;</blockquote> : null}
+          {a.quote ? <blockquote className={styles.quote}>&ldquo;{a.quote}&rdquo;</blockquote> : null}
 
-              <div className={styles.actions}>
-                <a href={`mailto:${settings.identity.email}`} className="btn btn-primary">Email me</a>
-                <Link href="/blog" className="btn btn-outline">Read the write-ups</Link>
-              </div>
-            </div>
-
-            {a.portraitUrl ? (
-              <div className={styles.mastheadMedia}>
-                <Image
-                  src={a.portraitUrl}
-                  alt={a.portraitAlt}
-                  fill
-                  priority
-                  sizes="(max-width: 900px) 100vw, 440px"
-                  className={styles.portraitImg}
-                />
-              </div>
-            ) : null}
+          <div className={styles.actions}>
+            <a href={`mailto:${settings.identity.email}`} className="btn btn-primary">Email me</a>
+            <Link href="/blog" className="btn btn-outline">Read the write-ups</Link>
           </div>
         </div>
       </header>
