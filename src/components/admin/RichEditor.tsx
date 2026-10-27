@@ -35,6 +35,7 @@ export function RichEditor({
   const lastRange = useRef<Range | null>(null);
   const [active, setActive] = useState<Record<string, boolean>>({});
   const [colorPopup, setColorPopup] = useState<{ x: number; y: number; cmd: PopupCmd } | null>(null);
+  const popupRange = useRef<Range | null>(null);
 
   // The editor owns its DOM. React must never write innerHTML here: doing so
   // resets the caret to offset 0, which is why clicking mid-paragraph used to
@@ -146,6 +147,13 @@ export function RichEditor({
         }
       }
       if (!range || range.collapsed || !el.contains(range.commonAncestorContainer)) return;
+      // Clicking the same colour button again closes the picker.
+      if (colorPopup?.cmd === cmd) {
+        setColorPopup(null);
+        popupRange.current = null;
+        return;
+      }
+      popupRange.current = range.cloneRange();
       const rect = range.getBoundingClientRect();
       setColorPopup({
         x: Math.max(8, Math.min(rect.left ?? el.getBoundingClientRect().left, window.innerWidth - 260)),
@@ -256,29 +264,75 @@ export function RichEditor({
     if (!el || !colorPopup) return;
     el.focus();
     const sel = window.getSelection();
-    const range = lastRange.current;
+    const range = popupRange.current ?? lastRange.current;
     if (range && sel) {
       sel.removeAllRanges();
       sel.addRange(range);
     }
     try {
-      document.execCommand("styleWithCSS", false, "true");
-      if (colorPopup.cmd === "foreColor" || colorPopup.cmd === "hiliteColor") {
+      if (color === "none") {
+        removeColor(colorPopup.cmd);
+      } else if (colorPopup.cmd === "foreColor" || colorPopup.cmd === "hiliteColor") {
+        document.execCommand("styleWithCSS", false, "true");
         document.execCommand(colorPopup.cmd, false, color);
       } else if (colorPopup.cmd === "underlineColor" || colorPopup.cmd === "strikeColor") {
-        // Underline / strikethrough with a custom line colour: native
-        // underlineColor isn't supported anywhere reliable, so wrap the
-        // selection manually in a styled <u>/<s>.
         applyLineColor(colorPopup.cmd === "underlineColor" ? "u" : "s", color);
       } else {
-        // Bold / italic tinted with a font colour.
         applyStyledTag(colorPopup.cmd === "boldColor" ? "strong" : "em", `color: ${color}`);
       }
     } catch {
       /* older browsers */
     }
     setColorPopup(null);
+    popupRange.current = null;
     emit();
+  }
+
+  // Strip the colour this tool would have applied from the saved range.
+  function removeColor(cmd: PopupCmd) {
+    const el = ref.current;
+    const range = popupRange.current;
+    if (!el || !range) return;
+    const propFor: Record<PopupCmd, string> = {
+      foreColor: "color",
+      hiliteColor: "background-color",
+      boldColor: "color",
+      italicColor: "color",
+      underlineColor: "text-decoration-color",
+      strikeColor: "text-decoration-color",
+    };
+    const prop = propFor[cmd];
+    const startEl = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? (range.startContainer as Element)
+      : range.startContainer.parentElement;
+    const nodes = startEl ? [...startEl.querySelectorAll("[style]")] : [];
+    // include ancestors of the selection too
+    let anc = startEl;
+    while (anc && anc !== el) { nodes.push(anc); anc = anc.parentElement; }
+    for (const n of nodes) {
+      const style = (n as HTMLElement).style;
+      if (!style.getPropertyValue(prop)) continue;
+      if (cmd === "underlineColor" || cmd === "strikeColor") {
+        style.removeProperty("text-decoration-color");
+        style.removeProperty("text-decoration-line");
+        style.removeProperty("text-decoration-thickness");
+        style.removeProperty("text-underline-offset");
+        if (!style.cssText.trim()) { unwrap(n as HTMLElement); }
+      } else if (prop === "background-color" && n instanceof HTMLElement && n.tagName === "MARK") {
+        unwrap(n);
+      } else {
+        style.removeProperty(prop);
+        if (!style.cssText.trim() && (n as HTMLElement).tagName === "SPAN") unwrap(n as HTMLElement);
+      }
+    }
+    el.normalize();
+  }
+
+  function unwrap(node: HTMLElement) {
+    const parent = node.parentNode;
+    if (!parent) return;
+    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+    parent.removeChild(node);
   }
 
   return (
@@ -321,15 +375,26 @@ export function RichEditor({
         })}
       </div>
       {colorPopup ? (
-        <div className={styles.swatches} style={{ left: colorPopup.x, top: colorPopup.y }} role="menu" aria-label="Pick a colour">
-          {SWATCHES.map((c) => (
-            <button key={c} type="button" className={styles.swatch} style={{ background: c }} title={c} onMouseDown={(e) => e.preventDefault()} onClick={() => applyColor(c)} />
-          ))}
-          <label className={styles.customColor} onMouseDown={(e) => e.preventDefault()}>
-            <input type="color" onChange={(e) => applyColor(e.target.value)} aria-label="Custom colour" />
-            <span>Custom</span>
-          </label>
-        </div>
+        <>
+          <div className={styles.popupScrim} onMouseDown={(e) => { e.preventDefault(); setColorPopup(null); popupRange.current = null; }} />
+          <div className={styles.swatches} style={{ left: colorPopup.x, top: colorPopup.y }} role="menu" aria-label="Pick a colour">
+            {SWATCHES.map((c) => (
+              <button key={c} type="button" className={styles.swatch} style={{ background: c }} title={c} onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); applyColor(c); }} />
+            ))}
+            <label className={styles.customColor} onMouseDown={(e) => e.preventDefault()}>
+              <input type="color" onChange={(e) => applyColor(e.target.value)} aria-label="Custom colour" />
+              <span>Custom</span>
+            </label>
+            <button
+              type="button"
+              className={styles.noneBtn}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={(e) => { e.stopPropagation(); applyColor("none"); }}
+            >
+              None
+            </button>
+          </div>
+        </>
       ) : null}
       <div
         ref={ref}
