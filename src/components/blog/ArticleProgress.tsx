@@ -11,11 +11,15 @@ import styles from "./ArticleProgress.module.scss";
    headline has scrolled past; until then it stays invisible. */
 export function ArticleProgress({
   title,
+  coverUrl,
+  postSlug,
   shareUrl,
   avatarUrl,
   siteName,
 }: {
   title: string;
+  coverUrl?: string;
+  postSlug: string;
   shareUrl: string;
   avatarUrl?: string;
   siteName?: string;
@@ -88,16 +92,13 @@ export function ArticleProgress({
         <span ref={fillRef} className={styles.fill} />
       </span>
       <div className={styles.inner}>
-        <Link href="/blog" className={styles.brand} aria-label={siteName ? `${siteName} home` : "Home"}>
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" className={styles.avatar} width={32} height={32} />
-          ) : (
-            <span className={styles.avatarFallback} aria-hidden="true">
-              {(siteName || "B").trim().charAt(0).toUpperCase()}
-            </span>
-          )}
-        </Link>
+        {/* blog.google puts their "G" mark here — we put the post's cover. */}
+        {coverUrl ? (
+          <Link href={`/blog/${postSlug}`} className={styles.brand} aria-label={title} tabIndex={-1} aria-hidden="true">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt="" className={styles.avatar} width={32} height={32} />
+          </Link>
+        ) : null}
         <Link href="/blog" className={styles.title}>{title}</Link>
         <ShareMenu title={title} url={shareUrl} compact />
       </div>
