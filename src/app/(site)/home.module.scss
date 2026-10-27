@@ -422,144 +422,273 @@
 /* Intro — research-page style statement + newest story */
 .intro {
   max-width: var(--container);
-  margin: var(--spacer-5) auto 0;
-  padding: 0 var(--container-pad);
+  margin: 0 auto;
+  padding: 0 var(--container-pad) var(--spacer-6);
 }
 
-.introTop {
+/* ---------- Statement hero (blog.google/research style) ---------- */
+.statement {
   position: relative;
-  padding-bottom: var(--spacer-4);
+  padding-top: clamp(56px, 9vw, 120px);
+  overflow-x: clip;
 }
 
-.introTitle {
+.statementTitle {
+  margin: 0 auto;
+  max-width: 1080px;
+  display: grid;
   font-family: var(--font-ui);
-  font-size: clamp(40px, 6.4vw, 76px);
   font-weight: 400;
-  letter-spacing: -2px;
-  line-height: 1.04;
+  font-size: clamp(40px, 5.2vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   color: var(--gray-900);
-  text-wrap: balance;
 }
 
-.introAccent {
-  display: block;
-  color: var(--blue-700);
+.stLine {
+  position: relative;
 }
 
-.introLede {
-  margin-top: 22px;
-  max-width: 38ch;
+.stLineRight {
+  justify-self: end;
+  padding-right: clamp(8px, 6vw, 96px);
+}
+
+.dotBlue,
+.dotYellow {
+  display: inline-block;
+  width: clamp(10px, 1.2vw, 16px);
+  height: clamp(10px, 1.2vw, 16px);
+  margin-left: 10px;
+  border-radius: 50%;
+  vertical-align: baseline;
+  transform: translateY(-0.16em);
+}
+
+.dotBlue {
+  background: var(--blue-500);
+}
+
+.dotYellow {
+  background: var(--yellow-500);
+}
+
+.arrowArc {
+  position: absolute;
+  top: clamp(8px, 2vw, 30px);
+  right: clamp(0px, 4vw, 60px);
+  width: clamp(120px, 16vw, 230px);
+  color: var(--gray-800);
+  pointer-events: none;
+}
+
+.statementLede {
+  margin: clamp(28px, 4vw, 48px) 0 0 auto;
+  max-width: 34ch;
+  padding-right: clamp(8px, 8vw, 160px);
   font-size: 16px;
   line-height: 26px;
   color: var(--gray-700);
 }
 
-.introRow {
+/* ---------- Mission row: narrow copy + dark media card ---------- */
+.missionRow {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: 40px;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(28px, 5vw, 72px);
   align-items: start;
-  margin-top: var(--spacer-4);
-  padding-top: var(--spacer-4);
-  border-top: 1px solid var(--gray-200);
+  margin-top: clamp(48px, 7vw, 96px);
 }
 
-.introCopy {
-  display: grid;
-  gap: 14px;
-  justify-items: start;
+.missionCopy {
+  position: relative;
+  padding-left: 8px;
+}
+
+.halfCircle {
+  position: absolute;
+  left: -64px;
+  top: -34px;
+  width: 130px;
+  color: var(--gray-500);
+  pointer-events: none;
+
+  @media (max-width: 1200px) {
+    display: none;
+  }
+}
+
+.missionTitle {
+  font-family: var(--font-ui);
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.25px;
+  line-height: 1.2;
+  color: var(--gray-900);
+  max-width: 12ch;
+}
+
+.missionText {
+  margin: 18px 0 0;
+  max-width: 40ch;
   font-size: 15px;
   line-height: 26px;
   color: var(--gray-700);
+}
 
-  p {
-    margin: 0;
-    max-width: 42ch;
+.plainLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--blue-700);
+
+  &:hover {
+    color: var(--blue-900);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 }
 
-.introKicker {
-  font-family: var(--font-ui);
-  font-size: clamp(24px, 2.6vw, 32px);
-  font-weight: 400;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-  color: var(--gray-900);
-}
-
-@media (max-width: 900px) {
-  .introRow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-  }
-}
-
-.introMedia {
+.scrimCard {
   position: relative;
   display: block;
   aspect-ratio: 16 / 10;
   border-radius: var(--radius-card);
   overflow: hidden;
   background: #0b0b0c;
+  color: #fff;
 }
 
-.introMediaImg {
+.scrimImg {
   object-fit: cover;
-  opacity: 0.85;
+  opacity: 0.92;
   transition: transform 500ms cubic-bezier(0.2, 0, 0, 1), opacity 300ms ease;
 }
 
-.introMedia:hover .introMediaImg {
+.scrimCard:hover .scrimImg {
   transform: scale(1.03);
   opacity: 1;
 }
 
-.introMediaScrim {
+.scrimBody {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 55%);
+  inset: auto 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 44px 24px 22px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
 }
 
-.introMediaLabel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  border-radius: 8px;
-  background: var(--white);
-  color: var(--gray-900);
-  font-family: var(--font-ui);
-  font-size: 14px;
+.scrimKicker {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
   font-weight: 500;
-  box-shadow: var(--shadow-1);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.introMediaCaption {
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: 18px;
-  font-size: 14px;
-  line-height: 20px;
-  color: rgba(255, 255, 255, 0.92);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Second staggered line, like "to reality." on google.com/research */
-.introTitleLower {
-  margin-top: var(--spacer-4);
+.scrimTitle {
   font-family: var(--font-ui);
-  font-size: clamp(40px, 6.4vw, 76px);
+  font-size: clamp(20px, 2vw, 26px);
   font-weight: 400;
-  letter-spacing: -2px;
-  line-height: 1.04;
-  color: var(--gray-900);
-  text-align: right;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+  color: #fff;
   text-wrap: balance;
+}
+
+.scrimCta {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  transition: background-color 200ms ease, transform 200ms ease;
+}
+
+.scrimCard:hover .scrimCta {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateX(3px);
+}
+
+/* ---------- Photo strip with hand-drawn doodle frame feel ---------- */
+.photoStrip {
+  position: relative;
+  margin: clamp(56px, 8vw, 110px) auto 0;
+  max-width: 900px;
+  text-align: center;
+}
+
+.photoStrip::before {
+  content: "";
+  position: absolute;
+  inset: -16px -22px -10px;
+  border: 1.4px solid var(--gray-400);
+  border-radius: 60% 40% 55% 45% / 45% 60% 40% 55%;
+  transform: rotate(-0.6deg);
+  pointer-events: none;
+}
+
+.photoStripImg {
+  position: relative;
+  width: 100%;
+  display: block;
+  border-radius: var(--radius-card);
+  box-shadow: 0 24px 60px -30px rgba(32, 33, 36, 0.45);
+}
+
+.photoStripCaption {
+  margin-top: 18px;
+  font-size: 14px;
+  color: var(--gray-600);
+
+  a {
+    color: var(--blue-700);
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .missionRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stLine {
+    white-space: normal;
+  }
+
+  .statementTitle {
+    font-size: clamp(40px, 11vw, 64px);
+  }
+
+  .arrowArc {
+    width: 110px;
+    top: 0;
+  }
+}
+
+.intro,
+.statement {
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 640px) {
+  .arrowArc {
+    display: none;
+  }
 }

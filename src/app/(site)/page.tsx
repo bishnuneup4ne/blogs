@@ -12,8 +12,15 @@ export default async function HomePage() {
 
   // Statement headline split like blog.google/research: "Word one," floats
   // left, "word two." drops to the right on the next line.
-  const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/);
-  const half = Math.max(1, Math.ceil(words.length / 2));
+  const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/).filter(Boolean);
+  // Split so both lines are close in width — the stagger reads intentional.
+  let half = 1;
+  let best = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(" ").length;
+    const b = words.slice(i).join(" ").length;
+    if (Math.abs(a - b) < best) { best = Math.abs(a - b); half = i; }
+  }
   const lineOne = words.slice(0, half).join(" ");
   const lineTwo = words.slice(half).join(" ");
 
@@ -22,12 +29,10 @@ export default async function HomePage() {
       <div className={styles.statement}>
         <h1 className={styles.statementTitle}>
           <span className={styles.stLine}>
-            {lineOne},
-            <span className={styles.dotBlue} aria-hidden="true" />
+            {lineOne},&nbsp;<span className={styles.dotBlue} aria-hidden="true" />
           </span>
           <span className={`${styles.stLine} ${styles.stLineRight}`}>
-            {lineTwo}
-            <span className={styles.dotYellow} aria-hidden="true" />
+            {lineTwo}.&nbsp;<span className={styles.dotYellow} aria-hidden="true" />
           </span>
         </h1>
         <svg className={styles.arrowArc} viewBox="0 0 220 120" fill="none" aria-hidden="true">
