@@ -10,7 +10,7 @@
   /* Explicit px columns so the strip always overflows and arrows page. */
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(26vw, 340px);
+  grid-auto-columns: min(38vw, 520px);
   gap: 16px;
   scroll-snap-type: x mandatory;
   transition: none;
