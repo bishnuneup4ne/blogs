@@ -10,12 +10,7 @@ export default async function HomePage() {
   const [posts, settings, albums] = await Promise.all([getAllPosts(), getSettings(), getAlbums()]);
   const ordered = [...posts].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
   const lead = ordered[0];
-  const latest = ordered.slice(0, 6);
-  // Newest first: photos carry takenAt; fall back to album order.
-  const galleryPhotos = [...albums.flatMap((a) => a.photos)]
-    .filter((p) => p.kind !== "video")
-    .sort((a, b) => (b.takenAt || "").localeCompare(a.takenAt || ""));
-
+  const latest = ordered.slice(1, 7);
   // Statement headline split like blog.google/research: "Word one," floats
   // left, "word two." drops to the right on the next line.
   const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/).filter(Boolean);
@@ -42,8 +37,9 @@ export default async function HomePage() {
           </span>
         </h1>
         <svg className={styles.arrowArc} viewBox="0 0 220 120" fill="none" aria-hidden="true">
-          <path d="M8 112C46 34 138 8 208 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M196 14l14 12-17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Tail starts low-right near the headline, sweeps up-left; head at (8,14) points straight at Newsletter */}
+          <path d="M212 112C174 34 82 8 12 26" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M24 14 10 26l17 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <p className={styles.statementLede}>{settings.hero.standfirst}</p>
       </div>
@@ -106,10 +102,9 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {galleryPhotos.length > 0 ? (
+      {albums.length > 0 ? (
         <div className={styles.photoStrip}>
           <GalleryStrip
-            photos={galleryPhotos}
             folders={albums.map((a) => ({ title: a.title, slug: a.slug, src: a.cover || a.photos.find((p) => p.kind !== "video")?.src || "", count: a.photos.length }))}
           />
         </div>
