@@ -1,7 +1,10 @@
 .grid {
+  /* Uniform mosaic: every tile is the same 4:3 box, videos take two columns
+     so a clip reads as a feature without breaking the row rhythm. */
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
+  grid-auto-flow: dense;
+  gap: clamp(10px, 1.4vw, 20px);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -11,17 +14,15 @@
   min-width: 0;
 }
 
-/* Video tiles run the full row so they never leave a hole beside a photo. */
+/* A clip spans two columns; with dense packing the photos fill the gaps. */
 .cellVideo {
-  grid-column: 1 / -1;
+  grid-column: span 2;
 }
 
 .cellVideo .item {
-  /* 16:9, but capped so a wide row doesn't dwarf the photo grid. */
   aspect-ratio: 16 / 9;
-  max-height: 520px;
-  margin-inline: auto;
-  width: min(100%, 924px);
+  max-height: none;
+  width: 100%;
 }
 
 /* Autoplaying YouTube tile: the iframe fills the rounded frame, and a
@@ -64,7 +65,17 @@
   opacity: 1;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .cellVideo {
     grid-column: auto;
   }
@@ -75,7 +86,7 @@
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius-16);
+  border-radius: 18px;
   overflow: hidden;
   background: var(--gray-100);
   cursor: zoom-in;
@@ -83,7 +94,7 @@
 }
 
 .item:hover {
-  box-shadow: 0 12px 32px -8px rgba(32, 33, 36, 0.24);
+  box-shadow: 0 14px 36px -10px rgba(32, 33, 36, 0.28);
   transform: translateY(-2px);
 }
 

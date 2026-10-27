@@ -98,10 +98,10 @@ export function HeroRail({ posts }: { posts: Post[] }) {
         {posts.map((post, i) => {
           const category = getCategory(post.category);
           return (
-            <li key={post.slug} className={`${styles.heroItem}${i === 0 ? ` ${styles.heroItemLead}` : ""}`}>
+            <li key={post.slug} className={styles.heroItem}>
               <Link
                 href={`/blog/${post.slug}`}
-                className={`${styles.heroCard} pastel-${category.pastel}${i === 0 ? ` ${styles.heroCardLead}` : ""}`}
+                className={`${styles.heroCard} ${styles.heroCardLead} pastel-${category.pastel}`}
               >
                 <span className={styles.heroText}>
                   <span className={styles.heroEyebrow}>{category.name}</span>

@@ -107,10 +107,6 @@ a:hover .readPill {
 
 /* The lead card starts at the track's left edge, so it snaps there; the peek
    cards snap their own left edge into view one at a time. */
-.heroItemLead {
-  scroll-snap-align: start;
-}
-
 .heroItem:first-child {
   flex-basis: var(--lead-w);
 }
@@ -130,10 +126,11 @@ a:hover .readPill {
   overflow: hidden;
 }
 
+/* Every card is text-beside-image, so paging never changes the shape. */
 .heroCardLead {
   flex-direction: row;
   align-items: stretch;
-  gap: 24px;
+  gap: clamp(16px, 2.5vw, 32px);
 }
 
 .heroText {
@@ -146,7 +143,8 @@ a:hover .readPill {
 
 
 .heroCardLead .heroText {
-  flex: 0 0 33%;
+  flex: 0 0 38%;
+  justify-content: center;
   padding: 8px 8px 8px 4px;
 }
 
