@@ -550,3 +550,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Second staggered line, like "to reality." on google.com/research */
+.introTitleLower {
+  margin-top: var(--spacer-4);
+  font-family: var(--font-ui);
+  font-size: clamp(40px, 6.4vw, 76px);
+  font-weight: 400;
+  letter-spacing: -2px;
+  line-height: 1.04;
+  color: var(--gray-900);
+  text-align: right;
+  text-wrap: balance;
+}

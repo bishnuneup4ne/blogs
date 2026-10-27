@@ -13,11 +13,9 @@ export default async function HomePage() {
   return (
     <section className={styles.intro}>
       <div className={styles.introTop}>
-        <h1 className={styles.introTitle}>
-          {settings.identity.siteName},
-          <span className={styles.introAccent}>{settings.hero.title}</span>
-        </h1>
+        <h1 className={styles.introTitle}>{settings.identity.siteName},</h1>
         <p className={styles.introLede}>{settings.identity.tagline}</p>
+        <h2 className={styles.introTitleLower}>{settings.hero.title}</h2>
       </div>
 
       <div className={styles.introRow}>
