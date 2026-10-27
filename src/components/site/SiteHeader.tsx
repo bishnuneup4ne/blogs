@@ -5,8 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import type { SiteSettings } from "@/lib/settings";
-import { CloseIcon, MenuIcon, SearchIcon, SocialIcon } from "@/components/icons/Icons";
+import {
+  ArrowRight,
+  CloseIcon,
+  MenuIcon,
+  SearchIcon,
+  SocialIcon,
+} from "@/components/icons/Icons";
 import styles from "./SiteHeader.module.scss";
+
+const SEARCH_TERMS = ["Malware", "Reverse engineering", "IOE", "Kathmandu"];
 
 export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const pathname = usePathname();
@@ -15,9 +23,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const wordmarkRef = useRef<HTMLAnchorElement>(null);
   const searchLayerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -48,9 +55,17 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
   const onBlog = pathname.startsWith("/blog");
   const nav = settings.nav.length > 0 ? settings.nav : [{ label: "Blog", href: "/blog" }];
+  const brandInitial = settings.identity.authorName.trim().charAt(0).toUpperCase() || "B";
 
   useEffect(() => {
-    if (!onBlog) {
+    const onScroll = () => setScrolled(window.scrollY > 6);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!onBlog || searchOpen || drawer) {
       setHidden(false);
       return;
     }
@@ -72,7 +87,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       if (document.querySelector("[data-article-progress]")) {
         const h1 = document.querySelector("article h1, h1");
         if (h1) {
-          const barH = headerRef.current?.getBoundingClientRect().height ?? 64;
+          const barH = headerRef.current?.getBoundingClientRect().height ?? 72;
           setHidden(h1.getBoundingClientRect().top < -barH * 0.5);
         } else {
           setHidden(y >= 120);
@@ -96,22 +111,18 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       window.removeEventListener("scroll", onScroll);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [onBlog]);
-
-  useEffect(() => {
-    if (drawer || searchOpen) setHidden(false);
-  }, [drawer, searchOpen]);
+  }, [onBlog, searchOpen, drawer]);
 
   useEffect(() => {
     if (!drawer) return;
     const node = drawerRef.current;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const frame = requestAnimationFrame(() => node?.querySelector<HTMLElement>("a, button")?.focus());
+    const frame = requestAnimationFrame(() => node?.querySelector<HTMLElement>("a, button, input")?.focus());
 
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Tab" || !node) return;
-      const focusable = Array.from(node.querySelectorAll<HTMLElement>("a, button")).filter(
+      const focusable = Array.from(node.querySelectorAll<HTMLElement>("a, button, input")).filter(
         (el) => el.getClientRects().length > 0,
       );
       if (focusable.length === 0) return;
@@ -157,17 +168,43 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      event.preventDefault();
+      openSearch();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openSearch() {
-    const layer = searchLayerRef.current;
-    const inner = innerRef.current;
-    const wordmark = wordmarkRef.current;
+    setDrawer(false);
     setSearchOpen(true);
-    if (!layer || !inner || !wordmark) return;
-    const gap = 32;
-    const target = Math.max(inner.clientWidth - wordmark.offsetWidth - gap, 280);
+    const layer = searchLayerRef.current;
+    if (!layer) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     gsap.killTweensOf(layer);
-    gsap.set(layer, { width: 0, opacity: 0, display: "flex" });
-    gsap.to(layer, { width: target, opacity: 1, duration: 0.5, ease: "power3.out" });
+    gsap.set(layer, { visibility: "visible" });
+    if (reduceMotion) {
+      gsap.set(layer, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        layer,
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.32, ease: "power3.out", overwrite: true },
+      );
+    }
+    requestAnimationFrame(() => searchInputRef.current?.focus());
   }
 
   function closeSearch(restoreFocus = true) {
@@ -177,35 +214,59 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     if (restoreFocus) searchButtonRef.current?.focus();
     if (!layer) return;
     gsap.killTweensOf(layer);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(layer, { opacity: 0, y: -8, visibility: "hidden" });
+      return;
+    }
     gsap.to(layer, {
-      width: 0,
       opacity: 0,
-      duration: 0.3,
+      y: -8,
+      duration: 0.2,
       ease: "power2.in",
-      onComplete: () => gsap.set(layer, { display: "none" }),
+      overwrite: true,
+      onComplete: () => gsap.set(layer, { visibility: "hidden" }),
     });
   }
 
-  function submitSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = query.trim();
+  function runSearch(value: string) {
+    const q = value.trim();
     if (!q) return;
     router.push(`/search?q=${encodeURIComponent(q)}`);
   }
 
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    runSearch(query);
+  }
+
+  function toggleDrawer() {
+    if (!drawer) closeSearch(false);
+    setDrawer((open) => !open);
+  }
+
+  const shellClass = [hidden ? styles.shellHidden : styles.shell, scrolled ? styles.shellScrolled : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={hidden ? styles.shellHidden : styles.shell} ref={headerRef}>
+    <div className={shellClass} ref={headerRef}>
       <header className={styles.header}>
-        <div className={styles.headerInner} ref={innerRef}>
+        <div className={styles.headerInner}>
           <Link
             href="/"
-            className={styles.wordmark}
-            ref={wordmarkRef}
+            className={styles.brand}
             aria-label={`${settings.identity.siteName} home`}
           >
-            <span className={styles.wordmarkPrefix}>News from&nbsp;</span>
-            {settings.identity.wordmark}
+            <span className={styles.brandMark} aria-hidden="true">
+              {brandInitial}
+            </span>
+            <span className={styles.brandText}>
+              <span className={styles.brandKicker}>{settings.identity.authorName}</span>
+              <span className={styles.brandName}>{settings.identity.wordmark}</span>
+            </span>
           </Link>
+
+          <span className={styles.divider} aria-hidden="true" />
 
           <nav className={styles.nav} aria-label="Primary">
             {nav.map((item) => {
@@ -217,10 +278,17 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={active ? `${styles.feedLink} ${styles.feedLinkActive}` : styles.feedLink}
+                  className={`${styles.navLink}${active ? ` ${styles.navLinkActive}` : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  {item.icon ? <SocialIcon name={item.icon} width={16} height={16} /> : null}
+                  {item.icon ? (
+                    <SocialIcon
+                      name={item.icon}
+                      width={16}
+                      height={16}
+                      className={styles.navIcon}
+                    />
+                  ) : null}
                   {item.label}
                 </Link>
               );
@@ -231,87 +299,157 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             <button
               ref={searchButtonRef}
               type="button"
-              className={styles.iconButton}
+              className={styles.searchTrigger}
               aria-label="Search"
               aria-expanded={searchOpen}
               aria-controls="site-search"
+              aria-keyshortcuts="/"
               onClick={openSearch}
             >
-              <SearchIcon width={25} height={25} />
+              <SearchIcon width={18} height={18} />
+              <span className={styles.searchLabel}>Search</span>
+              <kbd className={styles.searchKey} aria-hidden="true">
+                /
+              </kbd>
             </button>
             <Link href="/gallery" className={styles.galleryButton} aria-label="Gallery">
               <ImagesIcon />
-              <span className={styles.galleryLabel}>Gallery</span>
             </Link>
             {settings.toggles.newsletter ? (
               <Link href="/newsletter" className={styles.cta}>
                 Newsletter
+                <ArrowRight className={styles.ctaArrow} width={16} height={16} />
               </Link>
             ) : null}
             <button
               ref={burgerRef}
               type="button"
               className={styles.burger}
-              onClick={() => setDrawer((v) => !v)}
+              onClick={toggleDrawer}
               aria-expanded={drawer}
               aria-label={drawer ? "Close menu" : "Open menu"}
             >
-              {drawer ? <CloseIcon width={25} height={25} /> : <MenuIcon width={25} height={25} />}
+              {drawer ? <CloseIcon width={24} height={24} /> : <MenuIcon width={24} height={24} />}
             </button>
           </div>
 
-          <div id="site-search" className={styles.searchLayer} ref={searchLayerRef} aria-hidden={!searchOpen}>
-            <form onSubmit={submitSearch} className={styles.searchForm} role="search">
-              <SearchIcon width={22} height={22} className={styles.searchGlyph} />
-              <input
-                ref={searchInputRef}
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search writing, topics, albums…"
-                aria-label="Search"
-                className={styles.searchInput}
-                tabIndex={searchOpen ? 0 : -1}
-              />
-              <button
-                type="button"
-                className={styles.searchClose}
-                onClick={() => closeSearch()}
-                aria-label="Close search"
-                tabIndex={searchOpen ? 0 : -1}
-              >
-                <CloseIcon width={22} height={22} />
-              </button>
-            </form>
+          <div
+            id="site-search"
+            className={styles.searchLayer}
+            ref={searchLayerRef}
+            aria-hidden={!searchOpen}
+          >
+            <div className={styles.searchPanel} role="search">
+              <div className={styles.searchTop}>
+                <p className={styles.searchEyebrow}>Search the archive</p>
+                <button
+                  type="button"
+                  className={styles.searchClose}
+                  onClick={() => closeSearch()}
+                  aria-label="Close search"
+                  tabIndex={searchOpen ? 0 : -1}
+                >
+                  <CloseIcon width={20} height={20} />
+                </button>
+              </div>
+              <form onSubmit={submitSearch} className={styles.searchForm}>
+                <div className={styles.searchField}>
+                  <SearchIcon width={22} height={22} className={styles.searchGlyph} />
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search stories, topics, albums…"
+                    aria-label="Search"
+                    className={styles.searchInput}
+                    autoComplete="off"
+                    tabIndex={searchOpen ? 0 : -1}
+                  />
+                  <kbd className={styles.searchKbd} aria-hidden="true">
+                    Enter
+                  </kbd>
+                </div>
+              </form>
+              <div className={styles.searchQuick}>
+                <span className={styles.searchQuickLabel}>Try</span>
+                {SEARCH_TERMS.map((term) => (
+                  <button
+                    key={term}
+                    type="button"
+                    className={styles.searchChip}
+                    onClick={() => runSearch(term)}
+                    tabIndex={searchOpen ? 0 : -1}
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       {drawer ? (
-        <div ref={drawerRef} className={styles.drawer} role="dialog" aria-modal="true" aria-label="Site menu">
-          <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">
-            <SearchIcon width={22} height={22} className={styles.searchGlyph} />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search writing, topics, albums…"
-              aria-label="Search"
-            />
-          </form>
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className={styles.drawerLink}>
-              {item.label}
-            </Link>
-          ))}
-          <div className={styles.drawerSection}>
-            <p className={styles.drawerTitle}>More</p>
-            <Link href="/search" className={styles.drawerLink}>Search</Link>
-            <Link href="/privacy" className={styles.drawerLink}>Privacy</Link>
+        <div
+          ref={drawerRef}
+          className={styles.drawer}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site menu"
+        >
+          <div className={styles.drawerInner}>
+            <div className={styles.drawerHead}>
+              <p className={styles.drawerEyebrow}>Menu</p>
+              <span className={styles.drawerHint}>Use Esc to close</span>
+            </div>
+
+            <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">
+              <SearchIcon width={20} height={20} className={styles.searchGlyph} />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search the archive…"
+                aria-label="Search"
+              />
+            </form>
+
+            <nav className={styles.drawerNav} aria-label="Primary">
+              {nav.map((item, index) => {
+                const active =
+                  item.href === "/blog"
+                    ? pathname.startsWith("/blog")
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.drawerLink}${active ? ` ${styles.drawerLinkActive}` : ""}`}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    <span className={styles.drawerIndex}>{String(index + 1).padStart(2, "0")}</span>
+                    <span className={styles.drawerLabel}>{item.label}</span>
+                    <ArrowRight className={styles.drawerArrow} width={20} height={20} />
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className={styles.drawerFoot}>
+              {settings.toggles.newsletter ? (
+                <Link href="/newsletter" className={styles.drawerCta}>
+                  <span>Subscribe to the newsletter</span>
+                  <ArrowRight width={18} height={18} />
+                </Link>
+              ) : null}
+              <div className={styles.drawerMeta}>
+                <a href={`mailto:${settings.identity.email}`}>Contact</a>
+                <Link href="/gallery">Gallery</Link>
+                <Link href="/privacy">Privacy</Link>
+              </div>
+            </div>
           </div>
-          <a href={`mailto:${settings.identity.email}`} className={`${styles.drawerCta} btn btn-primary`}>
-            Contact
-          </a>
         </div>
       ) : null}
     </div>
@@ -320,7 +458,17 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
 function ImagesIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <rect x="8.5" y="3.5" width="12" height="12" rx="2.5" />
       <path d="M15.5 20.5h-9a2.5 2.5 0 0 1-2.5-2.5v-9" />
       <circle cx="12.8" cy="7.8" r="1.3" />

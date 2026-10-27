@@ -58,6 +58,28 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const [railOpen, setRailOpen] = useState(false);
   const isEditor = pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Remember the rail state between visits.
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("studio:rail") === "collapsed");
+    } catch {
+      /* private mode */
+    }
+  }, []);
+
+  function toggleRail() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("studio:rail", next ? "collapsed" : "open");
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     document.body.classList.add(styles.adminBody);
@@ -77,6 +99,18 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [railOpen]);
 
+  // `[` toggles the rail, like most editors.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const el = event.target as HTMLElement | null;
+      const typing = el?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName ?? "");
+      if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "[") toggleRail();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   async function signOut() {
     setSigningOut(true);
     try {
@@ -88,8 +122,13 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
     router.refresh();
   }
 
+  const shellClass = [
+    styles.shell,
+    collapsed ? styles.shellCollapsed : "",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className={styles.shell}>
+    <div className={shellClass}>
       {railOpen ? (
         <button type="button" className={styles.scrim} aria-label="Close menu" onClick={() => setRailOpen(false)} />
       ) : null}
@@ -99,13 +138,28 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
             <path d="m6 6 12 12M18 6 6 18" />
           </svg>
         </button>
-        <Link href="/admin" className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true">B</span>
-          <span className={styles.brandText}>
-            <span className={styles.brandName}>Blog Studio</span>
-            <span className={styles.brandKicker}>bishnuneupane13.com.np</span>
-          </span>
-        </Link>
+        <div className={styles.railHead}>
+          <Link href="/admin" className={styles.brand} aria-label="Blog Studio home">
+            <span className={styles.brandMark} aria-hidden="true">B</span>
+            <span className={styles.brandText}>
+              <span className={styles.brandName}>Blog Studio</span>
+              <span className={styles.brandKicker}>bishnuneupane13.com.np</span>
+            </span>
+          </Link>
+          <button
+            type="button"
+            className={styles.railToggle}
+            onClick={toggleRail}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+            title={`${collapsed ? "Expand" : "Collapse"} sidebar  ([)`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="2.5" />
+              <path d="M9.5 4v16" />
+            </svg>
+          </button>
+        </div>
 
         <nav className={styles.nav} aria-label="Admin">
           {NAV.map((group) => (
@@ -121,10 +175,12 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
                     href={item.href}
                     className={active ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
                     aria-current={active ? "page" : undefined}
+                    title={collapsed ? item.label : undefined}
+                    data-label={item.label}
                     onClick={() => setRailOpen(false)}
                   >
                     <span className={styles.navIcon}>{item.icon}</span>
-                    {item.label}
+                    <span className={styles.navText}>{item.label}</span>
                   </Link>
                 );
               })}
@@ -133,14 +189,22 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
         </nav>
 
         <div className={styles.railFoot}>
-          <Link href="/" className={styles.viewSite} target="_blank" rel="noreferrer">
-            View site
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M7 17 17 7M9 7h8v8" />
-            </svg>
+          <Link href="/" className={styles.viewSite} target="_blank" rel="noreferrer" title="Open the live site">
+            <span className={styles.navIcon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 4h6v6M20 4 10 14" />
+                <path d="M18 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5" />
+              </svg>
+            </span>
+            <span className={styles.navText}>View site</span>
           </Link>
-          <button type="button" className={styles.signOut} onClick={signOut} disabled={signingOut}>
-            {signingOut ? "Signing out…" : "Sign out"}
+          <button type="button" className={styles.signOut} onClick={signOut} disabled={signingOut} title="Sign out">
+            <span className={styles.navIcon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
+              </svg>
+            </span>
+            <span className={styles.navText}>{signingOut ? "Signing out…" : "Sign out"}</span>
           </button>
         </div>
       </aside>
