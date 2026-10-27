@@ -26,7 +26,7 @@ export function UpdateCard({ post }: { post: Post }) {
         <h3 className={styles.updateTitle}>
           <Link href={`/blog/${post.slug}`}>{post.title}</Link>
         </h3>
-        <Link href={`/blog/${post.slug}`} className={`${styles.readArticle} btn btn-outline`}>
+        <Link href={`/blog/${post.slug}`} className={styles.readArticle}>
           Read article <ArrowRight width={20} height={20} />
         </Link>
       </div>

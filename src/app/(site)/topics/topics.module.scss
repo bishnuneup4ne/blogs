@@ -1,4 +1,4 @@
-/* Topics — statement hero, a featured topic, accent tiles, photo collections. */
+/* Topics — simple directory: plain headings, cards with the action below the media. */
 
 .body {
   max-width: var(--container);
@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: clamp(28px, 4vw, 48px);
+  margin-bottom: clamp(24px, 3vw, 40px);
   font-size: 14px;
   color: var(--gray-600);
 
@@ -27,150 +27,87 @@
   }
 }
 
-/* Accent palette — same four colours as the homepage hero dots */
-.blue {
-  --topic-accent: var(--blue-600);
-  --topic-tint: radial-gradient(120% 130% at 12% 0%, rgba(26, 115, 232, 0.16), transparent 62%);
+.head {
+  max-width: 62ch;
 }
 
-.yellow {
-  --topic-accent: #f9ab00;
-  --topic-tint: radial-gradient(120% 130% at 12% 0%, rgba(249, 171, 0, 0.18), transparent 62%);
-}
-
-.red {
-  --topic-accent: #d93025;
-  --topic-tint: radial-gradient(120% 130% at 12% 0%, rgba(217, 48, 37, 0.15), transparent 62%);
-}
-
-.green {
-  --topic-accent: #1e8e3e;
-  --topic-tint: radial-gradient(120% 130% at 12% 0%, rgba(30, 142, 62, 0.15), transparent 62%);
-}
-
-/* ---------- Featured topic ---------- */
-.featuredSection {
-  margin-top: clamp(36px, 4.5vw, 60px);
-}
-
-.featured {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  padding: clamp(28px, 4vw, 52px);
-  border-radius: var(--radius-card);
-  background: var(--gray-50);
-  transition: background-color 200ms ease;
-}
-
-.featuredGlow {
-  position: absolute;
-  inset: 0;
-  background: var(--topic-tint);
-  pointer-events: none;
-}
-
-.featured:hover {
-  background: var(--gray-100);
-}
-
-.featuredBody {
-  position: relative;
-  display: grid;
-  justify-items: start;
-  gap: 10px;
-  max-width: 46ch;
-}
-
-.featuredKicker {
+.title {
+  margin: 0;
   font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--topic-accent);
-}
-
-.featuredTitle {
-  font-family: var(--font-ui);
-  font-size: clamp(28px, 3.4vw, 40px);
+  font-size: clamp(34px, 4vw, 48px);
   font-weight: 400;
+  line-height: 1.15;
   letter-spacing: -0.25px;
-  line-height: 1.14;
   color: var(--gray-900);
 }
 
-.featuredDesc {
-  font-size: 17px;
-  line-height: 27px;
+.lede {
+  margin: 16px 0 0;
+  font-size: 18px;
+  line-height: 28px;
   color: var(--gray-700);
+
+  a {
+    color: var(--blue-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 
-.featuredCta {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 44px;
-  padding: 0 22px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius-pill);
-  background: var(--white);
-  color: var(--blue-700);
-  font-size: 15px;
-  font-weight: 500;
-  transition: border-color 150ms ease, background-color 150ms ease;
-}
-
-.featured:hover .featuredCta {
-  border-color: var(--blue-600);
-  background: #f6f9fe;
-}
-
-/* ---------- Topic tiles ---------- */
-.gridSection,
-.albumsSection {
-  margin-top: clamp(40px, 5vw, 68px);
+.section {
+  margin-top: clamp(36px, 4.5vw, 60px);
 }
 
 .grid {
   margin-top: var(--spacer-3);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  gap: 24px;
+  align-items: stretch;
 }
 
-.card {
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 26px 24px 24px;
-  border-radius: var(--radius-card);
-  background: var(--gray-50);
-  transition: background-color 200ms ease, transform 200ms ease;
+/* Shared action pill — always below the content, never over an image */
+.cardBtn {
+  margin-top: auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--gray-900);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 150ms ease, background-color 150ms ease;
 
   &:hover {
-    background: var(--gray-100);
+    border-color: var(--gray-900);
+    background: var(--gray-50);
+  }
+}
+
+/* ---------- Topic card ---------- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px 22px 22px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+
+  &:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 16px 36px -22px rgba(32, 33, 36, 0.38);
     transform: translateY(-2px);
   }
-
-  &:hover .cardCta {
-    gap: 12px;
-    color: var(--blue-900);
-  }
-}
-
-.cardTop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--topic-accent);
 }
 
 .count {
@@ -179,105 +116,102 @@
 }
 
 .cardTitle {
-  margin: 6px 0 0;
+  margin: 0;
   font-family: var(--font-ui);
-  font-size: 24px;
-  font-weight: 400;
-  letter-spacing: -0.25px;
-  line-height: 1.2;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.24;
+  letter-spacing: -0.2px;
   color: var(--gray-900);
+
+  a {
+    color: inherit;
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
 }
 
 .cardDesc {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 15px;
   line-height: 24px;
   color: var(--gray-600);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.cardCta {
-  margin-top: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--blue-700);
-  transition: gap 180ms ease, color 150ms ease;
-}
-
-/* ---------- Photo collections ---------- */
-.albumGrid {
-  margin-top: var(--spacer-3);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-
+/* ---------- Photo collection card ---------- */
 .albumCard {
-  display: block;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-card);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
   overflow: hidden;
-  background: var(--gray-100);
+  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+
+  &:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 16px 36px -22px rgba(32, 33, 36, 0.38);
+    transform: translateY(-2px);
+  }
 }
 
-.albumCover {
-  position: relative;
+.albumMedia {
   display: block;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 2;
+  background: var(--gray-100);
+  overflow: hidden;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 450ms cubic-bezier(0.2, 0, 0, 1);
+    transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
   }
 }
 
-.albumCard:hover .albumCover img,
-.albumCard:focus-visible .albumCover img {
-  transform: scale(1.04);
+.albumCard:hover .albumMedia img {
+  transform: scale(1.03);
 }
 
-.albumOverlay {
-  position: absolute;
-  inset: auto 0 0;
-  display: grid;
-  gap: 1px;
-  padding: 30px 16px 14px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
-  color: #fff;
-}
-
-.albumName {
-  font-size: 15px;
-  font-weight: 500;
+.albumBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px 22px;
+  flex: 1;
 }
 
 .albumMeta {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.78);
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--gray-600);
 }
 
 @media (max-width: 1000px) {
-  .grid,
-  .albumGrid {
+  .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .grid,
-  .albumGrid {
+  .grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .card {
-    padding: 22px 20px 20px;
+  .title {
+    font-size: 32px;
+  }
+
+  .lede {
+    font-size: 16px;
+    line-height: 25px;
   }
 }

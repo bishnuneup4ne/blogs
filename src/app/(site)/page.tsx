@@ -1,10 +1,7 @@
-import Link from "next/link";
-import Image from "next/image";
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SectionHead, UpdateCard } from "@/components/site/sections";
-import { ArrowRight } from "@/components/icons/Icons";
 import styles from "./home.module.scss";
 
 export default async function HomePage() {
@@ -71,27 +68,7 @@ export default async function HomePage() {
         </div>
 
         <div className={styles.archiveMedia}>
-          {lead ? (
-            <Link href={`/blog/${lead.slug}`} className={styles.player}>
-              {lead.cover ? (
-                <Image
-                  src={lead.cover.src}
-                  alt=""
-                  fill
-                  priority
-                  sizes="(max-width: 900px) 100vw, 720px"
-                  className={styles.playerStill}
-                />
-              ) : null}
-              <span className={styles.playerGrid} aria-hidden="true" />
-              <span className={styles.playerInner}>
-                <span className={styles.playerTitle}>{lead.title}</span>
-                <span className={styles.playerPill}>
-                  Read the story <ArrowRight width={18} height={18} />
-                </span>
-              </span>
-            </Link>
-          ) : null}
+          {lead ? <UpdateCard post={lead} /> : null}
         </div>
       </section>
 

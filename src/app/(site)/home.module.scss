@@ -516,7 +516,7 @@
   color: var(--gray-700);
 }
 
-/* ---------- Archive band: copy left, feature "player" right ---------- */
+/* ---------- Archive band: copy left, latest story right ---------- */
 .archive {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
@@ -567,84 +567,6 @@
 .archiveMedia {
   min-width: 0;
 }
-
-/* Feature card: dark stage, faint grid, story title + pill */
-.player {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  background: #0e0f11;
-  color: #fff;
-}
-
-.playerStill {
-  object-fit: cover;
-  opacity: 0.3;
-  filter: saturate(0.7) contrast(1.05);
-  transition: transform 700ms cubic-bezier(0.2, 0, 0, 1), opacity 300ms ease;
-}
-
-.player:hover .playerStill {
-  transform: scale(1.03);
-  opacity: 0.36;
-}
-
-.playerGrid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(52, 168, 83, 0.17) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(52, 168, 83, 0.17) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: radial-gradient(72% 72% at 50% 50%, #000 28%, transparent 80%);
-  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 28%, transparent 80%);
-  pointer-events: none;
-}
-
-.playerInner {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: clamp(18px, 2.2vw, 30px);
-  max-width: 22ch;
-  padding: 0 24px;
-  text-align: center;
-}
-
-.playerTitle {
-  font-family: var(--font-ui);
-  font-size: clamp(22px, 2.7vw, 36px);
-  font-weight: 400;
-  line-height: 1.16;
-  letter-spacing: -0.25px;
-  color: #fff;
-  text-wrap: balance;
-}
-
-.playerPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 52px;
-  padding: 0 28px;
-  border-radius: var(--radius-pill);
-  background: #fff;
-  color: var(--gray-900);
-  font-family: var(--font-ui);
-  font-size: 16px;
-  font-weight: 500;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.player:hover .playerPill {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
-}
-
-
 
 /* ---------- Photo strip with hand-drawn doodle frame feel ---------- */
 .photoStrip {
@@ -765,16 +687,6 @@
 
   .archiveTitle {
     font-size: 30px;
-  }
-
-  .playerPill {
-    height: 46px;
-    padding: 0 22px;
-    font-size: 15px;
-  }
-
-  .playerInner {
-    gap: 18px;
   }
 }
 
