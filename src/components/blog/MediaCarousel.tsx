@@ -323,7 +323,7 @@ function MediaTile({
 
   return (
     <button type="button" className={`${styles.tile} ${sizeClass}`} onClick={onZoom} aria-label={`Zoom image: ${alt}`}>
-      <Image src={src} alt={alt} fill sizes="60vw" className={styles.img} />
+      <Image src={src} alt={alt} fill sizes="(max-width: 760px) 100vw, 80vw" className={styles.img} />
     </button>
   );
 }

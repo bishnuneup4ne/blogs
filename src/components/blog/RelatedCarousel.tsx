@@ -3,24 +3,31 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { relativeDate } from "@/lib/dates";
 import type { ScoredPost } from "@/lib/recommend";
 import { getCategory } from "@/lib/categories";
 import styles from "./RelatedCarousel.module.scss";
+import { routes } from "@/lib/routes";
 
-/* blog.google "More updates" row: grey tile with the cover inside a blob
-   mask, title + byline below. Circular arrows and a progress line. */
+/* blog.google "More updates" row: grey tile, cover cropped inside a blob
+   mask, kicker → title → byline below. Circular arrows + progress line. */
 const BLOBS = [styles.blob0, styles.blob1, styles.blob2, styles.blob3];
 export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
   const [progress, setProgress] = useState(0);
+  const [scrollable, setScrollable] = useState(false);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
 
   const update = useCallback(() => {
     const t = trackRef.current;
     if (!t) return;
     const max = t.scrollWidth - t.clientWidth;
-    setProgress(max <= 0 ? 1 : Math.min(Math.max(t.scrollLeft / max, 0), 1));
+    const left = t.scrollLeft;
+    setScrollable(max > 8);
+    setProgress(max <= 0 ? 1 : Math.min(Math.max(left / max, 0), 1));
+    setAtStart(left <= 4);
+    setAtEnd(max <= 0 || left >= max - 4);
   }, []);
 
   useEffect(() => {
@@ -79,7 +86,7 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
       >
         {items.map(({ post }, i) => (
           <li key={post.slug} className={styles.item}>
-            <Link href={`/blog/${post.slug}`} className={styles.card}>
+            <Link href={routes.post(post.slug)} className={styles.card}>
               <span className={styles.media}>
                 <span className={`${styles.blob} ${BLOBS[i % BLOBS.length]}${post.cover ? "" : ` pastel-${getCategory(post.category).pastel}`}`}>
                   {post.cover ? (
@@ -93,24 +100,23 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
                   ) : null}
                 </span>
               </span>
-              <span className={styles.body}>
-                <span className={styles.eyebrow}>{getCategory(post.category).name}</span>
-                <span className={styles.title}>{post.title}</span>
-                <span className={styles.byline}>
-                  {relativeDate(post.date)} · {post.readingMinutes} min read
-                </span>
+              <span className={styles.eyebrow}>{getCategory(post.category).name}</span>
+              <span className={styles.title}>{post.title}</span>
+              <span className={styles.byline}>
+                By {post.author.name}
               </span>
             </Link>
           </li>
         ))}
       </ul>
 
-      <div className={styles.controls}>
+      <div className={scrollable ? styles.controls : `${styles.controls} ${styles.controlsHidden}`}>
         <div className={styles.arrows}>
           <button
             type="button"
             className={styles.arrow}
             onClick={() => go(-1)}
+            disabled={atStart}
             aria-label="Previous stories"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -121,6 +127,7 @@ export function RelatedCarousel({ items }: { items: ScoredPost[] }) {
             type="button"
             className={styles.arrow}
             onClick={() => go(1)}
+            disabled={atEnd}
             aria-label="More stories"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

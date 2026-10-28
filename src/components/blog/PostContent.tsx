@@ -11,6 +11,28 @@ import { VideoEmbed } from "./VideoEmbed";
 import styles from "./PostContent.module.scss";
 import { MediaCarousel, type CarouselSlide } from "./MediaCarousel";
 import { getCategory } from "@/lib/categories";
+import { routes } from "@/lib/routes";
+
+/* Related-tout tints, one per topic colour chosen in the editor. */
+const TOUT_COLORS = ["blue", "green", "mint", "yellow", "red", "purple", "gray"] as const;
+
+function toutClass(color?: string) {
+  if (!color || !(TOUT_COLORS as readonly string[]).includes(color)) return "";
+  const key = `tout${color.charAt(0).toUpperCase()}${color.slice(1)}`;
+  return styles[key] ? ` ${styles[key]}` : "";
+}
+
+/* Coverless touts take the linked post's topic pastel — same family of soft
+   gradients as the card colour picker, not the saturated feed pastels. */
+const TOUT_MEDIA_TINT: Record<string, string> = {
+  blue: "toutBlue",
+  green: "toutGreen",
+  mint: "toutMint",
+  yellow: "toutYellow",
+  red: "toutRed",
+  purple: "toutPurple",
+  gray: "toutGray",
+};
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
   const [zoom, setZoom] = useState<number | null>(null);
@@ -109,6 +131,8 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </ul>
               );
             case "image": {
+              // Empty src = a placeholder block still being built.
+              if (!block.src) return null;
               const myIndex = imageIndexByBlock.get(index) ?? 0;
               // The same block also carries video: a YouTube/Vimeo link or a
               // direct MP4/WebM renders as a player instead of a photo.
@@ -133,7 +157,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                         alt={block.alt}
                         width={1400}
                         height={933}
-                        sizes="(max-width: 760px) 100vw, 860px"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1440px) calc(100vw - 64px), 1376px"
                         className={styles.image}
                       />
                     )}
@@ -149,6 +173,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             }
             case "row": {
+              if (!block.items.some((it) => it.kind === "quote" || it.src)) return null;
               return (
                 <figure key={key} className={`${styles.figure} ${styles.rowFigure}`}>
                   <MediaCarousel
@@ -169,10 +194,12 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             }
             case "video":
+              if (!block.url) return null;
               return <VideoEmbed key={key} url={block.url} poster={block.poster} autoplay={block.autoplay} caption={block.caption} />;
             case "related":
+              if (!block.slug) return null;
               return (
-                <Link key={key} href={`/blog/${block.slug}`} className={styles.relatedTout} aria-label={`${block.eyebrow ?? "Related article"}: ${block.title}`}>
+                <Link key={key} href={routes.post(block.slug)} className={`${styles.relatedTout}${toutClass(block.color)}`} aria-label={`${block.eyebrow ?? "Related article"}: ${block.title}`}>
                   <span className={styles.relatedToutBody}>
                     <span className={styles.relatedToutEyebrow}>{block.eyebrow || "Related Article"}</span>
                     <span className={styles.relatedToutTitle}>{block.title}</span>
@@ -184,7 +211,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                       </svg>
                     </span>
                   </span>
-                  <span className={`${styles.relatedToutMedia}${block.image && !brokenCovers[key] ? "" : ` pastel-${getCategory(block.slug).pastel}`}`}>
+                  <span className={`${styles.relatedToutMedia}${block.image && !brokenCovers[key] ? "" : ` ${styles[TOUT_MEDIA_TINT[getCategory(block.slug).pastel] ?? "toutGray"]}`}`}>
                     {block.image && !brokenCovers[key] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -228,6 +255,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "chart":
               return <ChartBlockView key={key} chart={block.chart} />;
             case "cta":
+              if (!block.label || !block.href) return null;
               return (
                 <p key={key} className={styles.ctaRow}>
                   <Link
@@ -243,6 +271,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </p>
               );
             case "footnote":
+              if (!block.text) return null;
               footnoteCount += 1;
               return (
                 <p key={key} className={styles.footnote} id={`fn-${key}`}>

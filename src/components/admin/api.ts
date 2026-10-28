@@ -28,6 +28,8 @@ export interface ApiTopic {
   description: string;
   pastel: string;
   color: string;
+  image_url?: string | null;
+  shape?: string | null;
   sort_order: number;
 }
 
@@ -179,6 +181,7 @@ export interface ApiSeries {
   title: string;
   slug: string;
   description: string;
+  cover_url?: string | null;
   status: "draft" | "live";
   posts?: number;
   post_ids?: string[];

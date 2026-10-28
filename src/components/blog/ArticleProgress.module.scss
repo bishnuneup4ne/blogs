@@ -1,23 +1,27 @@
 /* Reading-progress strip — takes over the top edge once the site header hides.
-   Hidden by default so it never reserves 60px before JS decides to show it;
-   [data-visible="on"] is set by the component while the strip is on screen. */
+   Rendered in a portal on <body> and position: fixed, so the article's
+   `container-type` grid (a stacking context) can never trap it beneath the
+   headings that scroll under it. Hidden until JS shows it. */
 
 .bar {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 55;
-  height: 64px;
+  z-index: 90;
+  height: 76px;
   background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
+  /* Inset hairline, not border-bottom: a border sits *outside* the height,
+     leaving its pixel row transparent for the text to peek through. */
+  box-shadow: inset 0 -1px 0 var(--gray-200);
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms ease;
+  /* GSAP drives the slide; keep the bar from ever being clipped. */
+  transform: translateY(-100%);
 }
 
 .bar[data-visible="on"] {
-  position: sticky;
   opacity: 1;
   pointer-events: auto;
 }
@@ -31,12 +35,13 @@
 .inner {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   height: 100%;
-  /* Full page width like blog.google, with a readable cap on huge screens. */
+  /* Align with the site header: same 1440px cap and gutter, so the reading bar
+     sits directly under the nav instead of running to the screen edges. */
   max-width: 1440px;
   margin-inline: auto;
-  padding-inline: clamp(16px, 3.5vw, 48px);
+  padding-inline: clamp(20px, 4vw, 56px);
 }
 
 /* blog.google fills the very top edge of the bar. Keep it flush above the
@@ -52,8 +57,8 @@
 .iconBtn {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   color: var(--gray-700);
   text-decoration: none;
@@ -66,13 +71,15 @@
 }
 
 .track {
-  /* blog.google draws the fill along the bar's bottom edge, under the row. */
+  /* The progress rail along the bar's bottom edge. 4px and fully opaque:
+     a 3px band at the very edge rounded away on some zooms and let the
+     paragraph beneath bleed through as a line of "text". */
   position: absolute;
-  bottom: -1px;
+  bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: var(--gray-100, #f1f3f4);
+  height: 4px;
+  background: var(--gray-150, #e8eaed);
   overflow: hidden;
 }
 
@@ -80,6 +87,8 @@
   position: absolute;
   inset: 0;
   background: var(--blue-600);
+  /* Painted above the white track base so the blue reads as the fill. */
+  z-index: 1;
   transform-origin: left center;
   transform: scaleX(0);
   will-change: transform;
@@ -89,9 +98,9 @@
   flex: 1;
   min-width: 0;
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 400;
-  line-height: 24px;
+  line-height: 26px;
   color: var(--gray-900);
   white-space: nowrap;
   overflow: hidden;
@@ -103,9 +112,9 @@
   display: grid;
   place-items: center;
   flex: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   overflow: hidden;
   /* Fallback monogram when no avatar is set — keep it on-brand blue. */
   background: var(--blue-600, #1a73e8);
@@ -137,7 +146,7 @@
 
 @media (max-width: 640px) {
   .bar {
-    height: 54px;
+    height: 64px;
   }
 
   .title {

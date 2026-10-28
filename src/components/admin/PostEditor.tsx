@@ -154,6 +154,16 @@ function newBlock(type: Block["type"]): Block {
   }
 }
 
+const TOUT_SWATCHES = [
+  { id: "blue", label: "Blue", css: "linear-gradient(227deg,#f0f6ff,#d9e7fd)" },
+  { id: "green", label: "Green", css: "linear-gradient(227deg,#f1faf3,#d8efdd)" },
+  { id: "mint", label: "Mint", css: "linear-gradient(227deg,#effaf6,#d3efe6)" },
+  { id: "yellow", label: "Yellow", css: "linear-gradient(227deg,#fdf8ec,#f8e7bd)" },
+  { id: "red", label: "Red", css: "linear-gradient(227deg,#fef4f2,#fadcd7)" },
+  { id: "purple", label: "Purple", css: "linear-gradient(227deg,#f8f5ff,#e8dcfb)" },
+  { id: "gray", label: "Gray", css: "linear-gradient(227deg,#f8f9fa,#eceef0)" },
+];
+
 export function PostEditor({ postId }: { postId: string }) {
   const router = useRouter();
   const toast = useToast();
@@ -1462,6 +1472,29 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
               <option key={g.src} value={g.src}>{g.label}</option>
             ))}
           </select>
+          <div>
+            <span style={{ fontSize: 12, color: "#5f6368", display: "block", marginBottom: 6 }}>Card colour</span>
+            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+              {TOUT_SWATCHES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  title={t.label}
+                  aria-label={t.label}
+                  onClick={() => onChange({ ...block, color: block.color === t.id ? undefined : t.id })}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    background: t.css,
+                    border: block.color === t.id ? "2px solid #202124" : "1px solid #dadce0",
+                    boxShadow: block.color === t.id ? "0 0 0 2px #fff, 0 0 0 3px #202124" : "none",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       );
     case "chart":

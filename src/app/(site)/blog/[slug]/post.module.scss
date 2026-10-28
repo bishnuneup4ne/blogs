@@ -1,14 +1,49 @@
 /* Full-bleed cover with the content sheet tucking under its bottom edge.
    Height is per-post editable (--cover-h set inline from post.coverHeight). */
+/* Page wash: the header zone sits on a soft aurora tint that fades into the
+   plain page behind the cover image — blog.google article style. */
+.postPage {
+  --hero-h: var(--cover-h, clamp(460px, 68vh, 720px));
+  background: var(--bg);
+
+  /* Section headings stay ink-black; the category colour lives in the wash
+     behind the hero, not in the type. */
+  --head-ink: var(--gray-900);
+}
+
+/* Fallback tints. The page also receives --wash / --wash-2 inline from the
+   topic's own colour (set in the admin), which wins over these — they only
+   apply if a topic has no colour at all. */
+.postPage { --wash: #d7e6fd; --wash-2: #e8f0fe; }
+.postPage.pastel-blue { --wash: #d7e6fd; --wash-2: #e8f0fe; }
+.postPage.pastel-green { --wash: #dcf1de; --wash-2: #eaf6ec; }
+.postPage.pastel-mint { --wash: #d5efe2; --wash-2: #e3f6ee; }
+.postPage.pastel-yellow { --wash: #fbeecb; --wash-2: #fdf6df; }
+.postPage.pastel-red { --wash: #fadfdb; --wash-2: #fdeeeb; }
+.postPage.pastel-purple { --wash: #e8ddfb; --wash-2: #f2ebfd; }
+.postPage.pastel-gray { --wash: #eceef0; --wash-2: #f4f5f6; }
+
 .heroMedia {
   position: relative;
-  height: var(--cover-h, clamp(420px, 62vh, 660px));
+  /* Taller default so a landscape photo isn't cropped to a letterbox strip. */
+  height: var(--cover-h, clamp(460px, 68vh, 720px));
+}
+
+/* Topic colour wash over the cover — the post reads as its category. */
+.heroMedia::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--cover-tint, transparent);
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 .heroImg {
   object-fit: cover;
-  /* Vertical focal point set per post in the editor (defaults to 30%). */
-  object-position: center var(--cover-focal, 30%);
+  /* Vertical focal point set per post in the editor. Centre by default — a
+     hard-coded 30% cropped most photos below their subject. */
+  object-position: center var(--cover-focal, 50%);
 }
 
 .heroScrim {
@@ -24,6 +59,23 @@
   border-radius: 44px 44px 0 0;
   background: var(--bg);
   padding-top: var(--spacer-3);
+
+  /* Soft category wash behind the title/date/byline block only — it fades
+     out before the article body starts, never over the cover photo. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: clamp(520px, 62vh, 720px);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--wash, #d7e6fd) 46%, transparent) 0%,
+      color-mix(in srgb, var(--wash-2, #e8f0fe) 22%, transparent) 46%,
+      transparent 100%
+    );
+    border-radius: 44px 44px 0 0;
+    pointer-events: none;
+  }
 }
 
 /* Mirrors blog.google's article page: a 12-column grid inside a 1440px
@@ -31,9 +83,17 @@
    spans the full width of the container. */
 .page {
   position: relative;
+  z-index: 1;
   max-width: 1440px;
   margin: 0 auto;
   padding-inline: 12px;
+  /* Inline-size container for the article's media: `100cqw` is this box's
+     width regardless of its padding or column, so figures can break out to
+     the page width and every photo/video/reel shares one measure.
+
+     NB: a size container also creates a stacking context. The reading bar is
+     rendered in a portal on <body> so it is never trapped underneath it. */
+  container-type: inline-size;
 }
 
 .grid {
@@ -43,16 +103,19 @@
   padding: var(--spacer-3) 0 0;
 }
 
+/* Spans the head row and the body row: a sticky child can only travel inside
+   its box, so it needs the article's full height. Explicit line numbers avoid
+   grid-row: 1 / -1 creating a phantom row that pushed the title down. */
 .aside {
   grid-column: 11 / -1;
-  /* Explicit span across all three tracks. A sticky child can only travel
-     inside its containing block, so the aside must be as tall as the whole
-     article grid — otherwise the TOC pins for zero pixels. */
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   justify-self: start;
+  /* Stretched to the row so the sticky nav can follow the whole article. */
   align-self: stretch;
+  /* Fill the track rather than a fixed 280px, which overflowed the right edge
+     on narrower desktops and sliced the panel in half. */
   width: 100%;
-  max-width: 280px;
+  max-width: none;
   min-width: 0;
 }
 
@@ -65,14 +128,14 @@
 /* Hero block — breadcrumb, title, abstract, byline (cols 3–10) */
 .articleFlow {
   grid-column: 3 / span 8;
-  grid-row: 2;
+  grid-row: 1;
   min-width: 0;
 }
 
 /* Body block — narrower reading measure (cols 4–9) */
 .bodyArea {
   grid-column: 4 / span 6;
-  grid-row: 3;
+  grid-row: 2;
   margin-top: var(--spacer-6);
   min-width: 0;
 }
@@ -82,24 +145,48 @@
   min-width: 0;
 }
 
-.breadcrumb {
+/* The whole page above the cover gets a faint category tint (see .postPage). */
+
+/* Trail on the left, series chip on the right. */
+.crumbRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--gray-600);
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 18px;
+}
 
-  a {
-    color: var(--blue-700);
+/* Plain text link — no pill, no border. The topic colour comes in via
+   --chip-accent so it matches the post's own topic. */
+.seriesChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-600);
+  text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 160ms ease;
+
+  svg {
+    flex: none;
+    color: var(--chip-accent, var(--gray-500));
+    transition: transform 160ms ease;
   }
+}
 
-  a:hover {
-    color: var(--blue-900);
-  }
+.seriesChip:hover {
+  color: var(--gray-900);
 
-  span[aria-hidden] {
-    color: var(--gray-500);
+  svg {
+    transform: translateX(2px);
   }
 }
 
@@ -110,7 +197,7 @@
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: -0.25px;
-  color: var(--gray-900);
+  color: var(--head-ink, var(--gray-900));
   text-wrap: balance;
 }
 
@@ -147,7 +234,7 @@
   flex-wrap: wrap;
   gap: 16px 24px;
   padding-block: var(--spacer-3);
-  border-top: 1px solid var(--gray-300);
+  border-top: 1px solid rgba(19, 29, 67, 0.14);
 }
 
 /* Listen + Share sit together on the right edge of the byline. */
@@ -184,6 +271,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Sits under the byline as its own quiet line: grey text, blue series name. */
 
 /* Share sits flush right on the byline row. */
 .bylineRow > :last-child {

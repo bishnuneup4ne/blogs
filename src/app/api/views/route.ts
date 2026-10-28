@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       .from("fn_posts")
       .select("id")
       .eq("slug", slug)
-      .in("status", ["published", "live"])
+      .eq("status", "published")
       .maybeSingle();
     if (postError) return NextResponse.json({ ok: true, skipped: isMissingSchema(postError) });
     if (!post) return NextResponse.json({ ok: false }, { status: 404 });

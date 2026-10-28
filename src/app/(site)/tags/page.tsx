@@ -3,6 +3,7 @@ import Link from "next/link";
 import { allTags } from "@/lib/data";
 import { ArrowRight } from "@/components/icons/Icons";
 import styles from "./tags.module.scss";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Tags",
@@ -18,7 +19,7 @@ export default async function TagsPage() {
   return (
     <div className={styles.body}>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href={routes.home}>Home</Link>
         <span aria-hidden="true">›</span>
         <span aria-current="page">Tags</span>
       </nav>
@@ -48,7 +49,7 @@ export default async function TagsPage() {
       {most ? (
         <p className={styles.footnote}>
           Most used: <Link href={`/blog/tag/${most.slug}`}>{most.name}</Link> ·{" "}
-          <Link href="/topics">browse by topic instead</Link>
+          <Link href={routes.topics}>browse by topic instead</Link>
         </p>
       ) : null}
     </div>

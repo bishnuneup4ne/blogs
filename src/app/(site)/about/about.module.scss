@@ -1,398 +1,606 @@
-/* About — professional profile: portrait-led masthead, sticky contents,
-   numbered-free timeline spine. Blog.google proportions, site tokens. */
+/* About — laid out as a blog.google article.
+   Every number here is measured from blog.google/article at 1440px:
+   12-column grid in a 1440 container with 72px gutters, title 60/72 on
+   cols 3–10, abstract 20/28, byline 48px tall, media full-width with a
+   24px radius, body paragraphs 16/28 in a ~600px column (cols 6–9). */
 
-.masthead {
+/* ---------- Shared grid ---------- */
+
+.grid {
   max-width: var(--container);
   margin: 0 auto;
-  padding: clamp(20px, 4vw, 44px) var(--container-pad) 0;
+  padding-inline: var(--container-pad);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+}
+
+.breadcrumb,
+.title,
+.metaRow,
+.abstract,
+.authors,
+.heroActions {
+  grid-column: 3 / span 8;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  padding-top: var(--spacer-3);
+  padding-bottom: var(--spacer-4);
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%) 0%,
+    rgb(228 243 255 / 85%) 30%,
+    rgb(226 242 236 / 90%) 64%,
+    rgb(255 255 255 / 0%) 100%
+  );
+  background-color: var(--white);
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: clamp(20px, 3vw, 32px);
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 24px;
+  font-family: var(--font-ui);
   font-size: 14px;
+  line-height: 24px;
   color: var(--gray-600);
 
   a {
+    padding: 0 6px;
+    border-radius: var(--radius-8);
     color: var(--blue-700);
     text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
+    transition: background-color 150ms ease, color 150ms ease;
   }
-}
 
-.mastheadGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 56px);
-  align-items: center;
-}
-
-.portrait {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: 28px;
-  overflow: hidden;
-  /* The site avatar is a round cut-out with transparent corners, so the tile
-     carries the tint instead of leaving dark wedges. */
-  background: radial-gradient(circle at 50% 35%, #eaf1ff 0%, #dfe7ff 55%, #eef0f6 100%);
-
-  /* Soft vignette so a dark photo still reads as a framed portrait. */
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgb(0 0 0 / 18%), transparent 45%);
-    pointer-events: none;
+  a:hover {
+    background: var(--gray-100);
+    color: var(--blue-900);
   }
-}
 
-.portraitImg {
-  object-fit: cover;
-}
+  span[aria-current] {
+    padding: 0 6px;
+    color: var(--gray-700);
+  }
 
-.mastheadCopy {
-  min-width: 0;
-}
-
-.kicker {
-  margin: 0 0 12px;
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gray-500);
+  svg {
+    flex: none;
+    color: var(--gray-500);
+  }
 }
 
 .title {
-  margin: 0 0 18px;
-  font-family: var(--font-display);
-  font-size: clamp(32px, 4.4vw, 52px);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  color: var(--gray-900);
-  white-space: pre-line;
-}
-
-.lede {
-  max-width: 60ch;
-  margin: 0 0 26px;
-  font-size: 17px;
-  line-height: 1.65;
-  color: var(--gray-700);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.primaryCta,
-.secondaryCta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 46px;
-  padding: 0 22px;
-  border-radius: 999px;
-  font-size: 14.5px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: background-color 160ms ease, border-color 160ms ease;
-
-  svg {
-    transition: transform 200ms ease;
-  }
-
-  &:hover svg {
-    transform: translateX(3px);
-  }
-}
-
-.primaryCta {
-  background: var(--blue-600);
-  color: var(--white);
-
-  &:hover {
-    background: var(--blue-700);
-  }
-}
-
-.secondaryCta {
-  border: 1px solid var(--gray-300);
-  background: var(--white);
-  color: var(--gray-900);
-
-  &:hover {
-    border-color: var(--gray-900);
-    background: var(--gray-50);
-  }
-}
-
-/* Focus chips sit on a hairline under the masthead. */
-.focus {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: clamp(28px, 4vw, 44px) 0 0;
-  padding: clamp(16px, 2vw, 22px) 0 0;
-  border-top: 1px solid var(--gray-200);
-  list-style: none;
-
-  li {
-    padding: 7px 14px;
-    border-radius: 999px;
-    background: var(--gray-50);
-    box-shadow: inset 0 0 0 1px var(--gray-200);
-    font-size: 12.5px;
-    letter-spacing: 0.02em;
-    color: var(--gray-700);
-  }
-}
-
-/* ---------- Body with sticky contents ---------- */
-
-.body {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 64px);
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: clamp(40px, 6vw, 80px) var(--container-pad) var(--spacer-6);
-  align-items: start;
-}
-
-.toc {
-  position: sticky;
-  top: calc(var(--header-h, 72px) + 24px);
-
-  ol {
-    display: grid;
-    gap: 10px;
-    margin: 12px 0 0;
-    padding: 0 0 0 12px;
-    border-left: 1px solid var(--gray-200);
-    list-style: none;
-  }
-
-  a {
-    font-size: 13.5px;
-    color: var(--gray-600);
-    text-decoration: none;
-
-    &:hover {
-      color: var(--gray-900);
-    }
-  }
-}
-
-.tocLabel {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gray-500);
-}
-
-.main {
-  max-width: 72ch;
-  min-width: 0;
-}
-
-.section + .section {
-  margin-top: clamp(40px, 5vw, 64px);
-}
-
-.sectionKicker {
-  margin: 0 0 6px;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--blue-700);
-}
-
-.sectionTitle {
-  margin: 0 0 20px;
-  font-family: var(--font-display);
-  font-size: clamp(26px, 3vw, 34px);
+  margin: 0 0 24px;
+  font-family: var(--font-ui);
+  font-size: clamp(40px, 4.2vw, 60px);
   font-weight: 400;
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.25px;
   color: var(--gray-900);
+  text-wrap: balance;
+}
+
+/* Date | read time on the left, Share on the right. */
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.divider {
+  color: var(--gray-400);
+}
+
+/* Blog.google's standfirst: larger than body copy, sitting under the date. */
+.abstract {
+  margin: 0 0 var(--spacer-3);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--gray-700);
+  max-width: 72ch;
+}
+
+.authors {
+  padding-block: 16px 20px;
+  border-top: 1px solid var(--gray-300);
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.authorAvatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--gray-100);
+}
+
+.authorInfo {
+  display: grid;
+  gap: 1px;
+}
+
+.authorName {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--gray-900);
+}
+
+.authorTitle {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--gray-600);
+}
+
+/* ---------- Media ---------- */
+
+.media {
+  max-width: var(--container);
+  margin: 0 auto var(--spacer-4);
+  padding-inline: var(--container-pad);
+}
+
+.mediaFrame {
+  position: relative;
+  aspect-ratio: 16 / 8.4;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--gray-100);
+}
+
+.mediaImg {
+  object-fit: cover;
+  /* The portrait's subject sits low in the frame; centring on it beats
+     cropping to the ceiling. */
+  object-position: center 62%;
+}
+
+/* Sits under the media aligned with the reading column below it. The hero
+   grid is 12 equal columns, so "cols 4–9" is not the same 600px measure the
+   body uses — centring a 600px box matches it exactly at every width.
+   Previously the button hung at the hero column's left edge, left of both
+   the image and the text. */
+.heroActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
+.actionsInner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Matches the site's shared .btn so this pill behaves like every other
+   Google-style button: 48px tall, 24px inset, 16px medium label. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  background: var(--blue-600);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: 0.1px;
+  text-decoration: none;
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.cta:hover {
+  background: var(--blue-800);
+  color: var(--white);
+  box-shadow: var(--shadow-1);
+}
+
+.cta:active {
+  background: var(--blue-900);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
+}
+
+/* ---------- Body: the narrow reading column ---------- */
+
+.article {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--spacer-3) var(--container-pad) 0;
 }
 
 .prose {
-  display: grid;
-  gap: 16px;
+  max-width: 600px;
+  margin-inline: auto;
 
   p {
-    margin: 0;
-    font-size: 16.5px;
-    line-height: 1.75;
-    color: var(--gray-700);
-  }
-}
-
-/* Pull quote between sections. */
-.quote {
-  margin: clamp(36px, 5vw, 56px) 0;
-  padding: 4px 0 4px 24px;
-  border-left: 3px solid var(--blue-700);
-  background: none;
-
-  p {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(19px, 2.2vw, 24px);
-    font-weight: 400;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 28px;
     color: var(--gray-900);
-
-    &::before {
-      content: "\201C";
-    }
-
-    &::after {
-      content: "\201D";
-    }
   }
 }
 
-/* ---------- Now ---------- */
+.h2 {
+  margin: 48px 0 16px;
+  font-family: var(--font-ui);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 36px;
+  letter-spacing: 0;
+  color: var(--gray-900);
+  scroll-margin-top: calc(var(--header-h) + 24px);
+}
 
-.now {
-  margin: 0;
+.h3 {
+  margin: 0 0 4px;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--gray-900);
+}
+
+.caption {
+  font-size: 14px !important;
+  line-height: 22px !important;
+  color: var(--gray-600) !important;
+}
+
+/* ---------- Right now ---------- */
+
+.nowList {
+  margin: 8px 0 20px;
+  padding: 0;
+  list-style: none;
   border-top: 1px solid var(--gray-200);
 }
 
-.nowRow {
+.nowList li {
   display: grid;
-  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
-  gap: 20px;
-  padding: 16px 0;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--gray-200);
 }
 
 .nowLabel {
+  font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  line-height: 24px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: var(--gray-500);
+  color: var(--gray-600);
 }
 
 .nowValue {
-  margin: 0;
-  font-size: 15.5px;
-  line-height: 1.6;
-  color: var(--gray-800);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--gray-900);
+}
+
+/* ---------- Disciplines ---------- */
+
+.disciplines {
+  margin: 8px 0 20px;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.disciplines li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-200);
+
+  &:first-child {
+    border-top: 1px solid var(--gray-200);
+  }
+}
+
+.disciplineIndex {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 26px;
+  color: var(--blue-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.disciplineName {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--gray-900);
 }
 
 /* ---------- Timeline ---------- */
 
 .timeline {
-  position: relative;
-  display: grid;
-  gap: 28px;
-  margin: 0;
-  padding: 0 0 0 26px;
+  margin: 8px 0 20px;
+  padding: 0 0 0 22px;
   list-style: none;
-
-  /* The spine: one continuous hairline, not a bar per row. */
-  &::before {
-    content: "";
-    position: absolute;
-    top: 6px;
-    bottom: 6px;
-    left: 5px;
-    width: 1px;
-    background: var(--gray-200);
-  }
+  border-left: 2px solid var(--gray-200);
 
   li {
     position: relative;
-  }
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 16px;
+    padding-bottom: 24px;
 
-  li::before {
-    content: "";
-    position: absolute;
-    left: -26px;
-    top: 6px;
-    width: 11px;
-    height: 11px;
-    border: 2px solid var(--blue-700);
-    border-radius: 50%;
-    background: var(--bg, #fff);
-  }
+    &::before {
+      content: "";
+      position: absolute;
+      left: -29px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--blue-600);
+    }
 
-  h3 {
-    margin: 0 0 4px;
-    font-family: var(--font-ui);
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.4;
-    color: var(--gray-900);
+    &:last-child {
+      padding-bottom: 0;
+    }
   }
 
   p {
     margin: 0;
     font-size: 15px;
-    line-height: 1.7;
+    line-height: 25px;
     color: var(--gray-600);
   }
 }
 
 .year {
-  display: inline-block;
-  margin-bottom: 6px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  color: var(--blue-700);
-}
-
-.timelineBody {
-  min-width: 0;
-}
-
-.foot {
-  margin: 16px 0 0;
-  font-size: 12.5px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 26px;
   color: var(--gray-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Pull quote ---------- */
+
+.quote {
+  margin: 40px 0;
+  padding: 0 0 0 24px;
+  border-left: 3px solid var(--blue-700);
+
+  p {
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.42;
+    letter-spacing: -0.2px;
+    color: var(--gray-900);
+  }
+}
+
+/* ---------- Writing list ---------- */
+
+.latest {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* The list's last hairline is the section's closing rule — without this the
+   list border and the "Posted in" top border stack into a double line. */
+.latest li:last-child .latestRow {
+  border-bottom: none;
+}
+
+.latest:last-child {
+  margin-bottom: 0;
+}
+
+.latestRow {
+  display: grid;
+  gap: 2px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--gray-200);
+  text-decoration: none;
+}
+
+.latestTitle {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--blue-700);
+  transition: color 150ms ease;
+}
+
+.latestMeta {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.latestRow:hover .latestTitle {
+  color: var(--blue-900);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Posted in ---------- */
+
+.postedIn {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.postedTitle {
+  margin: 0 0 14px;
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--gray-700);
+}
+
+.postedIn ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.postedIn a {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--gray-100);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--gray-700);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.postedIn a:hover {
+  background: var(--gray-200);
+  color: var(--gray-900);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1120px) {
+  .breadcrumb,
+  .title,
+  .metaRow,
+  .abstract,
+  .authors,
+  .heroActions {
+    grid-column: 2 / span 10;
+  }
 }
 
 @media (max-width: 900px) {
-  .mastheadGrid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
+  .breadcrumb,
+  .title,
+  .metaRow,
+  .abstract,
+  .authors,
+  .heroActions {
+    grid-column: 1 / -1;
   }
 
-  .portrait {
-    max-width: 240px;
+  .grid {
+    column-gap: 16px;
   }
 
-  .body {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .toc {
-    position: static;
+  .mediaFrame {
+    aspect-ratio: 16 / 10;
   }
 }
 
-@media (max-width: 560px) {
-  .nowRow {
+@media (max-width: 640px) {
+  .hero {
+    padding-top: var(--spacer-2);
+  }
+
+  .breadcrumb {
+    margin-bottom: 16px;
+  }
+
+  .title {
+    margin-bottom: 16px;
+    font-size: clamp(30px, 8.4vw, 40px);
+    line-height: 1.16;
+  }
+
+  .metaRow {
+    margin-bottom: 16px;
+  }
+
+  .abstract {
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  .mediaFrame {
+    aspect-ratio: 4 / 3;
+  }
+
+  .h2 {
+    margin-top: 36px;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+  .prose p {
+    font-size: 16px;
+    line-height: 27px;
+  }
+
+  .nowList li {
     grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
+    gap: 2px;
+  }
+
+  .timeline li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .year {
+    line-height: 22px;
+  }
+
+  .cta {
+    flex: 1;
+    justify-content: center;
   }
 }

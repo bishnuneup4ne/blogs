@@ -12,7 +12,7 @@ export function UpdateCard({ post, showByline = false }: { post: Post; showBylin
     <article className={styles.updateCard}>
       <Link
         href={`/blog/${post.slug}`}
-        className={styles.updateMedia}
+        className={`${styles.updateMedia} pastel-${category.pastel}`}
         tabIndex={-1}
         aria-hidden="true"
       >
@@ -21,6 +21,8 @@ export function UpdateCard({ post, showByline = false }: { post: Post; showBylin
         ) : (
           <span className={`${styles.mediaFallback} pastel-${category.pastel}`} />
         )}
+        {/* blog.google style: the topic rides on the photo in its own colour. */}
+        <span className={styles.topicOverlay}>{category.name}</span>
       </Link>
       <div className={styles.updateBody}>
         <h3 className={styles.updateTitle}>
@@ -37,27 +39,6 @@ export function UpdateCard({ post, showByline = false }: { post: Post; showBylin
   );
 }
 
-export function FeaturedStory({ post, kicker }: { post: Post; kicker: string }) {
-  return (
-    <article className={styles.featured}>
-      <Link href={`/blog/${post.slug}`} className={styles.featuredMedia} tabIndex={-1} aria-hidden="true">
-        {post.cover ? (
-          <Image src={post.cover.src} alt="" fill priority sizes="(max-width: 900px) 100vw, 60vw" className={styles.mediaImg} />
-        ) : null}
-      </Link>
-      <div className={styles.featuredText}>
-        <p className={styles.featuredKicker}>{kicker}</p>
-        <h2 className={styles.featuredTitle}>
-          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-        </h2>
-        <p className={styles.featuredDesc}>{post.description}</p>
-        <Link href={`/blog/${post.slug}`} className={styles.featuredArrow} aria-label={`Read ${post.title}`}>
-          <ArrowRight width={24} height={24} />
-        </Link>
-      </div>
-    </article>
-  );
-}
 
 export function SectionHead({ title, href, linkLabel }: { title?: string; href?: string; linkLabel?: string }) {
   return (

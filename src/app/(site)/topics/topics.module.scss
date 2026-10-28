@@ -1,4 +1,5 @@
-/* Topics — simple directory: plain headings, cards with the action below the media. */
+/* Topics — Google-style directory: statement head with jump chips, then
+   pastel topic cards, a series band (cover tiles), and photo collections. */
 
 .body {
   max-width: var(--container);
@@ -34,10 +35,10 @@
 .title {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: clamp(34px, 4vw, 48px);
+  font-size: clamp(40px, 4.6vw, 58px);
   font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.25px;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
   color: var(--gray-900);
 }
 
@@ -54,8 +55,43 @@
   }
 }
 
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.jumpChip {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--gray-800);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  &:hover {
+    border-color: var(--gray-900);
+    background: var(--gray-50);
+  }
+}
+
 .section {
-  margin-top: clamp(36px, 4.5vw, 60px);
+  margin-top: clamp(44px, 5vw, 72px);
+  scroll-margin-top: 96px;
+}
+
+.sectionLede {
+  margin: 6px 0 0;
+  font-size: 15.5px;
+  line-height: 24px;
+  color: var(--gray-600);
 }
 
 .grid {
@@ -92,27 +128,69 @@
   }
 }
 
-/* ---------- Topic card ---------- */
+/* ---------- Topic card — white with hairline; wash tile when no image ---- */
 .card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 24px 22px 22px;
+  gap: 12px;
+  padding: 22px;
   border-radius: var(--radius-card);
   border: 1px solid var(--gray-200);
   background: var(--white);
-  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+  transition: border-color 250ms ease, box-shadow 250ms ease;
 
   &:hover {
     border-color: var(--gray-300);
-    box-shadow: 0 16px 36px -22px rgba(32, 33, 36, 0.38);
-    transform: translateY(-2px);
+    box-shadow: 0 14px 32px -24px rgba(32, 33, 36, 0.35);
   }
+}
+
+.cardTinted {
+  background: var(--card-bg, var(--white));
+  border-color: transparent;
+
+  &:hover {
+    border-color: transparent;
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cardHead {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .count {
   font-size: 13px;
-  color: var(--gray-600);
+  color: var(--gray-700);
+}
+
+.cardShape {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  transition: border-radius 250ms ease;
+}
+
+.shapeFallback {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--white);
+  font-family: var(--font-ui);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--gray-700);
 }
 
 .cardTitle {
@@ -138,11 +216,75 @@
   margin: 0 0 8px;
   font-size: 15px;
   line-height: 24px;
-  color: var(--gray-600);
+  color: var(--gray-700);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* ---------- Series card — cover tile above, details below ---------- */
+.seriesGrid {
+  margin-top: var(--spacer-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.seriesCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  overflow: hidden;
+  transition: border-color 250ms ease, box-shadow 250ms ease;
+
+  &:hover {
+    border-color: var(--gray-300);
+    box-shadow: 0 16px 36px -22px rgba(32, 33, 36, 0.38);
+  }
+}
+
+.seriesMedia {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  background: var(--gray-100);
+  overflow: hidden;
+}
+
+.seriesImg {
+  object-fit: cover;
+  transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.seriesCard:hover .seriesImg {
+  transform: scale(1.03);
+}
+
+.seriesFallback {
+  position: absolute;
+  inset: 0;
+  background: var(--gray-100);
+}
+
+.seriesBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px 22px;
+  flex: 1;
+}
+
+.seriesKicker {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-600);
 }
 
 /* ---------- Photo collection card ---------- */
@@ -196,18 +338,20 @@
 }
 
 @media (max-width: 1000px) {
-  .grid {
+  .grid,
+  .seriesGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .grid {
+  .grid,
+  .seriesGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .title {
-    font-size: 32px;
+    font-size: 34px;
   }
 
   .lede {

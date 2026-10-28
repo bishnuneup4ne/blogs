@@ -7,6 +7,7 @@ import type { FormEvent } from "react";
 import type { SiteSettings } from "@/lib/settings";
 import { ArrowRight, CloseIcon, MenuIcon, SearchIcon } from "@/components/icons/Icons";
 import styles from "./SiteHeader.module.scss";
+import { routes } from "@/lib/routes";
 
 const SEARCH_TERMS = ["Malware", "Reverse engineering", "IOE", "Kathmandu"];
 
@@ -29,16 +30,28 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   useEffect(() => {
     // On article pages the reading bar takes over: hide the header at exactly
     // the moment the headline leaves the viewport, so the two never overlap.
-    const article = document.querySelector("[data-article-progress]");
+    // The bar is portalled in after mount, so look for it on every scroll
+    // rather than once at mount time.
+    let frame = 0;
     const onScroll = () => {
-      setScrolled(window.scrollY > 8);
-      if (!article) {
-        setHidden(false);
-        return;
-      }
-      const h1 = document.querySelector("article h1, h1");
-      const barH = 64;
-      setHidden(h1 ? h1.getBoundingClientRect().top < -barH * 0.5 : window.scrollY > 120);
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        setScrolled(window.scrollY > 8);
+        const hasBar = Boolean(document.querySelector("[data-article-progress]"));
+        if (!hasBar) {
+          setHidden(false);
+          return;
+        }
+        const h1 = document.querySelector("article h1, h1");
+        // 76px bar (64px on phones) — hide once the headline is under half.
+        const barH = 76;
+        const hide = h1 ? h1.getBoundingClientRect().top < -barH * 0.5 : window.scrollY > 120;
+        setHidden(hide);
+        // While the bar owns the top edge it exposes itself here, so the
+        // header never second-guesses the same breakpoint.
+        document.querySelector("[data-article-progress]")?.setAttribute("data-header-hidden", hide ? "on" : "off");
+      });
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -46,6 +59,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
     };
   }, [pathname]);
 
@@ -163,7 +177,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     <div className={`${styles.shell} ${scrolled ? styles.shellScrolled : ""} ${hidden ? styles.shellHidden : ""}`}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand} aria-label={`${settings.identity.siteName} home`}>
+          <Link href={routes.home} className={styles.brand} aria-label={`${settings.identity.siteName} home`}>
             <span className={styles.brandText}>
               <span className={styles.brandKicker}>News from</span>
               <span className={styles.brandName}>{settings.identity.wordmark}</span>
@@ -214,11 +228,11 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 {searchOpen ? <CloseIcon width={20} height={20} /> : <SearchIcon width={20} height={20} />}
               </button>
             </div>
-            <Link href="/gallery" className={styles.iconBtn} aria-label="Open gallery">
+            <Link href={routes.gallery} className={styles.iconBtn} aria-label="Open gallery">
               <ImagesIcon />
             </Link>
             {settings.toggles.newsletter && (
-              <Link href="/newsletter" className={styles.cta}>
+              <Link href={routes.newsletter} className={styles.cta}>
                 <span>Newsletter</span>
                 <ArrowRight className={styles.ctaArrow} width={16} height={16} />
               </Link>
@@ -245,7 +259,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         }}>
           <div ref={drawerRef} id="site-menu" className={styles.drawer} role="dialog" aria-modal="true" aria-label="Site navigation">
             <div className={styles.drawerTop}>
-              <Link href="/" className={styles.drawerBrand} aria-label={`${settings.identity.siteName} home`}>
+              <Link href={routes.home} className={styles.drawerBrand} aria-label={`${settings.identity.siteName} home`}>
                 <span className={styles.brandMark}>{brandInitial}</span>
                 <span className={styles.drawerBrandText}>
                   <span className={styles.drawerBrandName}>
@@ -278,14 +292,14 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
             <div className={styles.drawerFoot}>
               {settings.toggles.newsletter && (
-                <Link href="/newsletter" className={styles.drawerCta}>
+                <Link href={routes.newsletter} className={styles.drawerCta}>
                   <span>Get the newsletter</span><ArrowRight width={18} height={18} />
                 </Link>
               )}
               <div className={styles.drawerMeta}>
                 <a href={`mailto:${settings.identity.email}`}>Contact</a>
-                <Link href="/gallery">Gallery</Link>
-                <Link href="/privacy">Privacy</Link>
+                <Link href={routes.gallery}>Gallery</Link>
+                <Link href={routes.privacy}>Privacy</Link>
               </div>
             </div>
           </div>

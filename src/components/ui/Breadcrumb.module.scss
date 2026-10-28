@@ -1,0 +1,47 @@
+.crumbs {
+  font-family: var(--font-ui);
+
+  ol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  a,
+  span {
+    padding: 0 6px;
+    border-radius: var(--radius-8);
+  }
+
+  a {
+    color: var(--blue-700);
+    text-decoration: none;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  a:hover {
+    background: var(--gray-100);
+    color: var(--blue-900);
+  }
+
+  span {
+    color: var(--gray-700);
+  }
+}
+
+.sep {
+  flex: none;
+  color: var(--gray-400);
+}

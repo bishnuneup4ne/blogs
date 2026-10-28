@@ -165,6 +165,33 @@
   color: var(--accent);
 }
 
+.brandText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brandMark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.navIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
 /* Main content area */
 .main {
   min-width: 0;

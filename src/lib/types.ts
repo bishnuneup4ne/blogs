@@ -1,6 +1,8 @@
 export type CategorySlug = string;
 
-export type Pastel = "blue" | "green" | "yellow" | "red" | "purple" | "gray";
+/** Must match the fn_topics.pastel CHECK constraint in supabase/schema.sql. */
+export const PASTELS = ["blue", "green", "mint", "yellow", "red", "purple", "gray"] as const;
+export type Pastel = (typeof PASTELS)[number];
 
 export interface Category {
   slug: CategorySlug;
@@ -8,6 +10,10 @@ export interface Category {
   description: string;
   color: string;
   pastel: Pastel;
+  image?: string;
+  /* Material 3 style crop for the topic tile: circle | squircle | leaf | blob | petal */
+  shape?: string;
+  sort_order?: number;
 }
 
 export type TagSlug = string;
@@ -36,7 +42,7 @@ export type Block =
   | { type: "image"; src: string; alt: string; caption?: string; width?: "full" | "wide" | "medium" | "small" }
   | { type: "row"; items: RowItem[]; columns?: number; caption?: string }
   | { type: "video"; url: string; poster?: string; caption?: string; autoplay?: boolean }
-  | { type: "related"; slug: string; title: string; description?: string; image?: string; eyebrow?: string; cta?: string }
+  | { type: "related"; slug: string; title: string; description?: string; image?: string; eyebrow?: string; cta?: string; color?: string }
   | { type: "table"; head: string[]; rows: string[][] }
   | { type: "chart"; chart: ChartBlock }
   | { type: "cta"; label: string; href: string; style?: "primary" | "outline"; note?: string }
@@ -129,6 +135,7 @@ export interface Series {
   slug: string;
   title: string;
   description: string;
+  cover?: string;
   posts: { slug: string; title: string }[];
 }
 

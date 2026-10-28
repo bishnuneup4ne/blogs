@@ -96,6 +96,10 @@
   border-bottom: 1px solid var(--gray-200);
 }
 
+.resultText {
+  min-width: 0;
+}
+
 .kicker {
   font-family: var(--font-ui);
   font-size: 12px;

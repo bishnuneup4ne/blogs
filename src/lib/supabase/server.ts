@@ -3,15 +3,37 @@ import "server-only";
 import { createClient, type PostgrestError, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
+/** Determine if Supabase is truly configured with real credentials. */
+function isSupabaseConfigured(): boolean {
+  return Boolean(env.supabaseUrl && env.supabaseServiceKey);
+}
+
+/** No-op client used when Supabase is not configured. All operations silently
+   fail, which the data layer interprets as “fall back to files”. */
+function getNoOpClient() {
+  const noOp: Record<string, unknown> = {};
+  return new Proxy(noOp, {
+    get(_target, prop) {
+      const value = Reflect.get(noOp, prop);
+      return typeof value === "function" ? () => {} : value;
+    },
+  }) as unknown as SupabaseClient;
+}
+
 let client: SupabaseClient | null = null;
 
 function get(): SupabaseClient {
   if (!client) {
-    client = createClient(
-      env.supabaseUrl || "http://localhost:54321",
-      env.supabaseServiceKey || "service-role-key-missing",
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
+    if (isSupabaseConfigured()) {
+      client = createClient(
+        env.supabaseUrl,
+        env.supabaseServiceKey,
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      );
+    } else {
+      // Do not create a client with placeholder credentials.
+      client = getNoOpClient();
+    }
   }
   return client;
 }

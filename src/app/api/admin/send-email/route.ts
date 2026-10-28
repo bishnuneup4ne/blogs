@@ -10,8 +10,6 @@ import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
-export { sendSiteEmail, wrapEmail } from "@/lib/mailer";
-
 export async function POST(request: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;

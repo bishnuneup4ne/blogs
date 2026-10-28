@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { UnsubscribeForm } from "@/components/site/UnsubscribeForm";
 import styles from "./unsubscribe.module.scss";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Unsubscribe",
@@ -32,7 +33,7 @@ export default async function UnsubscribePage({
       ) : (
         <p className={styles.body}>
           Open the unsubscribe link from any newsletter email, or write to{" "}
-          <Link href="/about">the contact page</Link> and I will remove you by hand.
+          <Link href={routes.about}>the contact page</Link> and I will remove you by hand.
         </p>
       )}
     </div>

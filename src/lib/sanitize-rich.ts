@@ -517,7 +517,12 @@ function normaliseBlock(raw: unknown): Block | null {
     case "list":
       return { type, ordered: Boolean(source.ordered), items: stringList(source.items).map((item) => sanitizeRichText(item)) };
     case "image": {
-      const src = safeUrl(String(source.src ?? ""), true);
+      // A freshly inserted block has no src yet. Dropping it failed the whole
+      // save with "content blocks are invalid" mid-writing; keep the empty
+      // block so the editor round-trips, and filter empty ones at render.
+      const rawSrc = String(source.src ?? "").trim();
+      if (!rawSrc) return { type, src: "", alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600) };
+      const src = safeUrl(rawSrc, true);
       if (!src) return null;
       const width = ["full", "wide", "medium", "small"].includes(String(source.width)) ? (String(source.width) as "full" | "wide" | "medium" | "small") : undefined;
       return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
@@ -536,8 +541,10 @@ function normaliseBlock(raw: unknown): Block | null {
             const role = text(o.role, 200);
             return { kind: "quote", html: body, ...(author ? { author } : {}), ...(role ? { role } : {}) };
           }
-          const src = safeUrl(String(o.src ?? ""), true);
-          if (!src) return null;
+          const src: string = o.src ? (safeUrl(String(o.src), true) ?? "") : "";
+          // Empty slides are placeholders in a half-built carousel; keep them
+          // so saving doesn't fail, and let the renderer skip them.
+          if (!src && String(o.src ?? "").trim()) return null;
           const size = (ROW_SIZES as readonly string[]).includes(String(o.size)) ? { size: o.size as (typeof ROW_SIZES)[number] } : {};
           return { src, alt: text(o.alt, 400) ?? "", ...size };
         })
@@ -552,22 +559,24 @@ function normaliseBlock(raw: unknown): Block | null {
       // Videos are embedded or played from their own host (YouTube, Vimeo,
       // Supabase), so the image allowlist must not apply here — enforcing it
       // silently dropped every non-Supabase clip and failed the whole save.
-      const url = safeUrl(String(source.url ?? ""), false, new Set());
-      if (!url) return null;
+      const rawUrl = String(source.url ?? "").trim();
+      const url: string = rawUrl ? (safeUrl(rawUrl, false, new Set()) ?? "") : "";
+      if (rawUrl && !url) return null;
       const poster = source.poster ? safeUrl(String(source.poster), true) : null;
       const autoplay = Boolean(source.autoplay);
       return { type, url, ...(poster ? { poster } : {}), ...(autoplay ? { autoplay: true } : {}), caption: text(source.caption, 600) };
     }
     case "related": {
-      const relSlug = text(source.slug, 200);
-      const relTitle = text(source.title, 300);
-      if (!relSlug || !relTitle) return null;
+      const relSlug = text(source.slug, 200) ?? "";
+      const relTitle = text(source.title, 300) ?? "";
+      // Placeholder until the author picks a target post.
       const image = source.image ? safeUrl(String(source.image), true) : null;
       const eyebrow = text(source.eyebrow, 80);
       const cta = text(source.cta, 80);
+      const color = ["blue", "green", "mint", "yellow", "red", "purple", "gray"].includes(String(source.color)) ? String(source.color) : null;
       return {
         type, slug: relSlug, title: relTitle, description: text(source.description, 600),
-        ...(image ? { image } : {}), ...(eyebrow ? { eyebrow } : {}), ...(cta ? { cta } : {}),
+        ...(image ? { image } : {}), ...(eyebrow ? { eyebrow } : {}), ...(cta ? { cta } : {}), ...(color ? { color } : {}),
       };
     }
     case "table": {
@@ -578,16 +587,16 @@ function normaliseBlock(raw: unknown): Block | null {
             .slice(0, 100)
             .map((row) => stringList(row, 20, 2_000))
         : [];
-      return head.length ? { type, head, rows } : null;
+      return { type, head, rows };
     }
     case "chart": {
       const chart = chartBlock(source.chart);
       return chart ? { type, chart } : null;
     }
     case "cta": {
-      const label = text(source.label, 80)?.trim();
-      const href = safeUrl(String(source.href ?? ""), false);
-      if (!label || !href) return null;
+      const label = text(source.label, 80)?.trim() ?? "";
+      const rawHref = String(source.href ?? "").trim();
+      const href = rawHref ? (safeUrl(rawHref, false) ?? "") : "";
       return {
         type,
         label,
@@ -597,8 +606,7 @@ function normaliseBlock(raw: unknown): Block | null {
       };
     }
     case "footnote": {
-      const body = text(source.text, 800)?.trim();
-      return body ? { type, text: body } : null;
+      return { type, text: text(source.text, 800)?.trim() ?? "" };
     }
     case "jumplinks":
       return { type, title: text(source.title, 80) ?? undefined };

@@ -8,6 +8,7 @@ import { getAlbums, getAllPosts, getCategory } from "@/lib/data";
 import type { Post } from "@/lib/types";
 
 import styles from "./search.module.scss";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -63,7 +64,7 @@ export default async function SearchPage({
   return (
     <div className={styles.page}>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href={routes.home}>Home</Link>
         <span aria-hidden="true">›</span>
         <span aria-current="page">Search</span>
       </nav>
@@ -86,7 +87,7 @@ export default async function SearchPage({
         <div className={styles.none}>
           <p className={styles.noneTitle}>{q ? <>No results for “{q}”.</> : "Nothing filed here yet."}</p>
           <p className={styles.noneBody}>
-            Check the spelling, or <Link href="/blog">browse the full feed</Link>.
+            Check the spelling, or <Link href={routes.blog}>browse the full feed</Link>.
           </p>
         </div>
       ) : (
@@ -101,11 +102,11 @@ export default async function SearchPage({
                       {new Date(`${post.date}T00:00:00Z`).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }).toUpperCase()} / {category.name.toUpperCase()}
                     </p>
                     <h2 className={styles.resultTitle}>
-                      <Link href={`/blog/${post.slug}`}>{highlight(post.title, terms)}</Link>
+                      <Link href={routes.post(post.slug)}>{highlight(post.title, terms)}</Link>
                     </h2>                     <p className={styles.byline}>{post.readingMinutes} min read · {relativeDate(post.date)}</p>
                   </div>
                   {post.cover ? (
-                    <Link href={`/blog/${post.slug}`} className={styles.thumb} tabIndex={-1} aria-hidden="true">
+                    <Link href={routes.post(post.slug)} className={styles.thumb} tabIndex={-1} aria-hidden="true">
                       <Image src={post.cover.src} alt="" fill sizes="260px" loading="lazy" className={styles.thumbImg} />
                     </Link>
                   ) : null}
@@ -121,7 +122,11 @@ export default async function SearchPage({
                 {albums.map((album) => (
                   <Link key={album.slug} href={`/gallery/${album.slug}`} className={styles.album}>
                     <span className={styles.albumMedia}>
-                      <Image src={album.cover} alt={album.title} fill sizes="300px" className={styles.thumbImg} />
+                      {/* A coverless album has cover === "" — next/image throws
+                          on an empty src, which 500s the whole search page. */}
+                      {album.cover ? (
+                        <Image src={album.cover} alt={album.title} fill sizes="300px" className={styles.thumbImg} />
+                      ) : null}
                     </span>
                     <span className={styles.albumTitle}>{album.title}</span>
                     <span className={styles.albumMeta}>{album.photos.length} {album.photos.length === 1 ? "photo" : "photos"}</span>

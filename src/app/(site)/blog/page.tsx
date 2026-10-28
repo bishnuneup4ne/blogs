@@ -1,76 +1,85 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { LatestSection } from "@/components/site/LatestSection";
-import { allCategories, getAllPosts } from "@/lib/data";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
+import { getAllPosts } from "@/lib/data";
+import { countLabel, formatDate } from "@/lib/dates";
+import { routes } from "@/lib/routes";
 import styles from "./blog.module.scss";
+
+const description =
+  "Every post from newest to oldest: engineering, security, field notes, life, photography and essays.";
 
 export const metadata: Metadata = {
   title: "Feed",
-  description: "Every post from newest to oldest: engineering, security, field notes, life, photography and essays.",
-  alternates: { canonical: "/blog" },
-  openGraph: {
-    url: "/blog",
-    title: "Feed",
-    description: "Every post from newest to oldest: engineering, security, field notes, life, photography and essays.",
-  },
+  description,
+  alternates: { canonical: routes.blog },
+  openGraph: { url: routes.blog, title: "Feed", description },
 };
 
+const ArrowRight = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
 export default async function BlogPage() {
-  const posts = await getAllPosts();
-  const cats = await allCategories();
-  const topics = cats.map((c) => ({ slug: c.slug, name: c.name }));
+  const all = await getAllPosts();
+  const posts = [...all].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <>
-      {/* Hero Section - Google Blog Style */}
-      <div className={styles.hero}>
-        <div className={styles.heroContainer}>
-          <div className={styles.heroTop}>
-            <div className={styles.heroLeft}>
-              <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-                <Link href="/" className={styles.breadcrumbLink}>
-                  Home
-                </Link>
-                <span aria-hidden="true">›</span>
-                <span aria-current="page" className={styles.breadcrumbCurrent}>Feed</span>
-              </nav>
+    <div className={styles.wrap}>
+      <header className={styles.head}>
+        <Breadcrumb items={[{ label: "Home", href: routes.home }, { label: "Feed" }]} />
 
-              <h1 className={styles.heroTitle}>All stories</h1>
-
-              <p className={styles.heroLede}>
-                {posts.length} posts on building secure systems, the work of writing, and the life around it.
-              </p>
-            </div>
-
-            <div className={styles.heroRight}>
-              <div className={styles.topicChips}>
-                {cats.map((c) => (
-                  <Link
-                    key={c.slug}
-                    href={`/blog/category/${c.slug}`}
-                    className={styles.topicChip}
-                  >
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
+        <div className={styles.headRow}>
+          <div>
+            <h1 className={styles.title}>All stories</h1>
+            <p className={styles.lede}>{description}</p>
           </div>
-
-          {/* Hero Background Shape - Google Style */}
-          <div className={styles.heroShape} />
+          <p className={styles.count}>{countLabel(posts.length)}</p>
         </div>
-      </div>
 
-      {/* Post Listing Grid */}
-      <LatestSection
-        posts={posts}
-        topics={topics}
-        variant="grid"
-        hideTitle
-        markFirst
-      />
-    </>
+      </header>
+
+      {/* Every story, newest first — no featured slot, no topic privileges. */}
+      {posts.length > 0 ? (
+        <ul className={styles.grid}>
+          {posts.map((post, i) => (
+            <li key={post.slug}>
+              <article className={`${styles.card}${post.cover ? "" : ` ${styles.cardTinted}`}`}>
+                {post.cover ? (
+                  <Link href={routes.post(post.slug)} className={styles.cardMedia} tabIndex={-1} aria-hidden="true">
+                    <Image
+                      src={post.cover.src}
+                      alt=""
+                      fill
+                      priority={i === 0}
+                      sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 400px"
+                      className={styles.cardImg}
+                    />
+                  </Link>
+                ) : null}
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>
+                    <Link href={routes.post(post.slug)}>{post.title}</Link>
+                  </h3>
+                  <p className={styles.cardDesc}>{post.description}</p>
+                  <p className={styles.meta}>
+                    {formatDate(post.date)} <span aria-hidden="true">·</span> {post.readingMinutes} min read
+                  </p>
+                  <Link href={routes.post(post.slug)} className={styles.cardCta} tabIndex={-1} aria-hidden="true">
+                    Read article
+                    <ArrowRight />
+                  </Link>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.empty}>Nothing published yet — the first story will land right here.</p>
+      )}
+    </div>
   );
 }

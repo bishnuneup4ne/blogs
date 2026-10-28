@@ -1,91 +1,135 @@
+/* Gallery — one album per row: copy, cover and a strip of frames, as before.
+   Polish only: tighter rhythm, aligned type, and the album count chip moved
+   onto the cover. */
+
 .body {
   max-width: var(--container);
   margin: 0 auto;
   padding: var(--spacer-3) var(--container-pad) 40px;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--gray-600);
-
-  a {
-    color: var(--blue-700);
-  }
-
-  a:hover {
-    color: var(--blue-900);
-  }
-}
-
 .title {
   margin-top: 20px;
+  font-family: var(--font-ui);
   font-size: clamp(36px, 4vw, 48px);
   font-weight: 400;
   letter-spacing: -0.25px;
   line-height: 1.17;
+  color: var(--gray-900);
 }
 
 .lede {
-  margin-top: 8px;
+  margin-top: 10px;
+  max-width: 60ch;
   font-size: 18px;
   line-height: 28px;
   color: var(--gray-700);
+}
+
+.empty {
+  margin-top: 40px;
+  font-size: 15px;
+  color: var(--gray-600);
+
+  a {
+    color: var(--blue-700);
+    text-underline-offset: 3px;
+  }
 }
 
 .albums {
   display: grid;
   gap: var(--spacer-6);
   margin-top: 40px;
+  padding: 0;
+  list-style: none;
 }
 
+/* Copy · cover · frame strip. */
 .album {
   display: grid;
-  grid-template-columns: minmax(0, 300px) minmax(0, 1fr) 160px;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr) 176px;
   gap: 40px;
   align-items: start;
+  padding-top: var(--spacer-5);
+  border-top: 1px solid var(--gray-200);
+}
+
+.album:first-child {
+  padding-top: 0;
+  border-top: none;
 }
 
 .albumText {
   display: grid;
   justify-items: start;
   gap: 8px;
-  padding-top: 8px;
+  padding-top: 4px;
 }
 
 .year {
-  font-size: 14px;
-  color: var(--gray-600);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--blue-700);
 }
 
 .albumTitle {
+  margin: 0;
+  font-family: var(--font-ui);
   font-size: 28px;
   font-weight: 400;
   letter-spacing: -0.2px;
   line-height: 34px;
+  color: var(--gray-900);
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
   a:hover {
-    color: var(--blue-900);
+    color: var(--blue-700);
   }
 }
 
 .subtitle {
+  margin: 4px 0 0;
   font-size: 16px;
-  line-height: 24px;
+  line-height: 25px;
   color: var(--gray-600);
-  margin-bottom: 8px;
 }
 
+.albumMeta {
+  margin: 2px 0 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--gray-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Outline pill, matching the rest of the site's buttons. */
 .cta {
-  height: 44px;
-  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--gray-500);
+  border-radius: var(--radius-pill);
   color: var(--gray-900);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 200ms ease, background-color 200ms ease;
 }
 
 .cta:hover {
-  color: var(--blue-900);
+  border-color: var(--gray-900);
+  background: var(--gray-50);
 }
 
 .coverLink {
@@ -110,16 +154,16 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  width: 160px;
-  flex: none;
+  width: 176px;
 }
 
 .thumb {
   position: relative;
+  display: block;
   aspect-ratio: 1;
   border-radius: var(--radius-12);
   overflow: hidden;
-  background: var(--gray-50);
+  background: var(--gray-100);
 }
 
 .thumbImg {
@@ -129,69 +173,48 @@
 @media (max-width: 1100px) {
   .album {
     grid-template-columns: minmax(0, 1fr) 160px;
-    gap: 24px 28px;
-    align-items: start;
-  }
-
-  .albumText {
-    grid-column: 1 / -1;
-    grid-row: 1;
+    gap: 24px;
   }
 
   .coverLink {
-    grid-column: 1;
-    grid-row: 2;
+    grid-column: 1 / -1;
+    order: 2;
+  }
+
+  .albumText {
+    order: 1;
   }
 
   .thumbs {
-    grid-column: 2;
-    grid-row: 2;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-self: start;
+    order: 3;
+    width: 100%;
+    max-width: 160px;
   }
 }
 
-@media (max-width: 640px) {
-  .title {
-    font-size: 36px;
-    line-height: 42px;
-  }
-
-  .lede {
-    font-size: 16px;
-    line-height: 24px;
-  }
-
+@media (max-width: 700px) {
   .album {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 
-  .albumText,
   .coverLink,
   .thumbs {
-    grid-column: 1;
-    grid-row: auto;
+    grid-column: auto;
   }
 
-  .thumbs {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: 100%;
+  .albumTitle {
+    font-size: 24px;
+    line-height: 30px;
   }
 }
 
-.albumMeta {
-  font-size: 14px;
-  color: var(--gray-600);
-}
+@media (prefers-reduced-motion: reduce) {
+  .coverImg {
+    transition: none;
+  }
 
-.empty {
-  padding: var(--spacer-5) 0;
-  font-size: 16px;
-  color: var(--gray-600);
-
-  a {
-    color: var(--blue-700);
-    text-decoration: underline;
+  .coverLink:hover .coverImg {
+    transform: none;
   }
 }

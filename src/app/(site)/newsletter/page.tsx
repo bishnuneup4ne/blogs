@@ -7,6 +7,7 @@ import { SectionHead } from "@/components/site/sections";
 import { getAllPosts } from "@/lib/data";
 import { getSettings } from "@/lib/settings";
 import styles from "./newsletter.module.scss";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Newsletter",
@@ -28,7 +29,7 @@ export default async function NewsletterPage() {
       <header className={styles.masthead}>
         <div className={styles.inner}>
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-            <Link href="/">Home</Link>
+            <Link href={routes.home}>Home</Link>
             <span aria-hidden="true">›</span>
             <span aria-current="page">Newsletter</span>
           </nav>
@@ -44,7 +45,7 @@ export default async function NewsletterPage() {
                 </div>
                 <p className={styles.privacy}>
                   No spam, no tracking pixels. Unsubscribe from any email. Read the{" "}
-                  <Link href="/privacy">privacy policy</Link>.
+                  <Link href={routes.privacy}>privacy policy</Link>.
                 </p>
               </>
             ) : (
@@ -56,7 +57,7 @@ export default async function NewsletterPage() {
 
       <div className={styles.inner}>
         <section className={styles.section} aria-label="The latest">
-          <SectionHead title="The latest" href="/blog" linkLabel="Browse all posts" />
+          <SectionHead title="The latest" href={routes.blog} linkLabel="Browse all posts" />
           <p className={styles.sectionLede}>
             {posts.length} posts on systems, security and the slow things in between — newest first.
           </p>

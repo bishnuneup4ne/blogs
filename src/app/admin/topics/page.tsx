@@ -6,11 +6,19 @@ import { useRouter } from "next/navigation";
 import { api, useApiCollection, type ApiPost, type ApiTopic } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
 import { AdminDialog } from "@/components/admin/Dialog";
+import { MediaPicker } from "@/components/admin/MediaPicker";
 import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { PageHeader } from "@/components/admin/kit";
 import styles from "./topics.module.scss";
 
 const PASTELS = ["blue", "green", "mint", "yellow", "red", "purple", "gray"];
+const SHAPES: { id: string; label: string; radius: string }[] = [
+  { id: "circle", label: "Circle", radius: "50%" },
+  { id: "squircle", label: "Squircle", radius: "38% / 38%" },
+  { id: "leaf", label: "Leaf", radius: "0 60% 0 60%" },
+  { id: "blob", label: "Blob", radius: "46% 54% 58% 42% / 52% 44% 56% 48%" },
+  { id: "petal", label: "Petal", radius: "72% 28% 68% 32% / 30% 66% 34% 70%" },
+];
 
 interface TopicDraft {
   id?: string;
@@ -19,6 +27,8 @@ interface TopicDraft {
   description: string;
   pastel: string;
   color: string;
+  image_url: string;
+  shape: string;
   sort_order: number;
 }
 
@@ -35,7 +45,7 @@ export default function AdminTopicsPage() {
   const count = (slug: string) => postsC.items.filter((p) => p.topic_slug === slug).length;
 
   function blank(): TopicDraft {
-    return { slug: "", name: "", description: "", pastel: "blue", color: "", sort_order: topicsC.items.length + 1 };
+    return { slug: "", name: "", description: "", pastel: "blue", color: "", image_url: "", shape: "circle", sort_order: topicsC.items.length + 1 };
   }
 
   async function save() {
@@ -122,7 +132,7 @@ export default function AdminTopicsPage() {
                 type="button"
                 className={styles.kebab}
                 aria-label={`Options for ${topic.name}`}
-                onClick={() => setEditing({ id: topic.id, slug: topic.slug, name: topic.name, description: topic.description, pastel: topic.pastel, color: topic.color, sort_order: topic.sort_order })}
+                onClick={() => setEditing({ id: topic.id, slug: topic.slug, name: topic.name, description: topic.description, pastel: topic.pastel, color: topic.color, image_url: topic.image_url ?? "", shape: topic.shape ?? "circle", sort_order: topic.sort_order })}
               >
                 •••
               </button>
@@ -196,6 +206,31 @@ export default function AdminTopicsPage() {
                 ))}
               </div>
             </div>
+            <MediaPicker
+              label="Topic image"
+              value={editing.image_url}
+              onChange={(src) => setEditing({ ...editing, image_url: src })}
+            />
+            {editing.image_url ? (
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Image shape</h3>
+                <p className={styles.sectionNote}>How the topic image is cropped on /topics.</p>
+                <div className={styles.shapes}>
+                  {SHAPES.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className={`${styles.shapeBtn} ${editing.shape === s.id ? styles.shapeActive : ""}`}
+                      onClick={() => setEditing({ ...editing, shape: s.id })}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={editing.image_url} alt="" className={styles.shapeThumb} style={{ borderRadius: s.radius }} />
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ) : null}
         </AdminDialog>
       ) : null}
     </div>

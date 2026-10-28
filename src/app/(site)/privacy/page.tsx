@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSettings } from "@/lib/settings";
 import styles from "./privacy.module.scss";
+import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -16,7 +17,7 @@ export default async function PrivacyPage() {
   return (
     <article className={styles.page}>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-        <Link href="/">Home</Link>
+        <Link href={routes.home}>Home</Link>
         <span aria-hidden="true">›</span>
         <span aria-current="page">Privacy</span>
       </nav>
@@ -91,9 +92,9 @@ export default async function PrivacyPage() {
       </div>
 
       <p className={styles.foot}>
-        <Link href="/newsletter">About the newsletter</Link>
+        <Link href={routes.newsletter}>About the newsletter</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/about">About this site</Link>
+        <Link href={routes.about}>About this site</Link>
       </p>
     </article>
   );

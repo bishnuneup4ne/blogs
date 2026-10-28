@@ -5,6 +5,7 @@ import { site } from "@/lib/site";
 import { wrapEmail } from "@/lib/mailer";
 import { unsubscribeToken } from "@/lib/unsubscribe";
 import { rateLimit } from "@/lib/rate-limit";
+import { routes, url as urlFor } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -24,14 +25,18 @@ export const POST = adminRoute(async (req) => {
 
   const { data: post, error } = await db
     .from("fn_posts")
-    .select("title, slug, summary, cover_url, topic_slug")
+    .select("title, slug, summary, cover_url, topic_slug, status")
     .eq("slug", slug)
     .maybeSingle();
   if (error) return json({ error: error.message }, 500);
   if (!post) return json({ error: "Post not found" }, 404);
+  // Never blast unpublished drafts to the subscriber list.
+  if (!test && post.status !== "published") {
+    return json({ error: "Only published posts can be mailed to subscribers." }, 400);
+  }
 
   const settings = await getSettings();
-  const postUrl = `${site.url}/blog/${post.slug}`;
+  const postUrl = urlFor(routes.post(post.slug));
   const subject = post.title;
   const cover = post.cover_url
     ? `<img src="${post.cover_url}" alt="" width="480" style="display:block;width:100%;max-width:480px;height:auto;border-radius:10px;margin:0 0 24px" />`

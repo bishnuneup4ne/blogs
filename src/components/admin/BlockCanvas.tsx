@@ -53,7 +53,7 @@ export function useBlockDrag<T>({
       if (!d.active) {
         if (Math.abs(e.clientY - d.startY) < 5) return;
         d.active = true;
-        document.body.classList.add(styles.draggingBody);
+        document.body.classList.add("dragging-block");
       }
       const rects = blockRects();
       let to = d.from;
@@ -70,7 +70,7 @@ export function useBlockDrag<T>({
     const onUp = () => {
       const d = drag.current;
       drag.current = null;
-      document.body.classList.remove(styles.draggingBody);
+      document.body.classList.remove("dragging-block");
       setDragging((prev) => {
         if (prev && d?.active && prev.from !== prev.to) onReorder(prev.from, prev.to);
         return null;

@@ -421,16 +421,41 @@
 
 /* Intro — research-page style statement + newest story */
 .intro {
+  position: relative;
   max-width: var(--container);
   margin: 0 auto;
   padding: 0 var(--container-pad) var(--spacer-6);
 }
 
-/* ---------- Statement hero — big type + kicker rail + action foot ---------- */
+/* Content sits above the ambient doodle layer. */
+.intro > :not(.ambient) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Statement hero ----------
+   An editorial masthead: eyebrow → staggered two-line headline with doodles →
+   standfirst, actions and an archive stat row. Sits on a soft wash that fades
+   into the page, with hairline rules to give it structure. */
+
 .statement {
   position: relative;
   padding-top: clamp(40px, 4vw, 64px);
   overflow-x: clip;
+}
+
+/* The standfirst: a real editorial paragraph, not a caption. Sits right and
+   wide under the headline so it balances the two staggered lines above and
+   reads as the page's own voice rather than a footnote. */
+.statementLede {
+  margin: clamp(28px, 3.4vw, 44px) 0 0 auto;
+  max-width: 46ch;
+  font-family: var(--font-ui);
+  font-size: clamp(18px, 1.7vw, 22px);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--gray-700);
+  text-wrap: pretty;
 }
 
 .statementTitle {
@@ -451,7 +476,7 @@
 .doodleButterfly {
   position: absolute;
   top: -0.34em;
-  left: 46%;
+  left: 56%;
   width: clamp(46px, 4.6vw, 76px);
   height: auto;
   pointer-events: none;
@@ -459,8 +484,8 @@
 
 .doodleSatellite {
   position: absolute;
-  left: -0.4em;
-  bottom: 0.1em;
+  left: 31%;
+  bottom: -0.28em;
   width: clamp(44px, 4.4vw, 72px);
   height: auto;
   pointer-events: none;
@@ -472,7 +497,7 @@
 
 .stLineRight {
   justify-self: end;
-  margin-top: -0.18em; /* interlock the two lines like blog.google */
+  margin-top: -0.18em; /* interlock the two lines like the reference */
   padding-right: clamp(8px, 4vw, 72px);
 }
 
@@ -497,23 +522,519 @@
 
 .arrowArc {
   position: absolute;
-  /* Tail rises beside the yellow dot, head points up at the header Newsletter
-     button. Box sits fully above the foot row — no overlap with any text. */
   width: clamp(120px, 13vw, 170px);
   height: auto;
-  right: clamp(56px, 7vw, 110px);
-  top: calc(clamp(40px, 4vw, 64px) + clamp(52px, 6vw, 96px));
+  right: clamp(24px, 4vw, 64px);
+  top: calc(clamp(36px, 4vw, 64px) - clamp(8px, 1.4vw, 22px));
   color: var(--gray-800);
   pointer-events: none;
 }
 
-/* Mission line — left-aligned under the statement, like the research page */
-.statementLede {
-  margin: clamp(30px, 3.6vw, 52px) 0 0;
-  max-width: 62ch;
-  font-size: 19px;
-  line-height: 30px;
+/* ---------- Spotlight — copy left (with spiral doodle), dark media card
+   right with a "Watch the story" badge, like the research film block ---------- */
+.spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: center;
+  margin-top: clamp(56px, 7vw, 96px);
+}
+
+.spotlightCopy {
+  position: relative;
+  min-width: 0;
+  padding-left: clamp(0px, 4vw, 64px);
+}
+
+.spiral {
+  position: absolute;
+  left: 0;
+  top: -18%;
+  width: clamp(46px, 5vw, 76px);
+  height: auto;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.spotlightTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.2vw, 44px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--gray-900);
+  text-wrap: balance;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--blue-800);
+  }
+}
+
+.spotlightDesc {
+  margin: 16px 0 0;
+  max-width: 46ch;
+  font-size: 15.5px;
+  line-height: 26px;
   color: var(--gray-700);
+}
+
+.spotlightMeta {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: var(--gray-500);
+}
+
+.spotlightCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 22px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  background: var(--gray-900);
+  color: var(--white);
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease, transform 220ms ease;
+
+  &:hover {
+    background: var(--gray-800);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+}
+
+.spotlightMedia {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #0b0d10;
+  box-shadow: var(--shadow-3, 0 24px 48px -24px rgba(32, 33, 36, 0.4));
+}
+
+.spotlightImg {
+  object-fit: cover;
+  transition: transform 600ms cubic-bezier(0.27, 1.06, 0.18, 1);
+}
+
+.spotlightMedia:hover .spotlightImg {
+  transform: scale(1.03);
+}
+
+/* White pill over the media's bottom edge — the reference's play badge. */
+.playBadge {
+  position: absolute;
+  left: 50%;
+  bottom: -20px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  color: var(--gray-900);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlightCta,
+  .spotlightImg {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .spotlight {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: clamp(44px, 6vw, 64px);
+  }
+
+  .spotlightCopy {
+    padding-left: 0;
+  }
+
+  .spotlightMedia {
+    order: -1;
+  }
+}
+
+/* ---------- Ambient doodles ----------
+   A single decorative layer over the whole page. Marks sit at irregular
+   percentages (x and y), each with its own size and rotation, so they read as
+   scattered sketches rather than a row. They never capture the pointer, sit
+   behind the content, and drift on individual loops. */
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  > svg {
+    position: absolute;
+    animation: ambientDrift 11s ease-in-out infinite alternate;
+  }
+}
+
+/* Nine marks, one per gap, alternating sides. Sizes are restrained —
+   an accent here and there, not a page of stickers.
+   Bands: hero 0–12% · rail 15–34% · gap 34–37% · feature 37–53% ·
+   journal 56–78% · gap 78–82% · newsletter 82–97%. */
+
+/* Just under the headline, either side of the standfirst. */
+.am1  { left: 4%;   top: 12.3%; width: clamp(52px, 4.6vw, 72px); animation-delay: -2s; }
+.am2  { left: 86%;  top: 12.6%; width: clamp(38px, 3.4vw, 52px); animation-delay: -5.5s; }
+
+/* Left gutter of the spotlight rail, then the gap under it. */
+.am3  { left: 1.4%; top: 22%;   width: clamp(44px, 4vw, 58px); animation-delay: -1s; }
+.am4  { left: 46%;  top: 34.4%; width: clamp(78px, 6.6vw, 108px); color: var(--gray-500); animation-delay: -7s; }
+
+/* Right gutter of the feature panel, then the gap before the journal. */
+.am5  { left: 93.6%; top: 45%;  width: clamp(42px, 3.8vw, 56px); animation-delay: -4.5s; }
+.am6  { left: 20%;  top: 53.5%; width: clamp(46px, 4.2vw, 62px); animation-delay: -3s; }
+
+/* Right gutter of the journal rail, then the gap before the newsletter. */
+.am7  { left: 92.6%; top: 66%;  width: clamp(48px, 4.4vw, 64px); animation-delay: -9.5s; }
+.am8  { left: 12%;  top: 78.6%; width: clamp(34px, 3.2vw, 46px); color: var(--gray-400); animation-delay: -8.5s; }
+.am9  { left: 82%;  top: 78.8%; width: clamp(24px, 2.2vw, 32px); animation-delay: -6.8s; }
+
+@keyframes ambientDrift {
+  from { transform: translateY(0) rotate(-2deg); }
+  to { transform: translateY(-10px) rotate(2deg); }
+}
+
+/* A very quiet float on the hero doodles, so the top of the page breathes. */
+@keyframes floatSoft {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+
+.doodleButterfly,
+.doodleSatellite {
+  animation: floatSoft 5s ease-in-out infinite alternate;
+}
+
+.doodleSatellite {
+  animation-delay: -2.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient > svg,
+  .doodleButterfly,
+  .doodleSatellite {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Too narrow to scatter marks without colliding with the cards. */
+  .ambient {
+    display: none;
+  }
+}
+
+/* ---------- Journal feature/* ---------- Journal feature/* ---------- Journal feature — image left, copy right on a themed panel ----------
+   Each theme sets three tokens: the panel wash, the accent used by the
+   title/link/pill, and a soft halo behind the photo. Everything in the card
+   reads from those, so it stays coherent on any theme. */
+
+.journalFeature {
+  --jf-accent: var(--blue-700);
+  --jf-accent-strong: var(--blue-900);
+  --jf-accent-soft: var(--blue-50);
+  --jf-halo: rgb(26 115 232 / 16%);
+  --jf-bg: linear-gradient(160deg, #eef1fe 0%, #e2e9fd 100%);
+  --jf-ink: var(--gray-900);
+  --jf-muted: var(--gray-700);
+  --jf-meta: var(--gray-600);
+  position: relative;
+  overflow: hidden;
+  margin-top: clamp(56px, 7vw, 96px);
+  padding: clamp(28px, 3.6vw, 56px);
+  border-radius: 36px;
+  background: var(--jf-bg);
+  /* Hairline keeps the pastel panel from floating on light themes. */
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 45%);
+  isolation: isolate;
+}
+
+/* Prestyle themes, chosen in admin settings. */
+.theme-blue {
+  --jf-bg: linear-gradient(160deg, #eaf1ff 0%, #d9e6fd 100%);
+  --jf-accent: #1a73e8;
+  --jf-accent-strong: #174ea6;
+  --jf-accent-soft: #e8f0fe;
+  --jf-halo: rgb(26 115 232 / 18%);
+}
+.theme-mint {
+  --jf-bg: linear-gradient(160deg, #e9f7ef 0%, #d6eddd 100%);
+  --jf-accent: #188038;
+  --jf-accent-strong: #0d652d;
+  --jf-accent-soft: #e6f4ea;
+  --jf-halo: rgb(24 128 56 / 16%);
+}
+.theme-lavender {
+  --jf-bg: linear-gradient(160deg, #f2efff 0%, #e4dffd 100%);
+  --jf-accent: #6b3fd4;
+  --jf-accent-strong: #4a2a9c;
+  --jf-accent-soft: #efeaff;
+  --jf-halo: rgb(107 63 212 / 16%);
+}
+.theme-peach {
+  --jf-bg: linear-gradient(160deg, #fff0e9 0%, #fce1d6 100%);
+  --jf-accent: #c1502e;
+  --jf-accent-strong: #8f3617;
+  --jf-accent-soft: #fdece4;
+  --jf-halo: rgb(193 80 46 / 16%);
+}
+.theme-butter {
+  --jf-bg: linear-gradient(160deg, #fdf7e2 0%, #f9ecc4 100%);
+  --jf-accent: #9a6a00;
+  --jf-accent-strong: #6b4a00;
+  --jf-accent-soft: #fef7e0;
+  --jf-halo: rgb(154 106 0 / 16%);
+}
+
+/* A soft light bloom in the panel's top-left corner gives the flat wash depth
+   without adding a second colour. */
+.journalFeature::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(620px 300px at 8% -12%, rgb(255 255 255 / 70%) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+.jfInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 60px);
+  align-items: center;
+}
+
+/* The photo sits on a white mount so it reads as a print on the panel. */
+.jfMedia {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--gray-100);
+  /* One crisp white keyline + a soft theme-tinted lift, rather than a thick
+     white "picture frame". */
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 70%),
+    0 24px 48px -28px var(--jf-halo);
+  transition: box-shadow 300ms ease, transform 300ms ease;
+}
+
+.journalFeature:hover .jfMedia {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 85%),
+    0 30px 60px -30px var(--jf-halo);
+}
+
+.jfImg {
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.27, 1.06, 0.18, 1);
+}
+
+.journalFeature:hover .jfImg {
+  transform: scale(1.03);
+}
+
+.jfBody {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.jfTitle {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.7vw, 36px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.021em;
+  color: var(--jf-ink);
+  text-wrap: balance;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    /* Stretch the link over the copy column so the whole block is clickable. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--jf-accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+}
+
+.journalFeature:hover .jfTitle {
+  color: var(--jf-accent-strong);
+}
+
+.jfDesc {
+  margin: 16px 0 0;
+  max-width: 46ch;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 27px;
+  color: var(--jf-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Author first, in ink; date and read time recede. */
+.jfMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--jf-meta);
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    font-weight: 500;
+    color: var(--jf-ink);
+  }
+
+  span {
+    color: color-mix(in srgb, var(--jf-meta) 42%, transparent);
+  }
+}
+
+/* Pill takes the theme accent, not a fixed blue. */
+.jfCta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  margin-top: 24px;
+  padding: 0 20px 0 22px;
+  border: 1px solid color-mix(in srgb, var(--jf-accent) 38%, transparent);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--jf-accent-strong);
+  font-family: var(--font-ui);
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  text-decoration: none;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+
+  svg {
+    flex: none;
+    transition: transform 200ms ease;
+  }
+}
+
+/* Hovering the card lights the button; hovering the button fills it. */
+.journalFeature:hover .jfCta {
+  border-color: var(--jf-accent);
+  background: rgb(255 255 255 / 70%);
+}
+
+.jfCta:hover {
+  border-color: var(--jf-accent);
+  background: var(--jf-accent);
+  color: var(--white, #fff);
+}
+
+.journalFeature:hover .jfCta svg {
+  transform: translateX(3px);
+}
+
+@media (max-width: 900px) {
+  .jfInner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .jfDesc {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .journalFeature {
+    padding: 16px;
+    border-radius: 26px;
+  }
+
+  .jfMedia {
+    border-radius: 18px;
+    aspect-ratio: 4 / 3;
+    box-shadow: 0 0 0 6px rgb(255 255 255 / 62%);
+  }
+
+  .journalFeature:hover .jfMedia {
+    box-shadow: 0 0 0 6px rgb(255 255 255 / 78%);
+  }
+
+  .jfTitle {
+    font-size: clamp(23px, 6.4vw, 28px);
+  }
+
+  .jfCta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jfMedia,
+  .jfImg,
+  .jfCta,
+  .jfCta svg {
+    transition: none;
+  }
+
+  .journalFeature:hover .jfMedia,
+  .journalFeature:hover .jfImg {
+    transform: none;
+  }
 }
 
 /* ---------- Archive band: copy left, latest story right ---------- */
@@ -681,8 +1202,10 @@
 
   .statementLede {
     margin-top: 22px;
-    font-size: 15px;
-    line-height: 24px;
+    margin-inline: 0;
+    max-width: none;
+    font-size: 17px;
+    line-height: 27px;
   }
 
   .archiveTitle {

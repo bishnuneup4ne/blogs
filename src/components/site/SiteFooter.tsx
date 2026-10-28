@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SocialIcon } from "@/components/icons/Icons";
 import type { SiteSettings } from "@/lib/settings";
 import styles from "./SiteFooter.module.scss";
+import { routes } from "@/lib/routes";
 
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   return (
@@ -18,7 +19,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
           ))}
           {settings.footerLinks.some((link) => link.href === "/privacy") ? null : (
             <li className={styles.linksItem}>
-              <Link href="/privacy">Privacy</Link>
+              <Link href={routes.privacy}>Privacy</Link>
             </li>
           )}
         </ul>

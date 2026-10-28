@@ -415,28 +415,6 @@ export function Lightbox({
           </svg>
         </button>
       ) : null}
-
-      {navigable ? (
-        <div className={styles.strip} role="group" aria-label="All frames">
-          {images.map((item, i) => (
-            <button
-              key={item.src}
-              type="button"
-              aria-current={i === index ? "true" : undefined}
-              aria-label={`Frame ${i + 1}`}
-              className={i === index ? `${styles.thumb} ${styles.thumbActive}` : styles.thumb}
-              onClick={() => onIndexChange?.(i)}
-            >
-              {item.kind === "video" ? (
-                <video src={item.src} muted playsInline preload="metadata" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.src} alt="" />
-              )}
-            </button>
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 

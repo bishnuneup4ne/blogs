@@ -8,9 +8,10 @@ import { normalizeBlocks } from "@/lib/sanitize-rich";
 import { getSettings } from "@/lib/settings";
 import { posts as filePosts } from "@/content/posts";
 import { albums as fileAlbums } from "@/content/gallery";
+import { series as fileSeries } from "@/content/series";
 import { categories as fileCategories, getCategory } from "@/lib/categories";
 import { rankRelated, type ScoredPost } from "@/lib/recommend";
-import type { Album, Block, Category, GalleryPhoto, Heading, Post, Series } from "@/lib/types";
+import type { Album, Block, Category, CategorySlug, GalleryPhoto, Heading, Post, Series } from "@/lib/types";
 
 export type PostStatus = "draft" | "review" | "scheduled" | "published";
 
@@ -56,7 +57,36 @@ interface DbAuthorRow {
   avatar_url: string;
 }
 
-function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
+const DEFAULT_AUTHOR = { name: "Bishnu Neupane", role: "", avatar: "/avatar.jpg" };
+
+async function loadAuthors(): Promise<Map<string, { name: string; role: string; avatar: string }>> {
+  if (!hasSupabase()) {
+    // Fallback: return a default single-author map.
+    return new Map([["default", DEFAULT_AUTHOR]]);
+  }
+  try {
+    // Older installs have no fn_authors.status column, so don't filter on it;
+    // ordering keeps a stable pick when several authors exist.
+    const { data: authors, error } = await db
+      .from("fn_authors")
+      .select("id, name, role, avatar_url")
+      .order("sort_order");
+    if (error) throw error;
+    const authorMap = new Map<string, { name: string; role: string; avatar: string }>();
+    ;(authors ?? []).forEach((a: any) => {
+      authorMap.set(a.id, {
+        name: a.name,
+        role: a.role || "",
+        avatar: a.avatar_url || "/avatar.jpg",
+      });
+    });
+    return authorMap;
+  } catch {
+    return new Map([["default", DEFAULT_AUTHOR]]);
+  }
+}
+
+function mapPost(row: DbPostRow, authorMap: Map<string, { name: string; role: string; avatar: string }>): Post {
   const blocks = normalizeBlocks(row.blocks);
   // Reading time is derived from the actual body so it can never go stale.
   const words = blocks
@@ -65,6 +95,10 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
     .replace(/<[^>]+>/g, "")
     .split(/\s+/)
     .filter(Boolean).length;
+  const authorId = row.author_id ?? "default";
+  // A post with no author_id (or an author since deleted) falls back to the
+  // site's first author, then a synthetic byline — never undefined.
+  const author = authorMap.get(authorId) || authorMap.values().next().value || DEFAULT_AUTHOR;
   return {
     slug: row.slug,
     title: row.title,
@@ -75,39 +109,81 @@ function mapPost(row: DbPostRow, authorName = "Bishnu Neupane"): Post {
     tags: row.tags ?? [],
     cover: row.cover_url ? parseCover(row.cover_url, row.cover_alt, Number(row.cover_height ?? 0)) : undefined,
     featured: Boolean(row.featured),
-    author: { name: authorName, role: "", avatar: "/avatar.jpg" },
+    author: { name: author.name, role: author.role, avatar: author.avatar },
     blocks,
   };
 }
 
-async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Album[]; series: Series[]; subscriberCount: number } | null> {
-  if (!hasSupabase()) return null;
-  const authorName = (await getSettings()).identity.authorName;
+async function loadSeries(published: { id: string; slug: string; title: string; cover_url?: string | null }[]): Promise<Series[]> {
   try {
-    const [postsRes, topicsRes, albumsRes, photosRes, subsRes] = await Promise.all([
+    const [{ data: seriesRows }, { data: linkRows }] = await Promise.all([
+      db.from("fn_series").select("*").eq("status", "live"),
+      db.from("fn_series_posts").select("series_id, post_id, position").order("position"),
+    ]);
+    if (!seriesRows?.length) return [];
+    const byPost = new Map(published.map((p) => [p.id, p]));
+    return seriesRows
+      .map((s: any) => {
+        const posts = (linkRows ?? [])
+          .filter((l: any) => l.series_id === s.id && byPost.has(l.post_id))
+          .map((l: any) => ({ slug: byPost.get(l.post_id)!.slug, title: byPost.get(l.post_id)!.title }));
+        const ownCover = typeof s.cover_url === "string" && s.cover_url ? s.cover_url : undefined;
+        // No explicit cover yet? Lead with the first part's own cover photo.
+        const first = posts.length ? published.find((p) => p.slug === posts[0].slug) : undefined;
+        return {
+          slug: s.slug,
+          title: s.title,
+          description: s.description ?? "",
+          cover: ownCover ?? first?.cover_url ?? undefined,
+          posts,
+        };
+      })
+      // A live series whose posts are all unpublished must not render an empty page.
+      .filter((s) => s.posts.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Album[]; series: Series[] } | null> {
+  if (!hasSupabase()) return null;
+  try {
+    const [postsRes, topicsRes, albumsRes, photosRes] = await Promise.all([
       db.from("fn_posts").select("*").eq("status", "published").order("date", { ascending: false }),
       db.from("fn_topics").select("*").order("sort_order"),
       db.from("fn_albums").select("*").order("sort_order", { ascending: false }),
       db.from("fn_photos").select("*").order("position"),
-      db.from("fn_subscribers").select("id", { count: "exact", head: true }).in("status", ["subscribed", "pending"]),
     ]);
     if (postsRes.error || topicsRes.error || albumsRes.error) throw postsRes.error ?? topicsRes.error ?? albumsRes.error;
     const published = (postsRes.data ?? []) as DbPostRow[];
     // Empty DB means empty site — never fall back to the bundled demo posts.
-    if (published.length === 0) return { posts: [], topics: [], albums: [], series: [], subscriberCount: 0 };
-    const posts = published.map((r) => mapPost(r, authorName));
+    if (published.length === 0) return { posts: [], topics: [], albums: [], series: [] };
+    const authorMap = await loadAuthors();
+    const posts = published.map((r) => mapPost(r, authorMap));
+    const series = await loadSeries(
+      published.map((r) => ({ id: r.id, slug: r.slug, title: r.title, cover_url: (r as any).cover_url ?? null })),
+    );
     const topics: Category[] = (topicsRes.data ?? []).map((t: any) => ({
       slug: t.slug,
       name: t.name,
       description: t.description,
       color: t.color,
       pastel: t.pastel,
+      image: typeof t.image_url === "string" && t.image_url ? t.image_url : undefined,
+      shape: typeof t.shape === "string" && t.shape ? t.shape : undefined,
+      sort_order: Number(t.sort_order ?? 0),
     }));
     const photoRows = (photosRes.data ?? []) as any[];
+    // Group once: the previous filter-per-album was O(albums × photos).
+    const photosByAlbum = new Map<string, any[]>();
+    for (const p of photoRows) {
+      const list = photosByAlbum.get(p.album_id);
+      if (list) list.push(p);
+      else photosByAlbum.set(p.album_id, [p]);
+    }
     const albums: Album[] = ((albumsRes.data ?? []) as any[]).map((a) => {
-      const photos: GalleryPhoto[] = photoRows
-        .filter((p) => p.album_id === a.id)
-        .map((p) => ({
+      const photos: GalleryPhoto[] = (photosByAlbum.get(a.id) ?? [])
+        .map((p: any) => ({
           id: p.id,
           src: p.src,
           alt: p.alt,
@@ -129,7 +205,7 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
         photos,
       };
     });
-    return { posts, topics, albums, series: [] as Series[], subscriberCount: subsRes.count ?? 0 };
+    return { posts, topics, albums, series };
   } catch {
     return null;
   }
@@ -137,13 +213,20 @@ async function loadDb(): Promise<{ posts: Post[]; topics: Category[]; albums: Al
 
 function fileData() {
   const sorted = [...filePosts].sort((a, b) => (a.date < b.date ? 1 : -1));
-  return { posts: sorted, topics: fileCategories, albums: [...fileAlbums].sort((a, b) => b.year - a.year), series: [] as Series[], subscriberCount: 0 };
+  return { posts: sorted, topics: fileCategories, albums: [...fileAlbums].sort((a, b) => b.year - a.year), series: fileSeries };
 }
 
-/** Cached snapshot of all DB content (or files when DB is unavailable/unseeded). */
+/** Cached snapshot of all DB content.
+    The bundled demo posts are only a fallback for a site with no Supabase
+    configured at all — on a DB outage we serve empty content rather than
+    silently publishing demo stories over a live site. */
 export const getContent = unstable_cache(
-  async () => (await loadDb()) ?? fileData(),
-  ["fn-content-v3"],
+  async () => {
+    const live = await loadDb();
+    if (live) return live;
+    return hasSupabase() ? { posts: [], topics: [], albums: [], series: [] } : fileData();
+  },
+  ["fn-content-v4"],
   { revalidate: 60, tags: ["content"] },
 );
 
@@ -169,15 +252,18 @@ export async function getPostsByCategory(slug: string): Promise<Post[]> {
   return (await getAllPosts()).filter((p) => p.category === slug);
 }
 
-export async function getSubscriberCount(): Promise<number> {
-  return (await getContent()).subscriberCount;
-}
-
 export async function allTopics(): Promise<Topic[]> {
   const { posts, topics } = await getContent();
   const counts: Record<string, number> = {};
   for (const p of posts) counts[p.category] = (counts[p.category] ?? 0) + 1;
   return topics.map((c) => ({ ...c, count: counts[c.slug] ?? 0 }));
+}
+
+/* DB topics override the bundled defaults; unknown slugs fall back to the
+   generic "uncategorised" category, so never plain getCategory() on its own. */
+export async function getTopicCategory(slug: string): Promise<Category> {
+  const topics = await allTopics();
+  return topics.find((t) => t.slug === slug) ?? getCategory(slug as CategorySlug);
 }
 
 export { getCategory };
@@ -225,13 +311,9 @@ export async function getTagName(slug: string): Promise<string | undefined> {
 }
 
 export async function getAllSeries(): Promise<Series[]> {
-  return (await getContent()).series;
+  const slugs = new Set((await getAllPosts()).map((p) => p.slug));
+  return (await getContent()).series.filter((s) => s.posts.every((p) => slugs.has(p.slug)));
 }
-
-export async function getSeries(slug: string): Promise<Series | undefined> {
-  return (await getAllSeries()).find((series) => series.slug === slug);
-}
-
 
 export async function getAlbums(): Promise<Album[]> {
   return (await getContent()).albums;

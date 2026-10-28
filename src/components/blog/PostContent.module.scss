@@ -12,15 +12,19 @@
     color: var(--fg);
 
     a {
-      color: var(--accent);
+      color: var(--blue-700);
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
+      text-decoration-color: rgba(26, 115, 232, 0.35);
+      border-radius: 4px;
+      transition: color 150ms ease, text-decoration-color 150ms ease;
     }
 
     a:hover,
     a:focus {
-      color: var(--accent-dark, #1557b0);
+      color: var(--blue-900);
+      text-decoration-color: currentColor;
     }
   }
 
@@ -49,7 +53,7 @@
     position: relative;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-weight: 400;
-    color: var(--fg);
+    color: var(--head-ink, var(--gray-900));
     scroll-margin-top: calc(var(--header-h) + 24px);
     letter-spacing: -0.2px;
   }
@@ -245,14 +249,22 @@
   }
 }
 
-/* Media figure — full prose width */
+/* Media figure — breaks out of the reading column to the page container.
+   Sizing is delegated to the page via `container-type: inline-size`
+   (post.module.scss): `100cqw` is the container's width regardless of box
+   model, so photos, video and the carousel all share one measure. */
 .figure {
-  /* Default (no width class) = blog.google's alignment="full": images break
-     out of the reading column so photos get real width instead of a narrow
-     strip. Capped so text and captions stay readable. */
-  margin: clamp(32px, 4vw, 56px) auto;
-  width: min(100vw - 2 * var(--container-pad, 32px), 1080px);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: clamp(32px, 4vw, 56px) 0;
+  /* Default: a step wider than the text column, not the whole page. */
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
   max-width: none;
+  /* Column flex: the image button would otherwise compute "fit-content" here
+     and shrink-wrap the photo's intrinsic size. */
+  display: flex;
+  flex-direction: column;
 
   figcaption {
     margin-top: 16px;
@@ -263,12 +275,21 @@
   }
 }
 
-.imageWrap {
-  position: relative;
+/* A "row" block is a carousel figure: it must not shrink-wrap to the photo's
+   intrinsic width (the .figure flex would do that). */
+.rowFigure {
   display: block;
+}
+
+.imageWrap {
+  /* Never shrink-wrap to the intrinsic image width — a wide photo rendered
+     narrower than a small one at the same setting. */
+  display: block;
+  flex: none;
   width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card, 24px);
   background: var(--bg);
   cursor: zoom-in;
 }
@@ -281,6 +302,7 @@
   display: block;
   width: 100%;
   height: auto;
+  border-radius: var(--radius-card, 24px);
 }
 
 /* Table styling */
@@ -332,27 +354,28 @@
    left, rounded image on the right. Measured from blog.google: 227deg
    #f0f3ff → #d0d9ff, 24px radius/padding, 24px gap, 50/50 split. */
 .relatedTout {
-  /* blog.google "Related Article": lavender panel, text left, white tile right. */
+  /* blog.google "Related Article": tinted panel (per-topic wash when set),
+     text left, white inset tile right. */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.86fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   align-items: center;
   gap: 32px;
-  margin: 40px 0;
-  padding: 24px;
-  border-radius: var(--radius-card, 24px);
-  background: linear-gradient(227deg, #eef1ff 16.73%, #dbe1ff 98.44%);
+  margin: 36px 0;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--tout-bg, linear-gradient(227deg, #f4f6ff 0%, #e6ebff 100%));
   color: var(--gray-900);
   text-decoration: none;
-  transition: box-shadow 200ms ease;
 
+  /* No hover shadow — the card is already an action; keep it calm. */
   &:hover {
-    box-shadow: 0 10px 30px -16px rgb(60 64 103 / 38%);
     color: var(--gray-900);
     text-decoration: none;
+  }
 
-    .relatedToutImg {
-      transform: scale(1.02);
-    }
+  /* The image is a still inset tile — no zoom on hover. */
+  .relatedToutImg {
+    transition: none;
   }
 }
 
@@ -391,40 +414,62 @@
   color: var(--gray-700);
 }
 
+/* A real outline pill, not bare text — this reads as the card's action. */
 .relatedToutCta {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
   margin-top: auto;
+  padding: 0 18px 0 20px;
+  border: 1px solid var(--gray-400);
+  border-radius: var(--radius-pill);
+  background: transparent;
   font-family: var(--font-ui);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--gray-900);
+  transition: border-color 200ms ease, background-color 200ms ease;
 
   svg {
     transition: transform 200ms ease;
   }
 }
 
-.relatedTout:hover .relatedToutCta svg {
-  transform: translateX(4px);
+.relatedTout:hover .relatedToutCta {
+  border-color: var(--gray-900);
+  background: rgb(255 255 255 / 70%);
 }
 
-/* The image sits on its own white card so it reads as an inset tile. */
+/* Per-topic panel colours, chosen to sit under dark ink text. */
+.toutBlue { --tout-bg: linear-gradient(227deg, #f0f6ff 0%, #d9e7fd 100%); }
+.toutGreen { --tout-bg: linear-gradient(227deg, #f1faf3 0%, #d8efdd 100%); }
+.toutMint { --tout-bg: linear-gradient(227deg, #effaf6 0%, #d3efe6 100%); }
+.toutYellow { --tout-bg: linear-gradient(227deg, #fdf8ec 0%, #f8e7bd 100%); }
+.toutRed { --tout-bg: linear-gradient(227deg, #fef4f2 0%, #fadcd7 100%); }
+.toutPurple { --tout-bg: linear-gradient(227deg, #f8f5ff 0%, #e8dcfb 100%); }
+.toutGray { --tout-bg: linear-gradient(227deg, #f8f9fa 0%, #eceef0 100%); }
+
+/* The tile picks up the panel's own gradient at a lighter step, so it reads
+   as an inset rather than plain white. */
+.relatedTout[class*="tout"] .relatedToutMedia {
+  background-image: linear-gradient(227deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.4) 100%), var(--tout-bg);
+}
+
+.relatedTout:hover .relatedToutCta svg {
+  transform: translateX(3px);
+}
+
+/* The image sits on its own tinted tile so it reads as an inset. */
 .relatedToutMedia {
   display: block;
   min-width: 0;
-  /* Match the 16:10 source so the white frame stays even all round. */
   aspect-ratio: 16 / 10;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   background: var(--white);
-  padding: 10px;
-}
-
-.relatedToutMedia[class*="pastel-"] {
-  background-image: none;
-  background-color: var(--white);
+  padding: 7px;
 }
 
 .relatedToutImg {
@@ -432,9 +477,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--white);
-  transition: transform 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 @media (max-width: 720px) {
@@ -469,15 +513,24 @@
   }
 }
 
-/* Figure sizes */
-/* Explicit narrow widths, when an author still picks one. */
-.figWide { width: 100%; max-width: 860px; }
-.figMedium { width: 100%; max-width: 620px; }
-.figSmall { width: 100%; max-width: 420px; }
+/* Figure sizes. All variants keep the viewport-centred breakout and only
+   change the measure; "full" (no class) and "wide" are the same size. */
+.figWide { width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px); }
+.figMedium { width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 860px); }
+.figSmall { width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 560px); }
 
 @media (max-width: 640px) {
-  .figWide, .figMedium, .figSmall { max-width: 100%; }
-  .figure { width: 100%; }
+  /* The column already fills the screen; the centring transform would shift
+     content, so the breakout collapses to the column width. */
+  .figure,
+  .figWide,
+  .figMedium,
+  .figSmall {
+    width: 100%;
+    left: auto;
+    transform: none;
+    margin-inline: 0;
+  }
 }
 /* ---------- CTA button block ---------- */
 .ctaRow {

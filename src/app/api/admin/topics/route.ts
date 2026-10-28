@@ -1,4 +1,5 @@
 import { adminRoute, body, db, hexColor, integer, json, slug, str } from "@/lib/api-helpers";
+import { PASTELS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,11 @@ export const POST = adminRoute(async (req) => {
     name,
     slug: topicSlug,
     description: str(b.description, 600)?.trim() ?? "",
-    pastel: ["blue","green","yellow","red","purple","gray"].includes(String(b.pastel)) ? b.pastel : "blue",
+    pastel: (PASTELS as readonly string[]).includes(String(b.pastel)) ? b.pastel : "blue",
     color: hexColor(b.color),
+    image_url: str(b.image_url, 2000)?.trim() || null,
+    // "circle" is the default even before the shape column exists in the DB.
+    ...(b.shape !== undefined ? { shape: ["circle","squircle","leaf","blob","petal"].includes(String(b.shape)) ? b.shape : "circle" } : {}),
     sort_order: integer(b.sort_order, 0, 10000, (count ?? 0) + 1),
   };
   const { data, error } = await db.from("fn_topics").insert(payload).select().single();

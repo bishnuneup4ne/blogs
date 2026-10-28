@@ -1,5 +1,10 @@
 .figure {
   margin: var(--prose-block, 40px) 0;
+  /* Same breakout as photos — the container width, not the viewport. */
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100cqw - 2 * var(--container-pad, 32px));
 }
 
 /* Big, rounded media — the shape blog.google uses for inline video */
@@ -49,11 +54,6 @@
   overflow: hidden;
   background: #0e0f11 center / cover no-repeat;
   cursor: pointer;
-  transition: transform 200ms ease;
-}
-
-.facade:hover {
-  transform: scale(1.02);
 }
 
 /* Dark veil so the play glyph stays readable on any poster */

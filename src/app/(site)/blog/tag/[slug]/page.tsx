@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { LatestSection } from "@/components/site/LatestSection";
 import { allTags, allTopics, getPostsByTag, getTagName } from "@/lib/data";
 import styles from "./tag.module.scss";
+import { routes } from "@/lib/routes";
 
 export async function generateStaticParams() {
   return (await allTags()).map((t) => ({ slug: t.slug }));
@@ -41,9 +42,9 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
     <>
       <div className={styles.hero}>
         <nav className={styles.breadcrumb} aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
+          <Link href={routes.home}>Home</Link>
           <span aria-hidden="true">›</span>
-          <Link href="/blog">Feed</Link>
+          <Link href={routes.blog}>Feed</Link>
           <span aria-hidden="true">›</span>
           <span aria-current="page">{name}</span>
         </nav>

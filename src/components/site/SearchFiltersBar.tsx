@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import styles from "./SearchFilters.module.scss";
+import { routes } from "@/lib/routes";
 
 type Sort = "relevance" | "newest" | "oldest";
 
@@ -63,7 +64,7 @@ export function SearchFiltersBar({
             onSelect={(v) => setParam("topic", v)}
           />
           {hasFilters ? (
-            <Link href="/search" className={`${styles.clear} pill`}>Clear all</Link>
+            <Link href={routes.search} className={`${styles.clear} pill`}>Clear all</Link>
           ) : null}
         </div>
       </div>

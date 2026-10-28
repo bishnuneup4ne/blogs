@@ -1,5 +1,6 @@
 import { adminRoute, body, db, json, str } from "@/lib/api-helpers";
 import { parsePostInput } from "@/lib/post-input";
+import { recordRewrite } from "@/lib/rewrites";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export const PATCH = adminRoute(async (req, ctx) => {
   const patch: Record<string, unknown> = { ...parsed.data };
   if (Object.keys(patch).length === 0) return json({ error: "no fields" }, 400);
   patch.updated_at = new Date().toISOString();
+  const { data: before } = await db.from("fn_posts").select("slug").eq(col, id).maybeSingle();
   let { data, error } = await db.from("fn_posts").update(patch).eq(col, id).select().maybeSingle();
   // Older schemas lack cover_height — drop it and retry instead of failing the save.
   if (error && /cover_height/.test(error.message) && "cover_height" in patch) {
@@ -28,6 +30,10 @@ export const PATCH = adminRoute(async (req, ctx) => {
   }
   if (error) return json({ error: error.message }, 400);
   if (!data) return json({ error: "Not found" }, 404);
+  // Slug changed? Log the old URL for 301s and repoint every link to it.
+  if (before?.slug && typeof patch.slug === "string" && patch.slug !== before.slug) {
+    await recordRewrite("post", before.slug, patch.slug);
+  }
   return json({ post: data });
 });
 

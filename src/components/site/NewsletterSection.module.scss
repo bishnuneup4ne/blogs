@@ -1,73 +1,31 @@
-/* blog.google newsletter band: a soft pastel wash with decorative shapes,
-   copy on the left and a white form card on the right. */
+/* Newsletter — an editorial closing block, not a coloured panel: a kicker
+   and headline, a short paragraph with what-you-get bullets, and the form
+   card opposite. A hairline separates it from the feed above. */
+
 .wrap {
   position: relative;
-  margin: var(--spacer-6) auto 0;
-  max-width: var(--container);
-  border-radius: var(--radius-card);
-  background:
-    radial-gradient(560px 300px at 88% 8%, rgb(254 239 195 / 55%) 0%, transparent 68%),
-    radial-gradient(520px 280px at 96% 96%, rgb(218 249 212 / 55%) 0%, transparent 70%),
-    linear-gradient(180deg, #f2f6ff 0%, #eef7fb 100%);
-  overflow: hidden;
+  margin: var(--spacer-7) auto 0;
+  max-width: 1040px;
+  padding-top: var(--spacer-5);
+  padding-bottom: var(--spacer-5);
+  border-top: 1px solid var(--gray-200);
 }
 
-/* Two faint blobs, like the reference's pale shapes. */
-.wrap::before,
-.wrap::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
+/* ---------- Head ---------- */
 
-.wrap::before {
-  top: -120px;
-  right: -80px;
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(circle, rgb(255 236 179 / 45%) 0%, transparent 70%);
-}
-
-.wrap::after {
-  bottom: -160px;
-  right: 12%;
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle, rgb(198 240 219 / 45%) 0%, transparent 70%);
-}
-
-.inner {
+.head {
   position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-  gap: clamp(32px, 5vw, 72px);
-  align-items: center;
-  padding: clamp(36px, 5vw, 64px) clamp(30px, 5vw, 72px);
-}
-
-.copy {
-  min-width: 0;
-}
-
-.kicker {
-  display: block;
-  margin-bottom: 12px;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--gray-600);
+  margin-bottom: clamp(24px, 3vw, 36px);
+  max-width: 42ch;
 }
 
 .title {
-  margin-bottom: 14px;
-  font-size: clamp(28px, 3.6vw, 44px);
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: clamp(28px, 3.4vw, 42px);
   font-weight: 400;
-  letter-spacing: -0.6px;
-  line-height: 1.14;
+  letter-spacing: -0.03em;
+  line-height: 1.16;
   color: var(--gray-900);
   text-wrap: balance;
 }
@@ -76,94 +34,61 @@
   color: var(--blue-700);
 }
 
+/* Curves from just under the headline down to the form card's top edge. */
+.doodleArrow {
+  position: absolute;
+  right: clamp(-290px, -19vw, -150px);
+  top: 62%;
+  width: clamp(80px, 7.6vw, 118px);
+  height: auto;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+/* Satellite sits in the gap above the form card. */
+.doodleSatellite {
+  position: absolute;
+  top: -52px;
+  right: clamp(16px, 4vw, 44px);
+  width: clamp(46px, 4vw, 58px);
+  height: auto;
+  color: var(--gray-800);
+  pointer-events: none;
+}
+
+/* ---------- Body ---------- */
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding-top: 4px;
+}
+
 .desc {
-  margin-top: 0;
-  margin-bottom: var(--spacer-4);
+  margin: 0;
   max-width: 46ch;
+  font-family: var(--font-ui);
   font-size: 16px;
   line-height: 28px;
   color: var(--gray-700);
 }
 
-.readers {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.avatars {
-  display: flex;
-  align-items: center;
-
-  img,
-  span {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--gray-50);
-    object-fit: cover;
-  }
-
-  > * + * {
-    margin-left: -10px;
-  }
-}
-
-.avatarMine {
-  z-index: 3;
-}
-
-.avatarGhost {
-  display: grid;
-  place-items: center;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--white);
-}
-
-.a1 {
-  z-index: 2;
-  background: #aecbfa;
-  color: #174ea6;
-}
-
-.a2 {
-  z-index: 1;
-  background: #f6aea9;
-  color: #a50e0e;
-}
-
-.a3 {
-  background: #b7d3a6;
-  color: #1e4620;
-}
-
-.readersLine {
-  font-size: 14px;
-  line-height: 22px;
-  color: var(--gray-700);
-
-  strong {
-    font-weight: 500;
-    color: var(--gray-900);
-  }
-}
-
-.aboutLink {
-  color: var(--blue-700);
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
+/* The form sits in a bordered card rather than a floating shadowed panel. */
 .formCard {
-  padding: var(--spacer-4);
-  border-radius: var(--radius-card);
+  position: relative;
+  padding: 22px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-16, 16px);
   background: var(--white);
-  box-shadow: var(--shadow-1);
 }
 
 .note {
@@ -204,25 +129,30 @@
   .inner {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--spacer-4);
-    padding: var(--spacer-5) var(--container-pad);
+  }
+
+  .head {
+    max-width: none;
+  }
+
+  /* Doodles collide with the wrapped headline / stacked form on narrow
+     screens — the layout reads better without them. */
+  .doodleArrow,
+  .doodleSatellite {
+    display: none;
   }
 }
 
 @media (max-width: 560px) {
   .wrap {
     margin-top: var(--spacer-5);
-    border-left: none;
-    border-right: none;
-    border-radius: 0;
   }
 
-  .compact {
-    border-left: 1px solid var(--border-light);
-    border-right: 1px solid var(--border-light);
-    border-radius: var(--radius-card);
+  .title {
+    font-size: clamp(26px, 7.4vw, 32px);
   }
 
-  .readers {
-    flex-wrap: wrap;
+  .formCard {
+    padding: 16px;
   }
 }

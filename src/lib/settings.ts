@@ -31,6 +31,8 @@ export interface SiteSettings {
     authorName: string;
   };
   hero: { title: string; standfirst: string };
+  /** Prestyle palette for the home "featured story" band. */
+  featureTheme: "blue" | "mint" | "lavender" | "peach" | "butter";
   socials: { label: string; href: string; icon?: string }[];
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string; icon?: string }[];
@@ -65,6 +67,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     title: "Notes worth keeping.",
     standfirst: "Security engineering, systems, the trail and everything between — written down as it happens.",
   },
+  featureTheme: "blue",
   socials: [
     { label: "GitHub", href: "https://github.com/bishnuneup4ne" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/bishnuneup4ne/" },
@@ -161,6 +164,9 @@ function normaliseSettings(raw: SiteSettings, base: SiteSettings): SiteSettings 
       title: safeText(hero.title ?? hero.heading, base.hero.title, 160),
       standfirst: safeText(hero.standfirst ?? hero.subheading, base.hero.standfirst, 400),
     },
+    featureTheme: (["blue", "mint", "lavender", "peach", "butter"] as const).includes(raw.featureTheme as never)
+      ? raw.featureTheme
+      : base.featureTheme,
     socials: safeList(raw.socials, base.socials, (item) => {
       if (!item || typeof item !== "object") return null;
       const social = item as Record<string, unknown>;

@@ -46,3 +46,8 @@ export function relativeDate(iso: string): string {
   }
   return formatDate(iso);
 }
+
+/** "3 stories", "1 story" — for counters in page heads. */
+export function countLabel(n: number, singular = "story", plural = "stories"): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}

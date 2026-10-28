@@ -9,8 +9,75 @@ import styles from "./InThisArticle.module.scss";
 export function InThisArticle({ headings }: { headings: Heading[] }) {
   const [activeId, setActiveId] = useState<string | null>(headings[0]?.id ?? null);
   const [open, setOpen] = useState(true);
+  const [userToggled, setUserToggled] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLButtonElement>(null);
+
+  /* Fold while a photo, reel or player scrolls behind the sticky rail, then
+     reopen once it has passed. Hashing makes CSS-module class names useless
+     as selectors, so match the elements themselves.
+
+     Two things keep it from flickering:
+     - The test band is the *pill*, never the open panel. Measuring the panel
+       meant opening it made it collide with media sooner, which collapsed it,
+       which shrank the band and reopened it — a visible loop.
+     - Hysteresis: media must clear the pill by 16px before it reopens, so a
+       photo resting exactly on the boundary can't toggle it every frame. */
+  useEffect(() => {
+    if (userToggled) return;
+    let frame = 0;
+    let folded = false;
+    function update() {
+      frame = 0;
+      const nav = wrapRef.current;
+      const pill = pillRef.current;
+      if (!nav || !pill) return;
+      const top = pill.getBoundingClientRect().top;
+      const bottom = top + pill.getBoundingClientRect().height;
+      const clip = nav.parentElement?.getBoundingClientRect() ?? nav.getBoundingClientRect();
+      const left = Math.max(pill.getBoundingClientRect().left, clip.left);
+      const right = Math.min(pill.getBoundingClientRect().right, clip.right);
+
+      let overlapsBand = false;
+      const media = document.querySelectorAll<HTMLElement>("figure, iframe, video");
+      for (const el of media) {
+        const r = el.getBoundingClientRect();
+        if (r.right > left && r.left < right && r.bottom > top && r.top < bottom) {
+          overlapsBand = true;
+          break;
+        }
+      }
+
+      // Enter the fold as soon as they touch; leave only once clearly clear.
+      if (!folded && overlapsBand) folded = true;
+      else if (folded && !overlapsBand) {
+        let stillNear = false;
+        for (const el of media) {
+          const r = el.getBoundingClientRect();
+          if (r.right > left && r.left < right && r.bottom > top - 16 && r.top < bottom + 16) {
+            stillNear = true;
+            break;
+          }
+        }
+        if (!stillNear) folded = false;
+      }
+
+      setOpen((prev) => (prev === !folded ? prev : !folded));
+    }
+    function onScroll() {
+      if (!frame) frame = requestAnimationFrame(update);
+    }
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [userToggled]);
 
   // Scroll-spy: the active heading is the last one whose top has passed the
   // header band. Deterministic on every scroll frame — no observer gaps.
@@ -61,6 +128,9 @@ export function InThisArticle({ headings }: { headings: Heading[] }) {
   function toggle() {
     const panel = panelRef.current;
     const next = !open;
+    // A manual toggle wins for the rest of the visit, so auto-folding can't
+    // fight the reader on the next photo.
+    setUserToggled(true);
     setOpen(next);
     if (!panel) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -80,8 +150,9 @@ export function InThisArticle({ headings }: { headings: Heading[] }) {
   }
 
   return (
-    <nav className={styles.wrap} aria-label="In this article">
+    <nav ref={wrapRef} className={styles.wrap} aria-label="In this article">
       <button
+        ref={pillRef}
         type="button"
         className={styles.pill}
         aria-expanded={open}

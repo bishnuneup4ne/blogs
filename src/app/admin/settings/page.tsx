@@ -16,20 +16,34 @@ interface AboutEntry { label?: string; value?: string; year?: string; title?: st
 interface SettingsForm {
   identity: { wordmark: string; siteName: string; tagline: string; email: string; location: string; avatarUrl: string; authorName: string };
   hero: { title: string; standfirst: string };
+  featureTheme: "blue" | "mint" | "lavender" | "peach" | "butter";
   socials: { label: string; href: string; icon?: string }[];
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string }[];
   footerLinks: { label: string; href: string }[];
+  homeSections: { id: string; enabled: boolean; title: string; href?: string; linkLabel?: string }[];
   about: { kicker: string; title: string; lede: string; quote: string; imageUrl: string; imageAlt: string; focus: string[]; story: string[]; now: AboutEntry[]; timeline: AboutEntry[]; updated: string };
 }
+
+const FEATURE_THEMES: { id: SettingsForm["featureTheme"]; name: string; swatch: string }[] = [
+  { id: "blue", name: "Blue", swatch: "#d7e3fc" },
+  { id: "mint", name: "Mint", swatch: "#d3ecd9" },
+  { id: "lavender", name: "Lavender", swatch: "#e3ddff" },
+  { id: "peach", name: "Peach", swatch: "#fce0d3" },
+  { id: "butter", name: "Butter", swatch: "#f9ecc4" },
+];
 
 const BLANK: SettingsForm = {
   identity: { wordmark: "", siteName: "", tagline: "", email: "", location: "", avatarUrl: "", authorName: "" },
   hero: { title: "", standfirst: "" },
+  featureTheme: "blue",
   socials: [],
   toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [],
   footerLinks: [],
+  // Carried through the form untouched unless an editor changes them; the
+  // API merges shallowly, so omitting this key would leave stale values.
+  homeSections: [],
   about: { kicker: "About", title: "", lede: "", quote: "", imageUrl: "", imageAlt: "", focus: [], story: [], now: [], timeline: [], updated: "" },
 };
 
@@ -220,6 +234,23 @@ export default function AdminSettingsPage() {
               <span>Standfirst</span>
               <textarea rows={3} value={form.hero.standfirst} onChange={(e) => patch("hero", { standfirst: e.target.value })} />
             </label>
+            <div className={styles.field}>
+              <span>Featured band colour</span>
+              <em>Prestyle theme behind the home page's featured story panel.</em>
+              <div className={styles.themeRow}>
+                {FEATURE_THEMES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    aria-label={t.name}
+                    aria-pressed={form.featureTheme === t.id}
+                    className={`${styles.themeSwatch} ${form.featureTheme === t.id ? styles.themeSwatchActive : ""}`}
+                    style={{ background: t.swatch }}
+                    onClick={() => setForm((f) => ({ ...f, featureTheme: t.id }))}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </Card>
 

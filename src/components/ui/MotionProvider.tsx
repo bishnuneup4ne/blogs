@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { usePathname } from "next/navigation";
@@ -66,22 +66,29 @@ return () => {
     };
   }, []);
 
-  // Page transition — fade/slide content on route change
+  // Page transition — a short fade, but only after the first paint. Fading
+  // the initial load left the page at 40% opacity for ~400ms, which reads as
+  // a broken, half-rendered layout rather than a transition.
+  const firstPaint = useRef(true);
   useEffect(() => {
     const main = document.querySelector("main");
     if (!main) return;
+    if (firstPaint.current) {
+      firstPaint.current = false;
+      gsap.set(main, { clearProps: "opacity" });
+      return;
+    }
     if (
       new URLSearchParams(window.location.search).has("nomotion") ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      gsap.set(main, { clearProps: "opacity,transform" });
+      gsap.set(main, { clearProps: "opacity" });
       return;
     }
-    gsap.fromTo(
-      main,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" },
-    );
+    /* Fade only — no translate. A transformed <main> becomes the containing
+       block for everything inside, so the header, reading bar and TOC would
+       slide with the page and lose their sticky once the tween finished. */
+    gsap.fromTo(main, { opacity: 0 }, { opacity: 1, duration: 0.28, ease: "power1.out" });
   }, [pathname]);
 
   return <>{children}</>;

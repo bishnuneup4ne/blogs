@@ -1,11 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import Link from "next/link";
 import Image from "next/image";
 import type { Post } from "@/lib/types";
 import { getCategory } from "@/lib/categories";
+import { formatDate } from "@/lib/dates";
 import styles from "./HomeSections.module.scss";
+
+/* Rotating pastel washes so every spotlight blog reads a different colour. */
+const TILE_WASHES = [
+  "heroTileWash-lime",
+  "heroTileWash-blue",
+  "heroTileWash-indigo",
+  "heroTileWash-mint",
+  "heroTileWash-peach",
+  "heroTileWash-butter",
+  "heroTileWash-lavender",
+].map((k) => styles[k]);
+import { routes } from "@/lib/routes";
 
 /* blog.google home patterns, ported to this site's tokens:
    hero rail (one big card + tinted peek cards), 3-up row, themed collection
@@ -13,7 +27,7 @@ import styles from "./HomeSections.module.scss";
    Measured from blog.google/: 277×449 cards, 245px square images, 24px
    radius, rail arrows + progress line. */
 
-function Media({ post, sizes, className }: { post: Post; sizes: string; className?: string }) {
+function Media({ post, sizes, className, eager }: { post: Post; sizes: string; className?: string; eager?: boolean }) {
   const category = getCategory(post.category);
   if (!post.cover) {
     return <span className={`${styles.mediaFallback} pastel-${category.pastel} ${className ?? ""}`} aria-hidden="true" />;
@@ -24,6 +38,7 @@ function Media({ post, sizes, className }: { post: Post; sizes: string; classNam
       alt=""
       fill
       sizes={sizes}
+      priority={eager}
       className={className}
       style={post.cover.focal != null ? { objectPosition: `center ${post.cover.focal}%` } : undefined}
     />
@@ -45,320 +60,7 @@ const ReadPill = ({ label = "Read article" }: { label?: string }) => (
   </span>
 );
 
-/* ---------- Hero rail ---------- */
 
-export function HeroRail({ posts }: { posts: Post[] }) {
-  const trackRef = useRef<HTMLUListElement>(null);
-  const [active, setActive] = useState(0);
-  const [max, setMax] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  const update = useCallback(() => {
-    const t = trackRef.current;
-    if (!t) return;
-    const limit = t.scrollWidth - t.clientWidth;
-    setMax(limit);
-    setProgress(limit <= 0 ? 1 : Math.min(Math.max(t.scrollLeft / limit, 0), 1));
-    const pad = parseFloat(getComputedStyle(t).paddingLeft) || 0;
-    const left = t.getBoundingClientRect().left + pad;
-    let best = 0;
-    let bestDist = Infinity;
-    (Array.from(t.children) as HTMLElement[]).forEach((el, i) => {
-      const d = Math.abs(el.getBoundingClientRect().left - left);
-      if (d < bestDist) { bestDist = d; best = i; }
-    });
-    setActive(best);
-  }, []);
-
-  useEffect(() => {
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [update]);
-
-  function go(delta: number) {
-    const t = trackRef.current;
-    if (!t) return;
-    // Scroll to the target card's own offset rather than adding a step to the
-    // current position: repeated deltas drifted, because scroll-snap re-settles
-    // the rail between clicks and the "active" card lagged the real position.
-    const cards = Array.from(t.children) as HTMLElement[];
-    const pad = parseFloat(getComputedStyle(t).paddingLeft) || 0;
-    const target = cards[Math.min(Math.max(active + delta, 0), cards.length - 1)];
-    if (!target) return;
-    const left = Math.min(Math.max(target.offsetLeft - pad, 0), t.scrollWidth - t.clientWidth);
-    t.scrollTo({ left, behavior: "smooth" });
-  }
-
-  if (posts.length === 0) return null;
-
-  return (
-    <section className={styles.heroRail} aria-label="Featured stories">
-      <ul className={styles.heroTrack} ref={trackRef} onScroll={update}>
-        {posts.map((post, i) => {
-          const category = getCategory(post.category);
-          return (
-            <li key={post.slug} className={styles.heroItem}>
-              <Link
-                href={`/blog/${post.slug}`}
-                className={`${styles.heroCard} ${styles.heroCardLead} pastel-${category.pastel}`}
-              >
-                <span className={styles.heroText}>
-                  <span className={styles.heroEyebrow}>{category.name}</span>
-                  <span className={styles.heroTitle}>{post.title}</span>
-                  <span className={styles.heroSummary}>{post.description}</span>
-                  <span className={styles.heroByline}>By {post.author.name}</span>
-                  <ReadPill />
-                </span>
-                {/* Every card is text-beside-image so paging never changes shape. */}
-                <span className={styles.heroMedia}>
-                  <Media post={post} sizes="(max-width: 900px) 100vw, 60vw" className={styles.coverImg} />
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      {posts.length > 1 ? (
-        <div className={styles.railControls}>
-          <span className={styles.railArrows}>
-            <button type="button" onClick={() => go(-1)} disabled={active <= 0} aria-label="Previous stories">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-            </button>
-            <button type="button" onClick={() => go(1)} disabled={max > 0 && progress >= 0.999} aria-label="Next stories">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
-            </button>
-          </span>
-          <span className={styles.railProgress} aria-hidden="true">
-            <span style={{ transform: `scaleX(${Math.max(progress, 0.08)})` }} />
-          </span>
-        </div>
-      ) : null}
-    </section>
-  );
-}
-
-/* ---------- Category "latest" block: 5 stories + View more ---------- */
-
-export function CategoryLatest({
-  title,
-  subtitle,
-  posts,
-  moreHref,
-  moreLabel = "View more",
-  carousel = false,
-}: {
-  title: string;
-  subtitle?: string;
-  posts: Post[];
-  moreHref: string;
-  moreLabel?: string;
-  /** Lay the stories out as a horizontal rail instead of a stacked list. */
-  carousel?: boolean;
-}) {
-  if (posts.length === 0) return null;
-  return (
-    <section className={styles.catLatest} aria-label={title}>
-      <div className={styles.catHead}>
-        <div>
-          <h2 className={styles.bandTitle}>{title}</h2>
-          {subtitle ? <p className={styles.catSubtitle}>{subtitle}</p> : null}
-        </div>
-        <Link href={moreHref} className={styles.catMore}>
-          {moreLabel}
-          <ReadArrow />
-        </Link>
-      </div>
-      <ul className={carousel ? `${styles.catList} ${styles.catRail}` : styles.catList}>
-        {posts.slice(0, 6).map((post) => (
-          <li key={post.slug}>
-            <Link href={`/blog/${post.slug}`} className={styles.catRow}>
-              <span className={styles.catMedia}>
-                <Media post={post} sizes="(max-width: 900px) 100vw, 260px" className={styles.coverImg} />
-              </span>
-              <span className={styles.catBody}>
-                <span className={styles.catTags}>
-                  {post.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className={styles.feedChip}>{tag}</span>
-                  ))}
-                </span>
-                <span className={styles.catTitle}>{post.title}</span>
-                <span className={styles.catDesc}>{post.description}</span>
-                <span className={styles.catMeta}>By {post.author.name}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* ---------- 3-up row ("More updates") ---------- */
-
-export function ThreeUp({ title, posts, href }: { title: string; posts: Post[]; href?: string }) {
-  if (posts.length === 0) return null;
-  return (
-    <section className={styles.band} aria-label={title}>
-      <div className={styles.bandHead}>
-        <h2 className={styles.bandTitle}>{title}</h2>
-        {href ? <Link href={href} className={styles.bandLink}>View all<ReadArrow /></Link> : null}
-      </div>
-      <ul className={styles.threeUp}>
-        {posts.slice(0, 3).map((post) => (
-          <li key={post.slug}>
-            <Link href={`/blog/${post.slug}`} className={styles.triCard}>
-              <span className={styles.triMedia}>
-                <Media post={post} sizes="(max-width: 760px) 100vw, 33vw" className={styles.coverImg} />
-              </span>
-              <span className={styles.triTitle}>{post.title}</span>
-              <ReadPill />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* ---------- Collection band (themed) ---------- */
-
-export function CollectionBand({
-  eyebrow,
-  title,
-  description,
-  posts,
-  href,
-  theme = "mint",
-}: {
-  eyebrow: string;
-  title: string;
-  description?: string;
-  posts: Post[];
-  href: string;
-  theme?: "mint" | "blue" | "sand";
-}) {
-  if (posts.length === 0) return null;
-  return (
-    <section className={`${styles.collection} ${styles[`theme${theme[0].toUpperCase()}${theme.slice(1)}`]}`} aria-label={title}>
-      <div className={styles.collectionInner}>
-        <div className={styles.collectionCopy}>
-          <p className={styles.collectionEyebrow}>{eyebrow}</p>
-          <h2 className={styles.collectionTitle}>{title}</h2>
-          {description ? <p className={styles.collectionText}>{description}</p> : null}
-          <Link href={href} className={styles.collectionCta}>
-            View the collection
-            <ReadArrow />
-          </Link>
-        </div>
-        <ul className={styles.collectionCards}>
-          {posts.slice(0, 3).map((post) => {
-            const category = getCategory(post.category);
-            return (
-              <li key={post.slug}>
-                <Link href={`/blog/${post.slug}`} className={styles.compactCard}>
-                  <span className={styles.compactMedia}>
-                    <Media post={post} sizes="(max-width: 760px) 60vw, 240px" className={styles.coverImg} />
-                  </span>
-                  <span className={styles.compactEyebrow}>{category.name}</span>
-                  <span className={styles.compactTitle}>{post.title}</span>
-                  <span className={styles.compactByline}>By {post.author.name}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- "The latest" feed with topic filter ---------- */
-
-export function LatestFeed({
-  posts,
-  topics,
-  title = "The latest",
-  filterLabel = "Sort by topic",
-}: {
-  posts: Post[];
-  topics: { slug: string; name: string }[];
-  title?: string;
-  filterLabel?: string;
-}) {
-  const [topic, setTopic] = useState("all");
-  const counts = new Map<string, number>();
-  posts.forEach((p) => counts.set(p.category, (counts.get(p.category) ?? 0) + 1));
-  const available = topics.filter((t) => (counts.get(t.slug) ?? 0) > 0);
-  const rows = (topic === "all" ? posts : posts.filter((p) => p.category === topic)).slice(0, 12);
-
-  return (
-    <section className={styles.feed} aria-label={title}>
-      <div className={styles.feedSide}>
-        <h2 className={styles.bandTitle}>{title}</h2>
-        <p className={styles.filterLabel}>{filterLabel}</p>
-        <div className={styles.filterChips} role="group" aria-label={filterLabel}>
-          <button type="button" className={topic === "all" ? styles.chipOn : styles.chip} aria-pressed={topic === "all"} onClick={() => setTopic("all")}>
-            All News
-          </button>
-          {available.map((t) => (
-            <button key={t.slug} type="button" className={topic === t.slug ? styles.chipOn : styles.chip} aria-pressed={topic === t.slug} onClick={() => setTopic(t.slug)}>
-              {t.name}
-            </button>
-          ))}
-        </div>
-      </div>
-      <ul className={styles.feedRows}>
-        {rows.map((post) => (
-          <li key={post.slug}>
-            <Link href={`/blog/${post.slug}`} className={styles.feedRow}>
-              <span className={styles.feedMedia}>
-                <Media post={post} sizes="300px" className={styles.coverImg} />
-              </span>
-              <span className={styles.feedBody}>
-                <span className={styles.feedChips}>
-                  <span className={styles.feedChip}>{getCategory(post.category).name}</span>
-                  {post.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className={`${styles.feedChip} ${styles.feedChipMuted}`}>{tag}</span>
-                  ))}
-                </span>
-                <span className={styles.feedTitle}>{post.title}</span>
-                <span className={styles.feedByline}>By {post.author.name}</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {rows.length === 0 ? <p className={styles.emptyFeed}>Nothing filed under this topic yet.</p> : null}
-    </section>
-  );
-}
-
-/* ---------- Feature story ---------- */
-
-export function Feature({ post, eyebrow = "Feature" }: { post: Post; eyebrow?: string }) {
-  const category = getCategory(post.category);
-  return (
-    <section className={styles.feature} aria-label="Featured story">
-      <h2 className={styles.bandTitle}>Featured</h2>
-      <Link href={`/blog/${post.slug}`} className={styles.featureCard}>
-        <span className={styles.featureMedia}>
-          <Media post={post} sizes="(max-width: 900px) 100vw, 55vw" className={styles.coverImg} />
-        </span>
-        <span className={styles.featureBody}>
-          <span className={styles.feedChips}>
-            <span className={styles.feedChip}>{eyebrow}</span>
-            <span className={styles.feedChip}>{category.name}</span>
-          </span>
-          <span className={styles.featureTitle}>{post.title}</span>
-          <span className={styles.featureText}>{post.description}</span>
-          <span className={styles.featureMeta}>By {post.author.name}</span>
-          <ReadPill label="Read the story" />
-        </span>
-      </Link>
-    </section>
-  );
-}
 
 
 /* ---------- Personal rail: a real carousel with arrows + progress ---------- */
@@ -372,8 +74,11 @@ export function StoryCarousel({
   subtitle,
   moreLabel,
   id,
+  anchor,
+  ariaLabel,
   limit = 8,
   featuredSlugs,
+  variant = "plain",
 }: {
   posts: Post[];
   href: string;
@@ -381,43 +86,231 @@ export function StoryCarousel({
   subtitle?: string;
   moreLabel?: string;
   id: string;
+  /** Element id on the section — lets the hero CTA scroll here. */
+  anchor?: string;
+  /** aria-label when there is no visible title. */
+  ariaLabel?: string;
   limit?: number;
   /** Posts to give the wider "lead" treatment at the head of the rail. */
   featuredSlugs?: Set<string>;
+  /** `tinted` swaps the card skin so stacked sections never look identical.
+      `spotlight` renders the research-page slide: copy left, dark media right.
+      `journal` is the premium lavender band for personal stories. */
+  variant?: "plain" | "tinted" | "spotlight" | "journal";
 }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const [progress, setProgress] = useState(0);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
+  const [scrollable, setScrollable] = useState(false);
+
+  const indexRef = useRef(0);
+  const animatingRef = useRef(false);
 
   const sync = useCallback(() => {
     const t = trackRef.current;
     if (!t) return;
     const max = t.scrollWidth - t.clientWidth;
     const left = t.scrollLeft;
+    setScrollable(max > 8);
     setProgress(max <= 0 ? 1 : Math.min(Math.max(left / max, 0), 1));
     setAtStart(left <= 4);
     setAtEnd(max <= 0 || left >= max - 4);
+    {
+      const box = t.getBoundingClientRect();
+      const mid = box.left + box.width / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      (Array.from(t.children) as HTMLElement[]).forEach((el, i) => {
+        const r = el.getBoundingClientRect();
+        const d = Math.abs(r.left + r.width / 2 - mid);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      indexRef.current = best;
+    }
   }, []);
 
   useEffect(() => {
     sync();
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.globalTimeline.timeScale(100);
+    }
     window.addEventListener("resize", sync);
     return () => window.removeEventListener("resize", sync);
   }, [sync]);
 
   function go(delta: number) {
     const t = trackRef.current;
-    if (!t) return;
-    const first = t.children[0] as HTMLElement | undefined;
-    const step = (first?.offsetWidth ?? 320) + 20;
-    t.scrollBy({ left: step * delta, behavior: "smooth" });
+    if (!t || animatingRef.current) return;
+    const cards = Array.from(t.children) as HTMLElement[];
+    // Current stop = whichever slide's centre is nearest the rail's centre.
+    const box = t.getBoundingClientRect();
+    const mid = box.left + box.width / 2;
+    let current = indexRef.current;
+    let bestDist = Infinity;
+    cards.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      const d = Math.abs(r.left + r.width / 2 - mid);
+      if (d < bestDist) { bestDist = d; current = i; }
+    });
+    const next = Math.min(Math.max(current + delta, 0), cards.length - 1);
+    const target = cards[next];
+    if (!target) return;
+    // GSAP-driven glide (no native smooth-scroll fight with snap).
+    const pad = parseFloat(getComputedStyle(t).paddingLeft) || 0;
+    const trackLeft = t.getBoundingClientRect().left;
+    const cardStart = target.getBoundingClientRect().left - trackLeft + t.scrollLeft - pad;
+    const left = Math.min(Math.max(cardStart, 0), t.scrollWidth - t.clientWidth);
+    animatingRef.current = true;
+    indexRef.current = next;
+    // Snap would yank the glide mid-flight; re-enable when it settles.
+    t.style.scrollSnapType = "none";
+    const proxy = { x: t.scrollLeft };
+    gsap.to(proxy, {
+      x: left,
+      duration: 0.9,
+      ease: "power3.inOut",
+      onUpdate: () => { t.scrollLeft = proxy.x; },
+      onComplete: () => {
+        t.style.scrollSnapType = "";
+        animatingRef.current = false;
+        sync();
+      },
+    });
   }
 
   if (posts.length === 0) return null;
 
+  if (variant === "spotlight") {
+    return (
+      <section id={anchor} className={styles.spotlightBand} aria-label={ariaLabel ?? title ?? "Featured stories"}>
+        <ul className={styles.spotlightTrack} ref={trackRef} onScroll={sync}>
+          {posts.slice(0, limit).map((post, i) => (
+            <li key={post.slug} className={styles.spotlightSlide}>
+              <article className={styles.heroTile}>
+                <div className={`${styles.heroTileInner} ${TILE_WASHES[i % TILE_WASHES.length]}`}>
+                  <Link
+                    href={routes.post(post.slug)}
+                    className={`${styles.heroTileMedia}${post.cover ? "" : ` pastel-${getCategory(post.category).pastel}`}`}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                  >
+                    {post.cover ? (
+                      <Image src={post.cover.src} alt="" fill sizes="(max-width: 900px) 82vw, 46vw" priority={i === 0} className={styles.coverImg} />
+                    ) : null}
+                  </Link>
+                  <div className={styles.heroTileBody}>
+                    <h2 className={styles.heroTileTitle}>{post.title}</h2>
+                    <p className={styles.heroTileDesc}>{post.description}</p>
+                    <p className={styles.heroTileMeta}>By {post.author.name} · {formatDate(post.date)} · {post.readingMinutes} min read</p>
+                    <Link href={routes.post(post.slug)} className={styles.heroTileCta}>
+                      Read article
+                      <ReadArrow />
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
+
+        <div className={scrollable ? styles.catControls : `${styles.catControls} ${styles.catControlsHidden}`}>
+          <div className={styles.catArrows}>
+            <button type="button" className={styles.catArrow} onClick={() => go(-1)} disabled={atStart} aria-label="Previous featured stories">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" className={styles.catArrow} onClick={() => go(1)} disabled={atEnd} aria-label="More featured stories">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
+          <span className={styles.catProgress} aria-hidden="true">
+            <span className={styles.catProgressFill} style={{ transform: `scaleX(${Math.max(progress, 0.12)})` }} />
+          </span>
+        </div>
+      </section>
+    );
+  }
+
+  /* Tall editorial cards — image on top, copy inside a white sheet with a
+     date + circular arrow foot, like blog.google's "What's new" rail. */
+  if (variant === "journal") {
+    return (
+      <section
+        id={anchor}
+        className={styles.personal}
+        aria-labelledby={title ? id : undefined}
+        aria-label={title ? ariaLabel : id}
+      >
+        {title ? (
+          <div className={styles.catHead}>
+            <div>
+              <h2 id={id} className={styles.bandTitle}>{title}</h2>
+              {subtitle ? <p className={styles.catSubtitle}>{subtitle}</p> : null}
+            </div>
+            {moreLabel ? (
+              <Link href={href} className={styles.catMore}>
+                {moreLabel}
+                <ReadArrow />
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
+
+        <ul className={styles.journalTrack} ref={trackRef} onScroll={sync}>
+          {posts.slice(0, limit).map((post, i) => (
+            <li key={post.slug} className={styles.journalItem}>
+              <Link
+                href={routes.post(post.slug)}
+                className={`${styles.journalCard} ${TILE_WASHES[i % TILE_WASHES.length]}`}
+              >
+                <span className={styles.journalText}>
+                  <span className={styles.journalKicker}>{getCategory(post.category).name}</span>
+                  <span className={styles.journalTitle}>{post.title}</span>
+                  <span className={styles.journalDesc}>{post.description}</span>
+                  <span className={styles.journalFoot}>
+                    <span className={styles.journalByline}>By {post.author.name}</span>
+                    <span className={styles.journalMore}>
+                      Read more
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </span>
+                </span>
+                <span className={`${styles.journalPhoto}${post.cover ? "" : ` pastel-${getCategory(post.category).pastel}`}`}>
+                  {post.cover ? (
+                    <Media post={post} sizes="(max-width: 760px) 82vw, 560px" className={styles.coverImg} eager={i === 0} />
+                  ) : null}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <div className={scrollable ? styles.catControls : `${styles.catControls} ${styles.catControlsHidden}`}>
+          <div className={styles.catArrows}>
+            <button type="button" className={styles.catArrow} onClick={() => go(-1)} disabled={atStart} aria-label="Previous journal stories">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" className={styles.catArrow} onClick={() => go(1)} disabled={atEnd} aria-label="More journal stories">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+            </button>
+          </div>
+          <span className={styles.catProgress} aria-hidden="true">
+            <span className={styles.catProgressFill} style={{ transform: `scaleX(${Math.max(progress, 0.12)})` }} />
+          </span>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={styles.personal} aria-labelledby={id}>
+    <section
+      id={anchor}
+      className={`${styles.personal}${variant === "tinted" ? ` ${styles.personalTinted}` : ""}`}
+      aria-labelledby={title ? id : undefined}
+      aria-label={title ? ariaLabel : id}
+    >
       {title ? (
         <div className={styles.catHead}>
           <div>
@@ -434,49 +327,32 @@ export function StoryCarousel({
       ) : null}
 
       <ul className={styles.personalTrack} ref={trackRef} onScroll={sync}>
-        {posts.slice(0, limit).map((post, i) => {
-          // The first story is the lead: copy + button on the left, image on
-          // the right. Everything after it is a normal carousel tile.
-          if (i === 0) {
-            return (
-              <li key={post.slug} className={`${styles.personalItem} ${styles.personalItemHero}`}>
-                <Link href={`/blog/${post.slug}`} className={styles.heroCard}>
-                  <span className={styles.heroCopy}>
-                    <span className={styles.compactEyebrow}>{getCategory(post.category).name}</span>
-                    <span className={styles.heroTitle}>{post.title}</span>
-                    <span className={styles.heroDesc}>{post.description}</span>
-                    <span className={styles.heroCta}>
-                      Read article
-                      <ReadArrow />
-                    </span>
-                  </span>
-                  <span className={styles.heroMedia}>
-                    <Media post={post} sizes="(max-width: 900px) 100vw, 520px" className={styles.coverImg} />
-                  </span>
-                </Link>
-              </li>
-            );
-          }
-          return (
-            <li key={post.slug} className={styles.personalItem}>
-              <Link href={`/blog/${post.slug}`} className={styles.personalCard}>
-                <span className={styles.personalMedia}>
-                  <Media post={post} sizes="(max-width: 760px) 82vw, 340px" className={styles.coverImg} />
+        {posts.slice(0, limit).map((post) => (
+          <li key={post.slug} className={styles.personalItem}>
+            <Link
+              href={routes.post(post.slug)}
+              className={`${styles.personalCard}${variant === "tinted" ? ` ${styles.cardTinted}` : ""}`}
+            >
+              <span className={`${styles.personalMedia}${post.cover ? "" : ` pastel-${getCategory(post.category).pastel}`}`}>
+                <Media post={post} sizes="(max-width: 760px) 82vw, 340px" className={styles.coverImg} />
+              </span>
+              <span className={styles.personalBody}>
+                <span className={styles.compactEyebrow}>{getCategory(post.category).name}</span>
+                <span className={styles.personalTitle}>{post.title}</span>
+                <span className={styles.compactByline}>
+                  {post.readingMinutes} min read · By {post.author.name}
                 </span>
-                <span className={styles.personalBody}>
-                  <span className={styles.compactEyebrow}>{getCategory(post.category).name}</span>
-                  <span className={styles.personalTitle}>{post.title}</span>
-                  <span className={styles.compactByline}>
-                    {post.readingMinutes} min read
-                  </span>
+                <span className={styles.personalCta}>
+                  Read article
+                  <ReadArrow />
                 </span>
-              </Link>
-            </li>
-          );
-        })}
+              </span>
+            </Link>
+          </li>
+        ))}
       </ul>
 
-      <div className={styles.catControls}>
+      <div className={scrollable ? styles.catControls : `${styles.catControls} ${styles.catControlsHidden}`}>
         <div className={styles.catArrows}>
           <button type="button" className={styles.catArrow} onClick={() => go(-1)} disabled={atStart} aria-label="Previous stories">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>

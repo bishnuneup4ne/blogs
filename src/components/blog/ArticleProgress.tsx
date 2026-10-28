@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import gsap from "gsap";
 import Link from "next/link";
 import { ShareMenu } from "./ShareMenu";
 import styles from "./ArticleProgress.module.scss";
+import { routes } from "@/lib/routes";
 
 /* blog.google-style reading progress: a slim bar pinned to the top that fills
    as the article scrolls. It reveals itself (with a slide-down) once the
@@ -27,6 +29,14 @@ export function ArticleProgress({
   const fillRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const shownRef = useRef(false);
+  /* Rendered on <body>: the article's .page grid is a `container-type`
+     context, so a bar living inside it could never paint above the headings
+     scrolling underneath. */
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let frame = 0;
@@ -45,7 +55,9 @@ export function ArticleProgress({
         shownRef.current = true;
         bar.setAttribute("data-visible", "on");
         gsap.killTweensOf(bar);
-        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          gsap.set(bar, { y: 0, opacity: 1 });
+        } else {
           gsap.fromTo(bar, { y: "-100%", opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out" });
         }
       } else if (!passed && shownRef.current) {
@@ -58,16 +70,17 @@ export function ArticleProgress({
             duration: 0.28,
             ease: "power2.in",
             onComplete: () => {
-              // Drop out of flow only once it is off screen, so the page never
-              // shows a gap; CSS keeps it absolute while hidden.
+              // Fixed positioning: parking it at its hidden offset keeps it
+              // out of the way without reserving space in the page.
               if (barRef.current && shownRef.current === false) {
                 barRef.current.setAttribute("data-visible", "off");
-                gsap.set(barRef.current, { y: "0px" });
+                gsap.set(barRef.current, { y: "-100%" });
               }
             },
           });
         } else {
           bar.setAttribute("data-visible", "off");
+          gsap.set(bar, { y: "-100%" });
         }
       }
     }
@@ -86,7 +99,9 @@ export function ArticleProgress({
     };
   }, []);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div ref={barRef} className={styles.bar} data-article-progress="" data-visible="off">
       <span className={styles.track} aria-hidden="true">
         <span ref={fillRef} className={styles.fill} />
@@ -95,7 +110,7 @@ export function ArticleProgress({
         {/* blog.google puts the publication mark here. This blog shows the
             story's own cover, which is what readers recognise mid-scroll;
             it falls back to the author avatar, then a monogram. */}
-        <Link href="/blog" className={styles.brand} aria-label={title} tabIndex={-1} aria-hidden="true">
+        <Link href={routes.blog} className={styles.brand} aria-label={title} tabIndex={-1} aria-hidden="true">
           {coverUrl || avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl || avatarUrl} alt="" className={styles.avatar} width={42} height={42} />
@@ -105,9 +120,9 @@ export function ArticleProgress({
             </span>
           )}
         </Link>
-        <Link href="/blog" className={styles.title}>{title}</Link>
+        <Link href={routes.blog} className={styles.title}>{title}</Link>
         <span className={styles.actions}>
-          <Link href="/search" className={styles.iconBtn} aria-label="Search">
+          <Link href={routes.search} className={styles.iconBtn} aria-label="Search">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-4-4" />
@@ -116,6 +131,7 @@ export function ArticleProgress({
           <ShareMenu title={title} url={shareUrl} compact />
         </span>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

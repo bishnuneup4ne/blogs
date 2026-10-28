@@ -53,9 +53,31 @@
   pointer-events: none;
 }
 
+/* Active states: like reads blue, dislike reads red — the same semantic
+   pairing used by the rest of the site. */
+.activeLike,
+.activeLike:hover {
+  background: var(--blue-50, #e8f0fe);
+  border-color: var(--blue-600, #1a73e8);
+  color: var(--blue-700, #1967d2);
+}
+
+.activeDislike,
+.activeDislike:hover {
+  background: var(--red-50, #fce8e6);
+  border-color: var(--red-600, #d93025);
+  color: var(--red-700, #c5221f);
+}
+
 .activeLike svg,
 .activeDislike svg {
   fill: currentColor;
+}
+
+/* Hover preview before a choice is made. */
+.pill:hover {
+  background: var(--gray-50, #f8f9fa);
+  border-color: var(--gray-400, #9aa0a6);
 }
 
 .count {

@@ -30,6 +30,7 @@ const NAV: NavGroup[] = [
       { href: "/admin/media", label: "Media", icon: svg("M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6") },
       { href: "/admin/gallery", label: "Gallery", icon: svg("M3 7h5v10H3zM10 7h4v10h-4zM16 7h5v10h-5z") },
       { href: "/admin/topics", label: "Topics", icon: svg("M4 7h10l6 5-6 5H4z") },
+      { href: "/admin/series", label: "Series", icon: svg("M4 6h16M4 12h16M4 18h10M17 15l3 3-3 3") },
     ],
   },
   {
@@ -82,8 +83,8 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
   }
 
   useEffect(() => {
-    document.body.classList.add(styles.adminBody);
-    return () => document.body.classList.remove(styles.adminBody);
+    document.body.classList.add("studio");
+    return () => document.body.classList.remove("studio");
   }, []);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
-/* blog.google multi-browse cards: grey panel, media on a pastel shape tile,
-   kicker + title + byline below. Hero item is wider. */
+/* blog.google "More updates" cards: grey tile, cover inside a blob mask,
+   kicker → title → byline below. Three per view; arrows reveal the rest. */
 
 .track {
   display: flex;
@@ -29,54 +29,68 @@
 }
 
 .item {
-  /* Exactly three cards per view on desktop; arrows reveal the rest. */
-  flex: 0 0 calc((100% - 32px) / 3);
+  /* Four cards per view on desktop, with the fifth peeking to show the row
+     continues; arrows page through the rest. */
+  flex: 0 0 calc((100% - 72px) / 4.35);
   scroll-snap-align: start;
   scroll-margin-inline: 8px;
   list-style: none;
 }
 
+/* blog.google "Related stories" tile: a warm off-white panel, the cover
+   cropped into an organic shape at the top, then kicker → title → byline,
+   with the byline pinned to the bottom so every card ends level. */
 .card {
-  display: block;
-  block-size: 100%;
-  padding: 20px;
-  border-radius: var(--radius-24);
-  background: var(--gray-100);
-  transition: box-shadow 200ms ease, transform 200ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 18px 18px 20px;
+  border-radius: 20px;
+  background: #faf8f5;
+  transition: box-shadow 220ms ease, transform 220ms ease, background-color 220ms ease;
 }
 
 .card:hover {
-  box-shadow: 0 10px 28px -14px rgba(32, 33, 36, 0.28);
+  background: #f6f2ec;
+  box-shadow: 0 14px 34px -20px rgba(32, 33, 36, 0.35);
+  transform: translateY(-2px);
 }
 
-/* Media tile — grey panel with the cover cropped inside a blob mask,
-   like blog.google's "More updates" cards. */
 .media {
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: var(--radius-24);
-  overflow: hidden;
-  padding: 8px;
+  aspect-ratio: 1 / 0.9;
+  margin-bottom: 2px;
 }
 
+/* Cover cropped inside an organic shape — each card gets its own outline,
+   like the reference. Coverless posts fall back to the category pastel. */
 .blob {
   position: relative;
   display: block;
-  width: 92%;
-  height: 92%;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  /* Coverless posts get the category pastel instead of an empty white blob —
-     the .pastel-* utilities on the element supply --shape-bg. */
-  background: var(--shape-bg, var(--white));
+  background: var(--shape-bg, var(--gray-100));
 }
 
-.blob0 { border-radius: 46% 54% 58% 42% / 52% 44% 56% 48%; }
-.blob1 { border-radius: 58% 42% 46% 54% / 44% 56% 48% 52%; }
-.blob2 { border-radius: 50% 50% 38% 62% / 60% 42% 58% 40%; }
-.blob3 { border-radius: 40% 60% 55% 45% / 48% 58% 42% 52%; }
+/* Four organic silhouettes, cycled per card: two arches (top-rounded) and
+   two "leaf" shapes, so a row never repeats the same outline twice. */
+.blob0 {
+  border-radius: 48% 52% 14% 14% / 44% 46% 12% 12%;
+}
+.blob1 {
+  border-radius: 58% 42% 46% 54% / 48% 52% 40% 44%;
+}
+.blob2 {
+  border-radius: 14% 14% 46% 54% / 12% 12% 44% 42%;
+}
+.blob3 {
+  border-radius: 44% 56% 52% 48% / 40% 44% 48% 50%;
+}
 
 .img {
   object-fit: cover;
@@ -87,29 +101,23 @@
   transform: scale(1.04);
 }
 
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 4px 24px 24px;
-}
-
 .eyebrow {
   font-family: var(--font-ui);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 20px;
-  letter-spacing: 0.2px;
   color: var(--gray-700);
 }
 
 .title {
   font-family: var(--font-ui);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 400;
-  line-height: 30px;
+  line-height: 28px;
   letter-spacing: -0.1px;
   color: var(--gray-900);
+  /* Three lines keeps titles level whether they run short or long. */
+  min-height: 84px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -118,14 +126,22 @@
 
 .byline {
   margin-top: auto;
+  padding-top: 4px;
   font-size: 14px;
   line-height: 20px;
-  color: var(--gray-600);
+  color: var(--gray-700);
 }
 
 .card:hover .title {
   text-decoration: underline;
   text-underline-offset: 3px;
+  text-decoration-color: var(--gray-400);
+  text-decoration-thickness: 1px;
+}
+
+/* Hide the chrome when there is nothing to page. */
+.controlsHidden {
+  display: none;
 }
 
 /* blog.google controls: joined circular arrows + a thin progress line */
@@ -138,35 +154,34 @@
 
 .arrows {
   display: inline-flex;
-  border-radius: var(--radius-pill);
-  background: var(--gray-100);
-  overflow: hidden;
+  align-items: center;
+  gap: 8px;
   flex: none;
 }
 
 .arrow {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border: none;
-  background: transparent;
-  color: var(--gray-900);
+  border-radius: 50%;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(32, 33, 36, 0.1);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-
-.arrow + .arrow {
-  border-left: 1px solid var(--gray-300);
+  transition: background-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
 }
 
 .arrow:hover:not(:disabled) {
   background: var(--white);
+  box-shadow: 0 3px 10px -2px rgba(32, 33, 36, 0.22);
 }
 
 .arrow:disabled {
-  color: var(--gray-400);
+  opacity: 0.4;
   cursor: default;
 }
 
@@ -175,7 +190,7 @@
   flex: 1;
   height: 2px;
   border-radius: 2px;
-  background: var(--gray-200);
+  background: var(--gray-200, #e8eaed);
   overflow: hidden;
 }
 
@@ -187,9 +202,15 @@
   transition: transform 220ms ease;
 }
 
+@media (max-width: 1100px) {
+  .item {
+    flex-basis: calc((100% - 48px) / 3.3);
+  }
+}
+
 @media (max-width: 900px) {
   .item {
-    flex-basis: calc((100% - 16px) / 2);
+    flex-basis: calc((100% - 16px) / 2.2);
   }
 }
 
