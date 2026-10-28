@@ -73,7 +73,7 @@ export default function ResourcesPage() {
       <footer className={styles.foot}>
         <p>
           Looking for the series these support? Start with{" "}
-          <Link href={routes.series("hardware-handbook")}>the Hardware Handbook</Link>.
+          <Link href={routes.series("hackers-handbook")}>the Hacker’s Handbook</Link>.
         </p>
       </footer>
     </article>
