@@ -281,8 +281,29 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "cta": {
               if (!block.label || !block.href) return null;
               const ctaVariant = block.variant === "banner" ? styles.ctaBanner : block.variant === "link" ? styles.ctaLink : "";
+              /* Internal CTAs ("next lesson", series pointers) render as the
+                 same split tout used by Related Article cards. */
+              const nextTarget = block.href.match(/^\/(blog|series)\/([a-z0-9-]+)/i);
+              if (nextTarget && !ctaVariant) {
+                const tintKey = nextTarget[1] === "blog" ? getCategory(nextTarget[2]).pastel : "blue";
+                return (
+                  <Link key={key} href={block.href} className={`${styles.relatedTout} ${styles.ctaAsTout}`} style={accentStyle(block)} aria-label={`${block.note || "Up next"}: ${block.label}`}>
+                    <span className={styles.relatedToutBody}>
+                      <span className={styles.relatedToutEyebrow}>{block.note || (nextTarget[1] === "series" ? "Part of a series" : "Next up")}</span>
+                      <span className={styles.relatedToutTitle}>{block.label}</span>
+                      <span className={styles.relatedToutCta}>
+                        {nextTarget[1] === "series" ? "See all lessons" : "Read it"}
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </span>
+                    </span>
+                    <span className={`${styles.relatedToutMedia} ${styles[TOUT_MEDIA_TINT[tintKey] ?? "toutGray"]}`} />
+                  </Link>
+                );
+              }
               return (
-                <p key={key} className={`${styles.ctaRow} ${ctaVariant}`.trim()} style={accentStyle(block)}>
+                <div key={key} className={`${styles.ctaRow} ${ctaVariant}`.trim()} style={accentStyle(block)}>
                   <Link
                     href={block.href}
                     className={block.style === "outline" ? `${styles.cta} ${styles.ctaOutline}` : styles.cta}
@@ -293,7 +314,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                     </svg>
                   </Link>
                   {block.note ? <span className={styles.ctaNote}>{block.note}</span> : null}
-                </p>
+                </div>
               );
             }
             case "footnote":

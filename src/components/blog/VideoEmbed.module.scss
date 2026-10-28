@@ -1,10 +1,10 @@
 .figure {
-  margin: var(--prose-block, 40px) 0;
-  /* Same breakout as photos — the container width, not the viewport. */
+  margin: clamp(32px, 3.5vw, 48px) 0;
+  /* Same box as photo figures — capped at the article's media width. */
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100cqw - 2 * var(--container-pad, 32px));
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
 }
 
 /* Big, rounded media — the shape blog.google uses for inline video */

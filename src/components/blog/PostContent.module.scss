@@ -378,17 +378,14 @@
   border-radius: var(--radius-card);
   background: var(--bg);
   cursor: zoom-in;
-  /* Portrait photos at full column width ran 1400px tall — more than a screen.
-     Cap every figure to a comfortable band and crop, so the article keeps a
-     readable vertical rhythm regardless of the source aspect ratio. */
-  max-height: min(68vh, 560px);
+  /* Same 16/9 box as video embeds, so consecutive media blocks line up. */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
 
   img {
     display: block;
     width: 100%;
     height: 100%;
-    max-height: min(68vh, 560px);
     object-fit: cover;
   }
 }
@@ -625,6 +622,15 @@
   align-items: center;
   gap: 14px;
   margin: 32px 0;
+}
+
+/* A /blog CTA rendered as a Related-Article-style tout: full media width. */
+.ctaAsTout {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
+  max-width: none;
 }
 
 .cta {
