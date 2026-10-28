@@ -637,6 +637,8 @@ function normaliseBlock(raw: unknown): Block | null {
       // Embeds are external players (Instagram, X, TikTok, GitHub, CodePen…),
       // so the Supabase-storage host restriction that applies to images must
       // not apply here — only require a well-formed http(s)/relative URL.
+      // Users can also paste full embed code (blockquote + script); the block
+      // only reads URLs out of it, never renders it raw, so allow it through.
       const raw = String(source.url ?? "").trim();
       if (!raw) return { type, url: "", caption: text(source.caption, 600) ?? undefined };
       let parsed: URL | null = null;
@@ -648,8 +650,9 @@ function normaliseBlock(raw: unknown): Block | null {
       const ok = parsed
         ? parsed.protocol === "https:" || parsed.protocol === "http:"
         : raw.startsWith("/") && !raw.startsWith("//");
-      if (!ok) return null;
-      return { type, url: raw.slice(0, 2_000), caption: text(source.caption, 600) ?? undefined };
+      const looksLikeEmbedCode = /<[a-z]/i.test(raw) && /https?:\/\/\S+/i.test(raw);
+      if (!ok && !looksLikeEmbedCode) return null;
+      return { type, url: raw.slice(0, 8_000), caption: text(source.caption, 600) ?? undefined };
     }
     case "keypoints": {
       // Drop empty rows rather than the whole block — they are the normal

@@ -5,11 +5,6 @@ import { useRouter } from "next/navigation";
 import { site } from "@/lib/site";
 import styles from "./login.module.scss";
 
-const NOTES = [
-  { label: "Posts", value: "Draft, schedule, publish" },
-  { label: "Media", value: "Images and video in one library" },
-  { label: "Subscribers", value: "Mail an essay to the list" },
-];
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
@@ -72,18 +67,7 @@ export default function AdminLoginPage() {
         </header>
 
         <div className={styles.body}>
-          <div className={styles.intro}>
-            <p className={styles.eyebrow}>
-              <span className={styles.eyebrowDot} aria-hidden="true" />
-              Private studio
-            </p>
-            <h1 id="studio-title" className={styles.title}>
-              Sign in to <span className={styles.accent}>write.</span>
-            </h1>
-            <p className={styles.sub}>
-              The archive, the drafts, and the mailing list live behind one password.
-            </p>
-          </div>
+          <h1 id="studio-title" className={styles.srTitle}>Sign in</h1>
 
           <form onSubmit={onSubmit} className={styles.card} noValidate>
             <label className={styles.field} htmlFor="studio-password">
@@ -156,20 +140,9 @@ export default function AdminLoginPage() {
               )}
             </button>
 
-            <p className={styles.formFoot}>
-              <kbd className={styles.kbd}>Enter</kbd> to sign in
-            </p>
           </form>
         </div>
 
-        <ul className={styles.notes} aria-label="What lives in the studio">
-          {NOTES.map((n) => (
-            <li key={n.label} className={styles.note}>
-              <span className={styles.noteLabel}>{n.label}</span>
-              <span className={styles.noteValue}>{n.value}</span>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <aside className={styles.art} aria-hidden="true">

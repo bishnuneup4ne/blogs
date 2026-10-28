@@ -11,8 +11,8 @@
 
 .pane {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 44px;
+  grid-template-rows: auto 1fr;
+  gap: 24px;
   min-height: 100dvh;
   padding: 34px clamp(24px, 5vw, 72px) 44px;
 }
@@ -98,14 +98,14 @@
 
 /* ---------- Body ---------- */
 
+/* Just the password card, centred in the pane. */
 .body {
   display: grid;
   align-content: center;
-  justify-items: start;
-  gap: 30px;
+  justify-items: center;
   width: 100%;
-  max-width: 440px;
-  margin: 0 auto 0 0;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .intro {
@@ -602,4 +602,17 @@
   .spinner {
     animation-duration: 1.6s;
   }
+}
+
+/* The page shows only the password card; this heading stays for screen readers. */
+.srTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

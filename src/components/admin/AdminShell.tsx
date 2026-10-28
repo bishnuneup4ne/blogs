@@ -129,6 +129,9 @@ export function AdminShell({ children }: { children?: React.ReactNode }) {
     collapsed ? styles.shellCollapsed : "",
   ].filter(Boolean).join(" ");
 
+  // The sign-in page is its own screen — no rail, no command bar.
+  if (pathname === "/admin/login") return <>{children}</>;
+
   return (
     <div className={shellClass}>
       {railOpen ? (

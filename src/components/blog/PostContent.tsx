@@ -8,6 +8,7 @@ import { ChartBlockView } from "./ChartBlock";
 import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import Link from "next/link";
 import { VideoEmbed } from "./VideoEmbed";
+import { EmbedBlock } from "./EmbedBlock";
 import styles from "./PostContent.module.scss";
 import { MediaCarousel, type CarouselSlide } from "./MediaCarousel";
 import { FaqList } from "./FaqList";
@@ -319,12 +320,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "embed": {
               const frame = embedFrame(block.url);
               if (!frame) return null;
-              return (
-                <figure key={key} className={styles.embedWrap}>
-                  <div className={styles.embedFrame} dangerouslySetInnerHTML={{ __html: frame }} />
-                  {block.caption ? <figcaption className={styles.embedCaption}>{block.caption}</figcaption> : null}
-                </figure>
-              );
+              return <EmbedBlock key={key} url={block.url} html={frame.html} kind={frame.kind} caption={block.caption} />;
             }
             case "keypoints": {
               const items = block.items.filter(Boolean);
@@ -703,104 +699,173 @@ function BeforeAfter({ before, after, labelBefore, labelAfter, alt }: { before: 
   );
 }
 
+type EmbedKind = "iframe" | "instagram" | "twitter" | "tiktok" | "threads" | "gist";
+
+interface EmbedFrameResult {
+  kind: EmbedKind;
+  html: string;
+}
+
 /**
- * Turn a pasted embed URL into safe iframe HTML for the renderers we support.
- * Unknown hosts fall back to a link card, so an embed block is never "invalid".
+ * Pull a canonical URL out of pasted embed code (a blockquote/script snippet,
+ * an iframe src, etc). Returns null when there is no instagram/x/tiktok link,
+ * which is what makes pasting full embed code work in an embed block.
  */
-function embedFrame(url: string): string | null {
+function extractEmbedUrl(raw: string): string | null {
+  const m = raw.match(/https?:\/\/(?:www\.)?(?:instagram\.com|instagr\.am|x\.com|twitter\.com|threads\.(?:net|com)|tiktok\.com)\/[^\s"'<>\\]+/i);
+  if (!m) return null;
+  let url: URL;
+  try {
+    url = new URL(m[0]);
+  } catch {
+    return null;
+  }
+  // Instagram's own embed iframe (/username/embed/) encodes the profile or
+  // post inside its src, not as a normal page URL.
+  const host0 = url.hostname.replace(/^www\./, "");
+  if (host0 === "instagram.com") {
+    const embPost = url.pathname.match(/^\/(?:p|reel|tv)\/([\w-]+)\/embed\/?$/);
+    if (embPost) return `https://www.instagram.com/p/${embPost[1]}/`;
+    const embProfile = url.pathname.match(/^\/([\w.][\w.-]*)\/embed\/?$/);
+    if (embProfile && !/^(_|explore|accounts|api|developer|about)$/.test(embProfile[1])) return `https://www.instagram.com/${embProfile[1]}/`;
+  }
+  const host = url.hostname.replace(/^www\./, "");
+  if (host === "instagram.com" || host === "instagr.am") {
+    const post = url.pathname.match(/^\/(?:p|reel|tv)\/([\w-]+)/);
+    if (post) return `https://www.instagram.com/p/${post[1]}/`;
+    const profile = url.pathname.match(/^\/([\w.][\w.-]*)\/?$/);
+    if (profile && !/^(_|explore|accounts|api|developer|about)$/.test(profile[1])) return `https://www.instagram.com/${profile[1]}/`;
+    return null;
+  }
+  if (host === "x.com" || host === "twitter.com") {
+    const id = url.pathname.match(/\/status(?:\/\d+)?(\d+)/)?.[1] ?? url.searchParams.get("id");
+    return id ? `https://x.com/i/status/${id}` : null;
+  }
+  if (host === "threads.net" || host === "threads.com") {
+    return url.pathname.includes("/post/") ? `${url.origin}${url.pathname}` : null;
+  }
+  if (host === "tiktok.com") {
+    return url.pathname.includes("/video/") ? `${url.origin}${url.pathname}` : null;
+  }
+  return null;
+}
+
+/**
+ * Turn a pasted embed URL — or pasted embed code — into safe HTML for the
+ * renderers we support. Unknown hosts fall back to a link card, so an embed
+ * block is never "invalid".
+ */
+function embedFrame(url: string): EmbedFrameResult | null {
   if (!url) return null;
+  const looksLikeCode = /<[a-z]/i.test(url);
+  const candidate = looksLikeCode ? extractEmbedUrl(url) : null;
+  const target = candidate ?? url.trim();
   let u: URL;
   try {
-    u = new URL(url);
+    u = new URL(target);
   } catch {
     return null;
   }
   const host = u.hostname.replace(/^www\./, "");
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const frame = (kind: EmbedKind, html: string): EmbedFrameResult => ({ kind, html });
+  const card = (label: string) => frame("iframe", embedLinkCard(target, label));
+  // Instagram's own embed iframe URL (/username/embed/) — resolve it to the
+  // canonical profile/post so the blockquote renderer picks it up.
+  if (host === "instagram.com" || host === "instagr.am") {
+    const embPost = u.pathname.match(/^\/(?:p|reel|tv)\/([\w-]+)\/embed\/?$/);
+    if (embPost) return frame("instagram", `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${encodeURIComponent(embPost[1])}/" data-instgrm-version="14"><a href="https://www.instagram.com/p/${encodeURIComponent(embPost[1])}/" target="_blank" rel="noopener noreferrer">View this post on Instagram</a></blockquote>`);
+    const embProfile = u.pathname.match(/^\/([\w.][\w.-]*)\/embed\/?$/);
+    if (embProfile && !/^(_|explore|accounts|api|developer|about)$/.test(embProfile[1])) return frame("instagram", `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/${encodeURIComponent(embProfile[1])}/" data-instgrm-version="14"><a href="https://www.instagram.com/${encodeURIComponent(embProfile[1])}/" target="_blank" rel="noopener noreferrer">View this profile on Instagram</a></blockquote>`);
+  }
   if (host === "youtube.com" || host === "m.youtube.com") {
     const id = u.pathname.startsWith("/embed/") ? u.pathname.slice(7) : u.searchParams.get("v");
     if (!id) return null;
-    return `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+    return frame("iframe", `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`);
   }
   if (host === "youtu.be") {
     const id = u.pathname.slice(1);
-    return id ? `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen></iframe>` : null;
+    return id ? frame("iframe", `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen></iframe>`) : null;
   }
   if (host === "vimeo.com") {
     const id = u.pathname.slice(1).split("/")[0];
     if (!/^\d+$/.test(id)) return null;
-    return `<iframe src="https://player.vimeo.com/video/${id}" title="Embedded video" loading="lazy" allowfullscreen></iframe>`;
+    return frame("iframe", `<iframe src="https://player.vimeo.com/video/${id}" title="Embedded video" loading="lazy" allowfullscreen></iframe>`);
   }
   if (host === "open.spotify.com" && u.pathname.startsWith("/embed/")) {
-    return `<iframe src="${u.toString()}" title="Spotify player" loading="lazy" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+    return frame("iframe", `<iframe src="${u.toString()}" title="Spotify player" loading="lazy" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`);
   }
   if (host === "codepen.io") {
     const parts = u.pathname.split("/").filter(Boolean); // /user/pen/ID
     if (parts[1] !== "pen" || !parts[2]) return null;
-    return `<iframe src="https://codepen.io/${parts[0]}/embed/${parts[2]}?default-tab=result" title="CodePen embed" loading="lazy" allowfullscreen></iframe>`;
+    return frame("iframe", `<iframe src="https://codepen.io/${parts[0]}/embed/${parts[2]}?default-tab=result" title="CodePen embed" loading="lazy" allowfullscreen></iframe>`);
   }
   if (host === "w.soundcloud.com" || host === "soundcloud.com") {
-    const src = host.startsWith("w.") ? url : `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}`;
-    return `<iframe src="${src}" title="SoundCloud player" loading="lazy" allow="autoplay"></iframe>`;
+    const src = host.startsWith("w.") ? target : `https://w.soundcloud.com/player/?url=${encodeURIComponent(target)}`;
+    return frame("iframe", `<iframe src="${src}" title="SoundCloud player" loading="lazy" allow="autoplay"></iframe>`);
   }
   if (host === "google.com" || host === "maps.google.com" || (host === "www.google.com" && u.pathname.startsWith("/maps"))) {
-    return `<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(u.searchParams.get("q") ?? "")}&output=embed" title="Google Maps embed" loading="lazy"></iframe>`;
+    return frame("iframe", `<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(u.searchParams.get("q") ?? "")}&output=embed" title="Google Maps embed" loading="lazy"></iframe>`);
   }
   if (host === "docs.google.com") {
-    return `<iframe src="${url}" title="Google Docs embed" loading="lazy"></iframe>`;
+    return frame("iframe", `<iframe src="${target}" title="Google Docs embed" loading="lazy"></iframe>`);
   }
   if (host === "gist.github.com") {
-    return `<script src="${url}.js"></script>`;
+    return frame("gist", "");
   }
   if (host === "github.com" || host === "githubassets.com") {
     // Gists render via script above; repo links become a styled card.
-    return embedLinkCard(url, "GitHub");
+    return card("GitHub");
   }
   if (host === "instagram.com" || host === "instagr.am") {
     const m = u.pathname.match(/\/(?:p|reel|tv)\/([\w-]+)/);
-    if (m) return `<iframe src="https://www.instagram.com/p/${encodeURIComponent(m[1])}/embed/captioned/" title="Instagram post" loading="lazy" style="border:0;max-width:540px;width:100%"></iframe>`;
-    return embedLinkCard(url, "Instagram");
+    if (m) return frame("instagram", `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/${encodeURIComponent(m[1])}/" data-instgrm-version="14"><a href="https://www.instagram.com/p/${encodeURIComponent(m[1])}/" target="_blank" rel="noopener noreferrer">View this post on Instagram</a></blockquote>`);
+    const profile = u.pathname.match(/^\/([\w.][\w.-]*)\/?$/);
+    if (profile && !/^(_|explore|accounts|api|developer|about)$/.test(profile[1])) {
+      return frame("instagram", `<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/${encodeURIComponent(profile[1])}/" data-instgrm-version="14"><a href="https://www.instagram.com/${encodeURIComponent(profile[1])}/" target="_blank" rel="noopener noreferrer">View this profile on Instagram</a></blockquote>`);
+    }
+    return card("Instagram");
   }
   if (host === "x.com" || host === "twitter.com") {
     const m = u.pathname.match(/\/status\/(\d+)/);
     const id = m ? m[1] : u.searchParams.get("id");
-    if (id) return `<blockquote class="twitter-tweet"><a href="https://twitter.com/i/status/${encodeURIComponent(id)}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
-    return embedLinkCard(url, "X");
+    if (id) return frame("twitter", `<blockquote class="twitter-tweet"><a href="https://twitter.com/i/status/${encodeURIComponent(id)}"></a></blockquote>`);
+    return card("X");
   }
   if (host === "threads.net" || host === "threads.com") {
     const m = u.pathname.match(/\/post\/([\w-]+)/);
-    if (m) return `<div data-embed-url="${esc(url)}" data-embed-kind="threads"><iframe src="https://threads.net/${u.pathname.startsWith("/@") ? "" : ""}embed?href=${encodeURIComponent(url.split("?")[0])}" title="Threads post" loading="lazy" style="border:0;width:100%;min-height:320px"></iframe></div>`;
-    return embedLinkCard(url, "Threads");
+    if (m) return frame("threads", `<div><iframe src="https://threads.net/embed?href=${encodeURIComponent(target.split("?")[0])}" title="Threads post" loading="lazy" style="border:0;width:100%;min-height:320px"></iframe></div>`);
+    return card("Threads");
   }
   if (host === "tiktok.com") {
     const m = u.pathname.match(/\/video\/(\d+)/);
-    if (m) return `<blockquote class="tiktok-embed"><a href="${esc(url.split("?")[0])}" target="_blank">View this TikTok on TikTok</a></blockquote><script async src="https://embed.tiktok.com/sdk.js"></script>`;
-    return embedLinkCard(url, "TikTok");
+    if (m) return frame("tiktok", `<blockquote class="tiktok-embed"><a href="${esc(target.split("?")[0])}" target="_blank" rel="noopener noreferrer">View this TikTok on TikTok</a></blockquote>`);
+    return card("TikTok");
   }
   if (host === "facebook.com" || host === "fb.watch") {
-    return `<iframe src="https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url.split("?")[0])}&show_text=true&width=500" title="Facebook post" loading="lazy" style="border:none;overflow:hidden;width:100%;max-width:540px;height:420px" scrolling="no" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>`;
+    return frame("iframe", `<iframe src="https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(target.split("?")[0])}&show_text=true&width=500" title="Facebook post" loading="lazy" style="border:none;overflow:hidden;width:100%;max-width:540px;height:420px" scrolling="no" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>`);
   }
   if (host === "medium.com" || host.endsWith(".medium.com")) {
-    return embedLinkCard(url, "Medium");
+    return card("Medium");
   }
   if (host === "discord.com" && u.pathname.startsWith("/channels/")) {
-    return `<iframe src="${esc(url.replace(/^https:\/\/discord\.com\/channels\//, "https://discord.com/widget?id=").replace(/\//g, "-"))}" title="Discord message" loading="lazy" style="border:0;width:100%;min-height:400px"></iframe>`;
+    return frame("iframe", `<iframe src="${esc(target.replace(/^https:\/\/discord\.com\/channels\//, "https://discord.com/widget?id=").replace(/\//g, "-"))}" title="Discord message" loading="lazy" style="border:0;width:100%;min-height:400px"></iframe>`);
   }
   if (host === "canva.com") {
     const m = u.pathname.match(/\/design\/([\w-]+)/);
-    if (m) return `<iframe src="https://www.canva.com/design/${encodeURIComponent(m[1])}/view?embed" title="Canva design" loading="lazy" style="border:0;width:100%;aspect-ratio:16/9"></iframe>`;
+    if (m) return frame("iframe", `<iframe src="https://www.canva.com/design/${encodeURIComponent(m[1])}/view?embed" title="Canva design" loading="lazy" style="border:0;width:100%;aspect-ratio:16/9"></iframe>`);
   }
   if (host === "figma.com") {
-    return `<iframe src="${esc(u.origin + "/embed" + u.pathname + "?embed_key=embed")}" title="Figma file" loading="lazy" style="border:0;width:100%;aspect-ratio:16/10"></iframe>`;
+    return frame("iframe", `<iframe src="${esc(u.origin + "/embed" + u.pathname + "?embed_key=embed")}" title="Figma file" loading="lazy" style="border:0;width:100%;aspect-ratio:16/10"></iframe>`);
   }
   if (host === "notion.so" || host === "notion.site") {
-    return `<iframe src="${esc(url.split("?")[0])}" title="Notion page" loading="lazy" style="border:0;width:100%;min-height:500px"></iframe>`;
+    return frame("iframe", `<iframe src="${esc(target.split("?")[0])}" title="Notion page" loading="lazy" style="border:0;width:100%;min-height:500px"></iframe>`);
   }
   if (host === "linkedin.com") {
-    return embedLinkCard(url, "LinkedIn");
+    return card("LinkedIn");
   }
   // Anything else still renders as a clean link card — never an invalid block.
-  return embedLinkCard(url, u.hostname || "Link");
+  return card(u.hostname || "Link");
 }
 
 /** Fallback presentation for hosts without a real embed API. */
