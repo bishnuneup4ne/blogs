@@ -25,6 +25,9 @@ function youTubeId(raw: string): string | null {
 export function AlbumGrid({ photos }: { photos: GalleryPhoto[]; count?: number }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  // The first photo is the LCP element on album pages — load it eagerly.
+  const firstImageIdx = photos.findIndex((p) => p.kind !== "video");
+
   const items: LightboxItem[] = photos.map((p) => ({
     src: p.src,
     alt: p.alt,
@@ -87,7 +90,8 @@ export function AlbumGrid({ photos }: { photos: GalleryPhoto[]; count?: number }
                         width={photo.width}
                         height={photo.height}
                         sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
-                        loading="lazy"
+                        loading={i === firstImageIdx ? "eager" : "lazy"}
+                        fetchPriority={i === firstImageIdx ? "high" : undefined}
                         className={styles.image}
                       />
                     )}
