@@ -339,10 +339,10 @@
 .tone-warning .calloutIcon { color: var(--red-900); box-shadow: inset 0 0 0 1px var(--red-100); }
 
 /* Layout variants using ID-based selectors (pure) */
-#co-left { grid-template-columns: 1fr; gap: 4px; padding: 16px 20px; border-left: 4px solid currentColor; border-radius: var(--radius-12); }
-#co-left .calloutIcon { width: auto; height: auto; background: none; box-shadow: none; justify-self: start; }
-#co-outline { background: transparent; border: 1.5px solid var(--border); }
-#co-filled { border-color: transparent; }
+.co-left { grid-template-columns: 1fr; gap: 4px; padding: 16px 20px; border-left: 4px solid currentColor; border-radius: var(--radius-12); }
+.co-left .calloutIcon { width: auto; height: auto; background: none; box-shadow: none; justify-self: start; }
+.co-outline { background: transparent; border: 1.5px solid var(--border); }
+.co-filled { border-color: transparent; }
 
 /* ---- Media figure ---------------------------------------------------------- */
 
@@ -1145,7 +1145,12 @@
 
 /* ---- Link cards ----------------------------------------------------------- */
 
+/* Same box as media figures, so the grid lines up with photos and video. */
 .linkCards {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
   margin: clamp(32px, 3.5vw, 48px) 0;
 }
 
@@ -1162,7 +1167,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
@@ -1174,7 +1179,7 @@
   padding: 16px 18px;
   border: 1px solid var(--gray-200);
   border-radius: var(--radius-16);
-  background: var(--bg);
+  background: var(--white, #fff);
   text-decoration: none;
   color: inherit;
   transition: border-color 160ms ease, box-shadow 200ms ease, transform 160ms ease;
@@ -1189,7 +1194,7 @@
 .linkCardTitle {
   display: flex;
   align-items: center;
-  gap: 8x;
+  gap: 8px;
   font-family: var(--font-ui);
   font-weight: 600;
   color: var(--gray-900);
@@ -1201,10 +1206,10 @@
   line-height: 1.5;
 }
 
-/* Variants using ID-based selectors (pure) */
-#lc-list .linkCardsGrid { grid-template-columns: 1fr; }
-#lc-tiles .linkCard { align-items: center; text-align: center; }
-#lc-tiles .linkCardTitle { justify-content: center; }
+/* Layout variants (class-based, matching the editor's option values). */
+.lc-list .linkCardsGrid { grid-template-columns: 1fr; }
+.lc-tiles .linkCard { align-items: center; text-align: center; }
+.lc-tiles .linkCardTitle { justify-content: center; }
 
 /* ---- Comparison table ----------------------------------------------------- */
 
@@ -1305,9 +1310,9 @@
 }
 
 /* Inline variant using ID-based selector (pure) */
-#cd-inline .countdownGrid { flex-direction: row; gap: 18px; }
-#cd-inline .countdownCell { min-width: 0; box-shadow: none; background: none; padding: 0; }
-#cd-inline .countdownCell strong { font-size: 22px; }
+.cd-inline .countdownGrid { flex-direction: row; gap: 18px; }
+.cd-inline .countdownCell { min-width: 0; box-shadow: none; background: none; padding: 0; }
+.cd-inline .countdownCell strong { font-size: 22px; }
 
 /* ---- Block kicker --------------------------------------------------------- */
 
@@ -1654,42 +1659,42 @@
 /* ---- Person card variants ----------------------------------------------- */
 
 /* Profile: Google-centered card using ID-based selector (pure) */
-#pr-profile {
+.pr-profile {
   grid-template-columns: 1fr;
   justify-items: center;
   text-align: center;
   padding: clamp(28px, 4vw, 40px);
 }
 
-#pr-profile .personAvatar {
+.pr-profile .personAvatar {
   width: 112px;
   height: 112px;
   margin-bottom: 8px;
 }
 
-#pr-profile .personName {
+.pr-profile .personName {
   font-size: clamp(26px, 3.4vw, 34px);
   font-weight: 400;
   letter-spacing: -0.01em;
 }
 
-#pr-profile .personRole {
+.pr-profile .personRole {
   font-size: 15px;
   color: var(--gray-600);
   margin-top: 2px;
 }
 
-#pr-profile .personBio {
+.pr-profile .personBio {
   text-align: left;
   margin-top: 16px;
 }
 
-#pr-profile .personLinks {
+.pr-profile .personLinks {
   justify-content: center;
 }
 
 /* Inline: compact person card using ID-based selector (pure) */
-#pr-inline {
+.pr-inline {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -1698,11 +1703,11 @@
   border-radius: var(--radius-card);
 }
 
-#pr-inline .personBody { display: block; }
-#pr-inline .personAvatar { width: 48px; height: 48px; }
-#pr-inline .personName { display: inline; }
-#pr-inline .personRole { display: inline; margin-left: 8px; }
-#pr-quote {
+.pr-inline .personBody { display: block; }
+.pr-inline .personAvatar { width: 48px; height: 48px; }
+.pr-inline .personName { display: inline; }
+.pr-inline .personRole { display: inline; margin-left: 8px; }
+.pr-quote {
   border-left: 4px solid var(--blue-600);
   border-radius: 0 var(--radius-16) var(--radius-16) 0;
   background: var(--blue-50);
@@ -1710,11 +1715,11 @@
 
 /* ---- Progress variants ---------------------------------------------------- */
 
-#pg-ring .progressTrack { height: 0; }
-#pg-ring { --pg-pct: 0%; }
-#pg-ring .progressBlock, #pg-ring.progressBlock { display: grid; place-items: center; }
-#pg-ring .progressTop { grid-row: 1; z-index: 1; flex-direction: column; text-align: center; }
-#pg-ring .progressTrack {
+.pg-ring .progressTrack { height: 0; }
+.pg-ring { --pg-pct: 0%; }
+.pg-ring.progressBlock { display: grid; place-items: center; }
+.pg-ring .progressTop { grid-row: 1; z-index: 1; flex-direction: column; text-align: center; }
+.pg-ring .progressTrack {
   position: static;
   width: 120px;
   height: 120px;
@@ -1722,28 +1727,28 @@
   background: conic-gradient(var(--blue-600) var(--pg-pct), var(--gray-100) 0);
   margin: 0 auto;
 }
-#pg-ring .progressFill { display: none; }
+.pg-ring .progressFill { display: none; }
 
-#pg-segmented .progressTrack { display: flex; gap: 4px; background: none; }
-#pg-segmented .progressFill { width: auto !important; flex: 1; background: var(--blue-600); }
+.pg-segmented .progressTrack { display: flex; gap: 4px; background: none; }
+.pg-segmented .progressFill { width: auto !important; flex: 1; background: var(--blue-600); }
 
 /* ---- Link card variants --------------------------------------------------- */
 
-#lc-list .linkCardsGrid { grid-template-columns: 1fr; }
-#lc-tiles .linkCard { align-items: center; text-align: center; }
-#lc-tiles .linkCardTitle { justify-content: center; }
+.lc-list .linkCardsGrid { grid-template-columns: 1fr; }
+.lc-tiles .linkCard { align-items: center; text-align: center; }
+.lc-tiles .linkCardTitle { justify-content: center; }
 
 /* ---- Compare variants ----------------------------------------------------- */
 
-#cp-columns {
+.cp-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   border: none;
 }
 
-#cp-columns .cmpHead { display: none; }
-#cp-columns .cmpRow {
+.cp-columns .cmpHead { display: none; }
+.cp-columns .cmpRow {
   display: grid;
   gap: 2px;
   border: 1px solid var(--gray-200);
@@ -1753,15 +1758,15 @@
 
 /* ---- Countdown inline variant -------------------------------------------- */
 
-#cd-inline .countdownGrid { flex-direction: row; gap: 18px; }
-#cd-inline .countdownCell { min-width: 0; box-shadow: none; background: none; padding: 0; }
-#cd-inline .countdownCell strong { font-size: 22px; }
+.cd-inline .countdownGrid { flex-direction: row; gap: 18px; }
+.cd-inline .countdownCell { min-width: 0; box-shadow: none; background: none; padding: 0; }
+.cd-inline .countdownCell strong { font-size: 22px; }
 
 /* ---- Responsive ----------------------------------------------------------- */
 
 @media (max-width: 640px) {
-  #pc-split, #cp-columns { grid-template-columns: 1fr; }
-  #pr-profile .personAvatar { width: 88px; height: 88px; }
+  .pc-split, .cp-columns { grid-template-columns: 1fr; }
+  .pr-profile .personAvatar { width: 88px; height: 88px; }
 }
 
 /* ---- Per-block accent ----------------------------------------------------- */
