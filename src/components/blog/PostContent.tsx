@@ -5,7 +5,6 @@ import Image from "next/image";
 import type { Block } from "@/lib/types";
 import { CodeBlock } from "./CodeBlock";
 import { ChartBlockView } from "./ChartBlock";
-import { Lightbox, type LightboxItem } from "@/components/ui/Lightbox";
 import Link from "next/link";
 import { VideoEmbed } from "./VideoEmbed";
 import { EmbedBlock } from "./EmbedBlock";
@@ -64,7 +63,6 @@ const TOUT_MEDIA_TINT: Record<string, string> = {
 };
 
 export function PostContent({ blocks }: { blocks: Block[] }) {
-  const [zoom, setZoom] = useState<number | null>(null);
   // Cover URLs can 404 before hydration (no onError fires then), so read
   // naturalWidth on mount as well and remember failures by block index.
   const [brokenCovers, setBrokenCovers] = useState<Record<string, true>>({});
@@ -72,24 +70,6 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
     if (!el || el.complete === false || el.naturalWidth > 0) return;
     setBrokenCovers((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
   };
-  const images: LightboxItem[] = blocks.flatMap((b) =>
-    b.type === "image"
-      ? [{ src: b.src, alt: b.alt, caption: b.caption }]
-      : b.type === "row"
-        ? b.items.flatMap((it) => (it.kind === "quote" ? [] : [{ src: it.src, alt: it.alt, caption: b.caption }]))
-        : [],
-  );
-
-  // Position of each single image in the lightbox gallery, keyed by block index.
-  const imageIndexByBlock = new Map<number, number>();
-  let cursor = 0;
-  blocks.forEach((b, i) => {
-    if (b.type === "image") {
-      imageIndexByBlock.set(i, cursor);
-      cursor += 1;
-    }
-  });
-
   return (
     <>
       <div className={styles.prose}>
@@ -157,7 +137,6 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "image": {
               // Empty src = a placeholder block still being built.
               if (!block.src) return null;
-              const myIndex = imageIndexByBlock.get(index) ?? 0;
               // The same block also carries video: a YouTube/Vimeo link or a
               // direct MP4/WebM renders as a player instead of a photo.
               if (/\.(mp4|webm)(\?|$)/i.test(block.src) || /(?:youtube(?:-nocookie)?\.com|youtu\.be|vimeo\.com)/i.test(block.src)) {
@@ -166,12 +145,9 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               const remote = /^https?:\/\//i.test(block.src) && !block.src.includes(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
               return (
                 <figure key={key} className={`${styles.figure}${block.width && block.width !== "full" ? ` ${styles[`fig${block.width[0].toUpperCase()}${block.width.slice(1)}`]}` : ""}`}>
-                  <button
-                    type="button"
-                    className={styles.imageWrap}
-                    onClick={() => setZoom(myIndex)}
-                    aria-label={`Zoom image: ${block.alt}`}
-                  >
+                  {/* Article photos are not zoomable — the caption carries everything
+                      a reader needs, and a lightbox interrupted the scroll. */}
+                  <div className={styles.imageWrap}>
                     {remote ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={block.src} alt={block.alt} loading="lazy" className={styles.image} />
@@ -185,13 +161,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                         className={styles.image}
                       />
                     )}
-                    <span className={styles.zoomHint} aria-hidden="true">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="m20 20-4-4M11 8v6M8 11h6" />
-                      </svg>
-                    </span>
-                  </button>
+                  </div>
                   {block.caption ? <figcaption>{block.caption}</figcaption> : null}
                 </figure>
               );
@@ -207,11 +177,10 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                         kind: "media",
                         src: it.src,
                         alt: it.alt,
-                        index: images.findIndex((img) => img.src === it.src && img.alt === it.alt),
                         size: it.size,
                       };
                     })}
-                    onOpen={(i) => setZoom(i)}
+
                   />
                   {block.caption ? <figcaption>{block.caption}</figcaption> : null}
                 </figure>
@@ -607,7 +576,6 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
 
       </div>
 
-      <Lightbox images={images} index={zoom} onClose={() => setZoom(null)} onIndexChange={setZoom} />
     </>
   );
 }

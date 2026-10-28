@@ -14,13 +14,13 @@ export type CarouselSlide =
       kind: "media";
       src: string;
       alt: string;
-      /** Position in the post-wide lightbox gallery; -1 when not zoomable. */
-      index: number;
+      /** Position in the post-wide lightbox gallery. Omit when not zoomable. */
+      index?: number;
       size?: string;
     }
   | { kind: "quote"; html: string; author?: string; role?: string };
 
-export function MediaCarousel({ slides, onOpen }: { slides: CarouselSlide[]; onOpen: (lightboxIndex: number) => void }) {
+export function MediaCarousel({ slides, onOpen }: { slides: CarouselSlide[]; onOpen?: (lightboxIndex: number) => void }) {
   const trackRef = useRef<HTMLUListElement>(null);
   const drag = useRef<{ down: boolean; startX: number; startLeft: number; moved: boolean; imageIdx?: number }>({ down: false, startX: 0, startLeft: 0, moved: false });
   const [progress, setProgress] = useState(0);
@@ -171,7 +171,7 @@ export function MediaCarousel({ slides, onOpen }: { slides: CarouselSlide[]; onO
                 playing={Boolean(playing[i])}
                 onPlay={() => setPlaying((p) => ({ ...p, [i]: true }))}
                 onPause={() => setPlaying((p) => ({ ...p, [i]: false }))}
-                onZoom={() => slide.index >= 0 && onOpen(slide.index)}
+                onZoom={onOpen && typeof slide.index === "number" && slide.index >= 0 ? () => onOpen(slide.index as number) : undefined}
               />
             )}
 
@@ -254,7 +254,7 @@ function MediaTile({
   playing: boolean;
   onPlay: () => void;
   onPause: () => void;
-  onZoom: () => void;
+  onZoom?: () => void;
 }) {
   const video: VideoSource | null = classifyVideo(src);
   const sizeClass = size === "portrait" ? styles.tilePortrait : size === "square" ? styles.tileSquare : size === "wide" ? styles.tileWide : "";
@@ -321,9 +321,14 @@ function MediaTile({
     );
   }
 
+  const media = <Image src={src} alt={alt} fill sizes="(max-width: 760px) 100vw, 80vw" className={styles.img} />;
+
+  // Without a zoom handler the tile is just an image — no button, no affordance.
+  if (!onZoom) return <div className={`${styles.tile} ${sizeClass}`}>{media}</div>;
+
   return (
     <button type="button" className={`${styles.tile} ${sizeClass}`} onClick={onZoom} aria-label={`Zoom image: ${alt}`}>
-      <Image src={src} alt={alt} fill sizes="(max-width: 760px) 100vw, 80vw" className={styles.img} />
+      {media}
     </button>
   );
 }

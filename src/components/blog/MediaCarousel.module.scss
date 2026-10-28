@@ -71,6 +71,10 @@
   border-radius: var(--radius-card);
   overflow: hidden;
   background: var(--gray-100);
+}
+
+/* Only a tile that actually opens a lightbox gets the zoom cursor. */
+button.tile {
   cursor: zoom-in;
 }
 

@@ -377,7 +377,6 @@
   border: none;
   border-radius: var(--radius-card);
   background: var(--bg);
-  cursor: zoom-in;
   /* Same 16/9 box as video embeds, so consecutive media blocks line up. */
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -397,10 +396,6 @@
 
 .figSmall {
   width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 520px);
-}
-
-.zoomHint {
-  display: none;
 }
 
 .image {
