@@ -26,6 +26,10 @@ export default async function HomePage() {
   // post that wasn't in the global top six).
   const personalPosts = byDate.filter((p) => p.category === "personal").slice(0, 6);
 
+  // The featured band shows the post pinned in settings, falling back to the
+  // newest personal story when nothing is chosen (or the slug no longer exists).
+  const featurePost = settings.featurePost ? posts.find((p) => p.slug === settings.featurePost) : undefined;
+
   // Statement headline split like the reference: "Word one," floats left,
   // "word two." drops to the right on the next line.
   const words = settings.hero.title.replace(/[.,!?]+$/, "").split(/\s+/).filter(Boolean);
@@ -79,7 +83,7 @@ export default async function HomePage() {
 
       {personalPosts.length > 0 ? (
         <>
-          <JournalFeature post={personalPosts[0]} theme={settings.featureTheme} />
+          <JournalFeature post={featurePost ?? personalPosts[0]} theme={settings.featureTheme} />
           <StoryCarousel
             id="personal-rail-heading"
             title="From the personal journal"

@@ -33,6 +33,8 @@ export interface SiteSettings {
   hero: { title: string; standfirst: string };
   /** Prestyle palette for the home "featured story" band. */
   featureTheme: "blue" | "mint" | "lavender" | "peach" | "butter";
+  /** Slug of the post shown in the featured band. Empty = newest personal story. */
+  featurePost: string;
   socials: { label: string; href: string; icon?: string }[];
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string; icon?: string }[];
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     standfirst: "Security engineering, systems, the trail and everything between — written down as it happens.",
   },
   featureTheme: "blue",
+  featurePost: "",
   socials: [
     { label: "GitHub", href: "https://github.com/bishnuneup4ne" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/bishnuneup4ne/" },
@@ -167,6 +170,7 @@ function normaliseSettings(raw: SiteSettings, base: SiteSettings): SiteSettings 
     featureTheme: (["blue", "mint", "lavender", "peach", "butter"] as const).includes(raw.featureTheme as never)
       ? raw.featureTheme
       : base.featureTheme,
+    featurePost: typeof raw.featurePost === "string" ? raw.featurePost.slice(0, 200) : base.featurePost,
     socials: safeList(raw.socials, base.socials, (item) => {
       if (!item || typeof item !== "object") return null;
       const social = item as Record<string, unknown>;

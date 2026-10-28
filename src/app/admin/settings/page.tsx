@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/components/admin/api";
+import { api, useApiCollection, type ApiPost } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
 import { useToast } from "@/components/admin/Feedback";
 import { Card, CardHead, PageHeader } from "@/components/admin/kit";
@@ -17,6 +17,7 @@ interface SettingsForm {
   identity: { wordmark: string; siteName: string; tagline: string; email: string; location: string; avatarUrl: string; authorName: string };
   hero: { title: string; standfirst: string };
   featureTheme: "blue" | "mint" | "lavender" | "peach" | "butter";
+  featurePost: string;
   socials: { label: string; href: string; icon?: string }[];
   toggles: { newsletter: boolean; comments: boolean; views: boolean; contactForm: boolean; toc: boolean };
   nav: { label: string; href: string }[];
@@ -37,6 +38,7 @@ const BLANK: SettingsForm = {
   identity: { wordmark: "", siteName: "", tagline: "", email: "", location: "", avatarUrl: "", authorName: "" },
   hero: { title: "", standfirst: "" },
   featureTheme: "blue",
+  featurePost: "",
   socials: [],
   toggles: { newsletter: true, comments: true, views: true, contactForm: true, toc: true },
   nav: [],
@@ -51,6 +53,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const toast = useToast();
   const [form, setForm] = useState<SettingsForm>(BLANK);
+  const postsC = useApiCollection<ApiPost>("/api/admin/posts", "posts");
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -251,6 +254,24 @@ export default function AdminSettingsPage() {
                 ))}
               </div>
             </div>
+
+            <label className={styles.field}>
+              <span>Featured band story</span>
+              <em>Which post the home page leads with. Leave empty for the newest personal story.</em>
+              <select
+                value={form.featurePost ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, featurePost: e.target.value }))}
+              >
+                <option value="">Newest personal story</option>
+                {postsC.items
+                  .filter((p) => p.status === "published")
+                  .map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.title}
+                    </option>
+                  ))}
+              </select>
+            </label>
           </div>
         </Card>
 
