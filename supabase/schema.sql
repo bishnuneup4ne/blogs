@@ -38,6 +38,8 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- fn_authors
+--   Seed one author so posts have a byline on a fresh project. Idempotent:
+--   inserts only when the table is still empty (no fixed id to conflict on).
 -- ---------------------------------------------------------------------------
 create table if not exists public.fn_authors (
   id           uuid primary key default gen_random_uuid(),
@@ -55,6 +57,15 @@ create table if not exists public.fn_authors (
 
 create index if not exists fn_authors_status_idx
   on public.fn_authors (status, sort_order);
+
+-- Per-author social / related links: jsonb array of { label, url, icon }.
+-- Existing databases: run this once to add the column.
+alter table public.fn_authors add column if not exists social_links jsonb not null default '[]'::jsonb;
+alter table public.fn_authors add column if not exists bio text;
+
+insert into public.fn_authors (name, role, avatar_url, status, sort_order)
+select 'Bishnu Neupane', '', '/avatar.jpg', 'active', 0
+where not exists (select 1 from public.fn_authors);
 
 -- ---------------------------------------------------------------------------
 -- fn_topics
@@ -80,6 +91,19 @@ alter table public.fn_topics add column if not exists shape text not null defaul
 
 create index if not exists fn_topics_sort_idx
   on public.fn_topics (sort_order, name);
+
+-- Seed the default topics so a fresh project has categories to write into.
+-- Idempotent: existing rows are left untouched.
+insert into public.fn_topics (name, slug, description, pastel, color, sort_order) values
+  ('Engineering', 'engineering', 'Architecture decisions, performance work and the tools I keep coming back to.', 'blue',   '#1a73e8', 0),
+  ('Security',    'security',    'AppSec, offensive tooling and post-mortems from things that should never have shipped.', 'red',    '#d93025', 1),
+  ('Field notes', 'field-notes', 'Short, unpolished observations from a week of building. Less essay, more notebook.',     'green',  '#188038', 2),
+  ('Life',        'life',        'Training, travel, books and the discipline of staying curious outside the terminal.',    'yellow', '#b06000', 3),
+  ('Photography', 'photography', 'Frames from Kathmandu, the trail, and whatever light happens to find me.',               'purple', '#8430ce', 4),
+  ('Essays',      'essays',      'Longer arguments about craft, attention and building things that outlast a trend.',      'green',  '#0b8043', 5),
+  ('Hardware',    'hardware',    'Teardowns, home-lab gear and the physical layer.',                                       'purple', '#8430ce', 6),
+  ('Personal',    'personal',    'Notes that used to live on the old site — kept in the archive.',                         'gray',   '#5f6368', 7)
+on conflict (slug) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- fn_posts
@@ -135,6 +159,28 @@ drop trigger if exists fn_posts_touch on public.fn_posts;
 create trigger fn_posts_touch
   before update on public.fn_posts
   for each row execute function public.fn_touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- fn_post_revisions — snapshot of a post taken before each admin save.
+--   snapshot is a jsonb copy of the full row (title, blocks, ...). Used by the
+--   Studio editor's "Revision history" to undo bad edits. Service-role only.
+-- ---------------------------------------------------------------------------
+create table if not exists public.fn_post_revisions (
+  id         uuid primary key default gen_random_uuid(),
+  post_id    uuid        not null references public.fn_posts (id) on delete cascade,
+  title      text        not null default '',
+  status     text        not null default 'draft'
+             check (status in ('draft', 'review', 'scheduled', 'published')),
+  snapshot   jsonb       not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists fn_post_revisions_post_idx
+  on public.fn_post_revisions (post_id, created_at desc);
+
+alter table public.fn_post_revisions enable row level security;
+
+-- Service-role only: no public policy, so anon/authenticated see nothing.
 
 -- ---------------------------------------------------------------------------
 -- fn_series / fn_series_posts — curated reading orders
@@ -384,8 +430,8 @@ alter table public.fn_post_views  enable row level security;
 alter table public.fn_series      enable row level security;
 alter table public.fn_series_posts enable row level security;
 alter table public.fn_subscribers enable row level security;
-alter table public.fn_messages    enable row level security;
-alter table public.fn_settings    enable row level security;
+alter table public.fn_messages    enable row level security;alter table public.fn_settings     enable row level security;
+alter table public.fn_post_revisions enable row level security;
 
 -- Published content is world-readable.
 drop policy if exists "published posts are public" on public.fn_posts;
@@ -444,3 +490,19 @@ drop policy if exists "images are publicly readable" on storage.objects;
 create policy "images are publicly readable"
   on storage.objects for select
   using (bucket_id = 'images');
+
+-- ============================================================================
+--  Migrations — safe to run repeatedly on an existing database.
+--  The app writes these columns; older databases created before them will
+--  otherwise fail a save (the API retries without them, but the value is lost).
+-- ============================================================================
+alter table public.fn_posts add column if not exists cover_height integer;
+alter table public.fn_posts add column if not exists cover_focal  integer check (cover_focal between 0 and 100);
+alter table public.fn_topics add column if not exists image_url text;
+alter table public.fn_topics add column if not exists shape text not null default 'circle';
+alter table public.fn_series add column if not exists cover_url text;
+
+-- Author profiles gained a status flag and a list of social links.
+alter table public.fn_authors add column if not exists status text not null default 'active'
+  check (status in ('active', 'inactive'));
+alter table public.fn_authors add column if not exists social_links jsonb not null default '[]'::jsonb;

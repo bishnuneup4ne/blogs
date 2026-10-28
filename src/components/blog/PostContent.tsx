@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { Block } from "@/lib/types";
 import { CodeBlock } from "./CodeBlock";
@@ -10,8 +10,36 @@ import Link from "next/link";
 import { VideoEmbed } from "./VideoEmbed";
 import styles from "./PostContent.module.scss";
 import { MediaCarousel, type CarouselSlide } from "./MediaCarousel";
+import { FaqList } from "./FaqList";
 import { getCategory } from "@/lib/categories";
 import { routes } from "@/lib/routes";
+import { SocialIcon } from "@/components/icons/Icons";
+
+/* Map a person link's explicit icon, or guess one from its label/host. */
+function personLinkIcon(link: { label?: string; href?: string; icon?: string }): string {
+  const explicit = (link.icon ?? "").trim().toLowerCase();
+  if (explicit) return explicit;
+  const hint = `${link.label ?? ""} ${link.href ?? ""}`.toLowerCase();
+  if (/github/.test(hint)) return "github";
+  if (/instagram|\binsta\b/.test(hint)) return "instagram";
+  if (/linkedin/.test(hint)) return "linkedin";
+  if (/threads/.test(hint)) return "threads";
+  if (/youtube|youtu\.be/.test(hint)) return "youtube";
+  if (/facebook|fb\.com/.test(hint)) return "facebook";
+  if (/twitter|x\.com/.test(hint)) return "x";
+  if (/mailto:|email|e-mail/.test(hint)) return "email";
+  return "website";
+}
+
+/** Block accent -> CSS var, so each block's CSS can theme itself. */
+function accentStyle(block: object): React.CSSProperties | undefined {
+  const b = block as { accent?: string; bg?: string; text?: string };
+  const style: Record<string, string> = {};
+  if (b.accent) style["--block-accent"] = b.accent;
+  if (b.bg) style["--block-bg"] = b.bg;
+  if (b.text) style["--block-text"] = b.text;
+  return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
+}
 
 /* Related-tout tints, one per topic colour chosen in the editor. */
 const TOUT_COLORS = ["blue", "green", "mint", "yellow", "red", "purple", "gray"] as const;
@@ -61,13 +89,6 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
     }
   });
 
-  // Headings for the auto-generated contents block.
-  const headingsSource = blocks.flatMap((b) =>
-    b.type === "h2" || b.type === "h3"
-      ? [{ id: b.id ?? `h-${b.text.slice(0, 16)}`, text: b.text, level: b.type === "h2" ? 2 : 3 }]
-      : [],
-  );
-
   return (
     <>
       <div className={styles.prose}>
@@ -93,14 +114,13 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 </h3>
               );
             case "quote": {
-              // Two looks: a left rule ("bar") or a filled author card ("card").
-              const variant = block.variant === "card" ? styles.quoteCard : styles.quoteBar;
+              const qv = block.variant === "big" ? styles.quoteBig : block.variant === "plain" ? styles.quotePlain : block.variant === "card" ? styles.quoteCard : block.variant === "bar" ? styles.quoteBar : "";
               const size = block.size === "sm" ? styles.quoteSm : block.size === "lg" ? styles.quoteLg : "";
               return (
                 <figure
                   key={key}
-                  className={`${styles.quote} ${variant} ${size}`.trim()}
-                  style={block.bg ? { ["--quote-bg" as string]: block.bg } : undefined}
+                  className={`${styles.quote} ${qv} ${size}`.trim()}
+                  style={{ ...accentStyle(block), ...(block.bg ? ({ ["--quote-bg" as string]: block.bg } as React.CSSProperties) : {}) }}
                 >
                   <blockquote dangerouslySetInnerHTML={{ __html: block.html }} />
                   {block.cite ? <QuoteAttribution cite={block.cite} /> : null}
@@ -109,9 +129,12 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             }
             case "callout":
               return (
-                <aside key={key} className={`${styles.callout} ${styles[block.tone]}`}>
-                  <div className={styles.calloutHead}>{block.title || defaultTitle(block.tone)}</div>
-                  <div className={styles.calloutBody} dangerouslySetInnerHTML={{ __html: block.html }} />
+                <aside key={key} className={`${styles.callout} ${styles[`tone-${block.tone}`]} ${block.variant ? styles[`co-${block.variant}`] : ""}`} style={accentStyle(block)}>
+                  <span className={styles.calloutIcon} aria-hidden="true">{block.icon || defaultToneIcon(block.tone)}</span>
+                  <div className={styles.calloutBody}>
+                    <p className={styles.calloutHead}>{block.title || toneLabel(block.tone)}</p>
+                    <div dangerouslySetInnerHTML={{ __html: block.html }} />
+                  </div>
                 </aside>
               );
             case "code":
@@ -199,7 +222,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
             case "related":
               if (!block.slug) return null;
               return (
-                <Link key={key} href={routes.post(block.slug)} className={`${styles.relatedTout}${toutClass(block.color)}`} aria-label={`${block.eyebrow ?? "Related article"}: ${block.title}`}>
+                <Link key={key} href={routes.post(block.slug)} className={`${styles.relatedTout}${toutClass(block.color)}${block.variant ? ` ${styles[`rel-${block.variant}`]}` : ""}`} style={accentStyle(block)} aria-label={`${block.eyebrow ?? "Related article"}: ${block.title}`}>
                   <span className={styles.relatedToutBody}>
                     <span className={styles.relatedToutEyebrow}>{block.eyebrow || "Related Article"}</span>
                     <span className={styles.relatedToutTitle}>{block.title}</span>
@@ -231,7 +254,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             case "table":
               return (
-                <div key={key} className={styles.tableWrap}>
+                <div key={key} className={`${styles.tableWrap} ${block.variant ? styles[`tbl-${block.variant}`] : ""}`} style={accentStyle(block)}>
                   <table>
                     <thead>
                       <tr>
@@ -254,10 +277,11 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               );
             case "chart":
               return <ChartBlockView key={key} chart={block.chart} />;
-            case "cta":
+            case "cta": {
               if (!block.label || !block.href) return null;
+              const ctaVariant = block.variant === "banner" ? styles.ctaBanner : block.variant === "link" ? styles.ctaLink : "";
               return (
-                <p key={key} className={styles.ctaRow}>
+                <p key={key} className={`${styles.ctaRow} ${ctaVariant}`.trim()} style={accentStyle(block)}>
                   <Link
                     href={block.href}
                     className={block.style === "outline" ? `${styles.cta} ${styles.ctaOutline}` : styles.cta}
@@ -270,6 +294,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   {block.note ? <span className={styles.ctaNote}>{block.note}</span> : null}
                 </p>
               );
+            }
             case "footnote":
               if (!block.text) return null;
               footnoteCount += 1;
@@ -279,28 +304,290 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                   <span>{block.text}</span>
                 </p>
               );
-            case "jumplinks":
-              // Chip row like blog.google's article jump links — the sticky rail
-              // still carries the full list, this is the in-flow entry point.
-              if (headingsSource.length === 0) return null;
+            case "imgtext": {
+              if (!block.src || !block.html) return null;
               return (
-                <nav key={key} className={styles.jumpChips} aria-label={block.title || "Jump to a section"}>
-                  <p className={styles.jumpChipsLabel}>{block.title || "Jump to"}</p>
+                <div key={key} className={`${styles.imgText} ${block.side === "right" ? styles.imgTextRight : ""}`} data-side={block.side ?? "left"} style={accentStyle(block)}>
+                  <figure className={styles.imgTextFig}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={block.src} alt={block.alt} loading="lazy" />
+                  </figure>
+                  <div className={styles.imgTextBody} dangerouslySetInnerHTML={{ __html: block.html }} />
+                </div>
+              );
+            }
+            case "embed": {
+              const frame = embedFrame(block.url);
+              if (!frame) return null;
+              return (
+                <figure key={key} className={styles.embedWrap}>
+                  <div className={styles.embedFrame} dangerouslySetInnerHTML={{ __html: frame }} />
+                  {block.caption ? <figcaption className={styles.embedCaption}>{block.caption}</figcaption> : null}
+                </figure>
+              );
+            }
+            case "keypoints": {
+              const items = block.items.filter(Boolean);
+              if (items.length === 0) return null;
+              return (
+                <section key={key} className={`${styles.summaryCard} ${block.variant ? styles[`kp-${block.variant}`] : ""}`} style={accentStyle(block)} aria-label={block.title || "Key takeaways"}>
+                  <span className={styles.summaryPill} aria-hidden="true">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m5 12.5 4.5 4.5L19 7.5" />
+                    </svg>
+                  </span>
+                  <div className={styles.summaryMain}>
+                    <h2 className={styles.summaryTitle}>{block.title || "Key takeaways"}</h2>
+                    <ul className={styles.summaryList}>
+                      {items.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              );
+            }
+            case "stats": {
+              const items = block.items.filter((s) => s.value || s.label);
+              if (items.length === 0) return null;
+              return (
+                <aside key={key} className={`${styles.statsRow} ${block.variant ? styles[`st-${block.variant}`] : ""}`} style={{ ...accentStyle(block), "--stats-cols": Math.min(4, Math.max(2, items.length)) } as React.CSSProperties} aria-label="Key figures">
+                  {items.map((s, i) => (
+                    <div key={i} className={styles.statCell}>
+                      <strong>{s.value}</strong>
+                      <span>{s.label}</span>
+                      {s.note ? <em>{s.note}</em> : null}
+                    </div>
+                  ))}
+                </aside>
+              );
+            }
+            case "timestrip": {
+              const items = block.items.filter((t) => t.date || t.title);
+              if (items.length === 0) return null;
+              return (
+                <section key={key} className={styles.blockShell} aria-label={block.title || "Timeline"}>
+                  {block.title ? <h2 className={styles.blockHeading}>{block.title}</h2> : null}
+                  <div className={`${styles.timeStrip} ${block.variant ? styles[`ts-${block.variant}`] : ""}`}>
                   <ol>
-                    {headingsSource.map((h) => (
-                      <li key={h.id} data-level={h.level}>
-                        <a href={`#${h.id}`}>{h.text}</a>
+                    {items.map((t, i) => (
+                      <li key={i}>
+                        <span className={styles.timeStripDot} aria-hidden="true" />
+                        <strong>{t.date}</strong>
+                        <span className={styles.timeStripTitle}>{t.title}</span>
+                        {t.detail ? <span className={styles.timeStripDetail}>{t.detail}</span> : null}
                       </li>
                     ))}
                   </ol>
+                  </div>
+                </section>
+              );
+            }
+            case "bafter": {
+              if (!block.before || !block.after) return null;
+              return <BeforeAfter key={key} before={block.before} after={block.after} labelBefore={block.labelBefore} labelAfter={block.labelAfter} alt={block.alt} />;
+            }
+            case "accordion": {
+              const items = block.items.filter((i) => i.q);
+              if (items.length === 0) return null;
+              return (
+                <div key={key} style={accentStyle(block)}>
+                  <FaqList items={items} variant={block.variant} title={block.title} />
+                </div>
+              );
+            }
+            case "proscons": {
+              const pros = block.pros.filter(Boolean);
+              const cons = block.cons.filter(Boolean);
+              if (pros.length === 0 && cons.length === 0) return null;
+              return (
+                <div key={key} className={`${styles.prosCons} ${block.variant ? styles[`pc-${block.variant}`] : ""}`} style={accentStyle(block)}>
+                  {pros.length ? (
+                    <section className={styles.prosCol} data-side="pros">
+                      <p className={styles.prosLabel}>{block.prosLabel || "Worth it"}</p>
+                      <ul>{pros.map((item, i) => <li key={i} dangerouslySetInnerHTML={{ __html: item }} />)}</ul>
+                    </section>
+                  ) : null}
+                  {cons.length ? (
+                    <section className={styles.prosCol} data-side="cons">
+                      <p className={styles.prosLabel}>{block.consLabel || "Trade-offs"}</p>
+                      <ul>{cons.map((item, i) => <li key={i} dangerouslySetInnerHTML={{ __html: item }} />)}</ul>
+                    </section>
+                  ) : null}
+                </div>
+              );
+            }
+            case "steps": {
+              const items = block.items.filter((i) => i.title);
+              if (items.length === 0) return null;
+              return (
+                <div key={key} className={`${styles.steps} ${block.variant ? styles[`st-${block.variant}`] : ""}`} style={accentStyle(block)} aria-label={block.title || "Steps"}>
+                  {block.title ? <p className={styles.blockKicker}>{block.title}</p> : null}
+                  <ol>
+                    {items.map((item, i) => (
+                      <li key={i}>
+                        <span className={styles.stepNum} aria-hidden="true">{i + 1}</span>
+                        <div>
+                          <strong>{item.title}</strong>
+                          {item.detail ? <span className={styles.stepDetail}>{item.detail}</span> : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              );
+            }
+            case "glossary": {
+              const terms = block.terms.filter((t) => t.term && t.def);
+              if (terms.length === 0) return null;
+              const groups = new Map<string, { term: string; def: string }[]>();
+              for (const t of [...terms].sort((a, b) => a.term.localeCompare(b.term))) {
+                const letter = (t.term.trim()[0] || "#").toUpperCase();
+                if (!groups.has(letter)) groups.set(letter, []);
+                groups.get(letter)!.push(t);
+              }
+              return (
+                <section key={key} className={`${styles.glossaryBlock} ${block.variant ? styles[`gl-${block.variant}`] : ""}`} style={accentStyle(block)} aria-label={block.title || "Glossary"}>
+                  <h2 className={styles.glossaryTitle}>{block.title?.trim() || "Glossary"}</h2>
+                  <div className={styles.glossaryGrid}>
+                    {[...groups.entries()].map(([letter, items]) => (
+                      <div key={letter} className={styles.glossaryGroup}>
+                        <p className={styles.glossaryLetter}>{letter}</p>
+                        {items.map((t, i) => (
+                          <dl key={i} className={styles.glossaryEntry}>
+                            <dt>{t.term}</dt>
+                            <dd>{t.def}</dd>
+                          </dl>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+            case "diff": {
+              const before = block.before.split("\n");
+              const after = block.after.split("\n");
+              if (!block.before.trim() && !block.after.trim()) return null;
+              return (
+                <section key={key} className={`${styles.compare} ${block.variant ? styles[`df-${block.variant}`] : ""}`} aria-label={block.filename || "Before and after"}>
+                  <h2 className={styles.compareTitle}>{block.filename?.trim() || "Before and after"}</h2>
+                  <p className={styles.compareSub}>The old version on the left, the new one on the right.</p>
+                  <div className={styles.compareGrid}>
+                    <div className={styles.comparePane} data-side="before">
+                      <p className={styles.compareLabel}>Before</p>
+                      <pre><code>{before.map((line, i) => <span key={i} data-line>{line || " "}</span>)}</code></pre>
+                    </div>
+                    <span className={styles.compareOr} aria-hidden="true">OR</span>
+                    <div className={styles.comparePane} data-side="after">
+                      <p className={styles.compareLabel}>After</p>
+                      <pre><code>{after.map((line, i) => <span key={i} data-line>{line || " "}</span>)}</code></pre>
+                    </div>
+                  </div>
+                </section>
+              );
+            }
+            case "person": {
+              if (!block.name?.trim()) return null;
+              const initials = block.name.split(/\s+/).filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase() ?? "").join("");
+              const links = (block.links ?? []).filter((l) => l.href);
+              return (
+                <section key={key} className={`${styles.personCard} ${block.variant ? styles[`pr-${block.variant}`] : ""}`} style={accentStyle(block)} aria-label={block.name}>
+                  <span className={styles.personAvatar} aria-hidden="true">
+                    {block.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={block.avatar} alt="" className={styles.personAvatarImg} />
+                    ) : (
+                      initials
+                    )}
+                  </span>
+                  <div className={styles.personBody}>
+                    <p className={styles.personName}>{block.name}</p>
+                    {block.role ? <p className={styles.personRole}>{block.role}</p> : null}
+                    {block.html ? <div className={styles.personBio} dangerouslySetInnerHTML={{ __html: block.html }} /> : null}
+                    {links.length ? (
+                      <ul className={styles.personLinks}>
+                        {links.map((l, i) => (
+                          <li key={i}>
+                            <a className={styles.personLink} href={l.href} rel="noreferrer noopener" target="_blank">
+                              <SocialIcon name={personLinkIcon(l)} width={15} height={15} aria-hidden="true" />
+                              <span>{l.label}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                </section>
+              );
+            }
+            case "progress": {
+              const max = block.max && block.max > 0 ? block.max : 100;
+              const pct = Math.max(0, Math.min(100, (block.value / max) * 100));
+              return (
+                <div key={key} className={`${styles.progressBlock} ${block.variant ? styles[`pg-${block.variant}`] : ""}`} role="figure" aria-label={block.label || "Progress"} style={{ ...accentStyle(block), ["--pg-pct" as string]: `${pct}%`, ["--pg-color" as string]: block.color ?? "" } as React.CSSProperties}>
+                  <div className={styles.progressTop}>
+                    <p className={styles.progressLabel}>{block.label || "Progress"}</p>
+                    <span className={styles.progressValue}>
+                      {block.value}{block.unit ? block.unit : ""}
+                      <span className={styles.progressUnit}> / {max}{block.unit ? block.unit : ""}</span>
+                    </span>
+                  </div>
+                  <div className={styles.progressTrack} role="progressbar" aria-valuenow={block.value} aria-valuemin={0} aria-valuemax={max}>
+                    <span className={styles.progressFill} style={{ width: `${pct}%` }} />
+                  </div>
+                  {block.note ? <p className={styles.progressNote}>{block.note}</p> : null}
+                </div>
+              );
+            }
+            case "linkcards": {
+              const items = block.items.filter((i) => i.title && i.href);
+              if (!items.length) return null;
+              return (
+                <nav key={key} className={`${styles.linkCards} ${block.variant ? styles[`lc-${block.variant}`] : ""}`} style={accentStyle(block)} aria-label={block.title || "Links"}>
+                  {block.title ? <p className={styles.linkCardsTitle}>{block.title}</p> : null}
+                  <ul className={styles.linkCardsGrid}>
+                    {items.map((c, i) => (
+                      <li key={i}>
+                        <a className={styles.linkCard} href={c.href} rel="noreferrer noopener" target="_blank">
+                          <span className={styles.linkCardTitle}>{c.title}<ArrowGlyph /></span>
+                          {c.desc ? <span className={styles.linkCardDesc}>{c.desc}</span> : null}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </nav>
               );
+            }
+            case "compare": {
+              const rows = block.rows.filter((r) => r.feature || r.a || r.b);
+              if (!rows.length) return null;
+              return (
+                <div key={key} className={`${styles.cmpWrap} ${block.variant ? styles[`cp-${block.variant}`] : ""}`} role="table" aria-label="Comparison" style={accentStyle(block)}>
+                  <div className={`${styles.cmpRow} ${styles.cmpHead}`} role="row">
+                    <span role="columnheader" />
+                    <span role="columnheader">{block.columns[0]}</span>
+                    <span role="columnheader">{block.columns[1]}</span>
+                  </div>
+                  {rows.map((r, i) => (
+                    <div key={i} className={styles.cmpRow} role="row">
+                      <span role="rowheader">{r.feature}</span>
+                      <span className={styles.cmpCell} role="cell"><CompareMark v={r.a} /></span>
+                      <span className={styles.cmpCell} role="cell"><CompareMark v={r.b} /></span>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            case "countdown":
+              return <Countdown key={key} date={block.date} label={block.label} note={block.note} variant={block.variant} style={accentStyle(block)} />;
             case "divider":
               return <hr key={key} className={styles.divider} />;
             default:
               return null;
           }
         }); })()}
+
       </div>
 
       <Lightbox images={images} index={zoom} onClose={() => setZoom(null)} onIndexChange={setZoom} />
@@ -308,8 +595,218 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
   );
 }
 
-function defaultTitle(tone: "note" | "tip" | "warning") {
-  return tone === "note" ? "Note" : tone === "tip" ? "Tip" : "Heads up";
+/* ✓ / ✗ or free text in a comparison cell. */
+function CompareMark({ v }: { v: string }) {
+  const t = v.trim().toLowerCase();
+  if (t === "yes" || t === "y" || t === "true" || t === "✓" || t === "+" || t === "on") return <span className={styles.cmpYes} aria-label="Yes">✓</span>;
+  if (t === "no" || t === "n" || t === "false" || t === "✗" || t === "−" || t === "-" || t === "off") return <span className={styles.cmpNo} aria-label="No">✕</span>;
+  return <span>{v}</span>;
+}
+
+const ArrowGlyph = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginLeft: "auto", flex: "none" }}>
+    <path d="M7 17 17 7M9 7h8v8" />
+  </svg>
+);
+
+function defaultToneIcon(tone: "note" | "tip" | "warning" | "info"): string {
+  return tone === "tip" ? "💡" : tone === "warning" ? "⚠️" : tone === "info" ? "ℹ️" : "📌";
+}
+
+function toneLabel(tone: "note" | "tip" | "warning" | "info"): string {
+  return tone === "tip" ? "Tip" : tone === "warning" ? "Heads up" : tone === "info" ? "Good to know" : "Note";
+}
+
+/* Live countdown to a future date; falls back to the note once passed. */
+function Countdown({ date, label, note, variant, style }: { date: string; label?: string; note?: string; variant?: "grid" | "inline"; style?: React.CSSProperties }) {
+  const target = Date.parse(date);
+  // Null until mount: Date.now() during render differs between the server and
+  // the browser, which React reports as a hydration mismatch (error #418).
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    if (Number.isNaN(target)) return;
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [target]);
+  if (Number.isNaN(target)) return null;
+  // Server + first client paint render the same stable placeholder.
+  if (now === null) {
+    return (
+      <div className={styles.countdown} data-variant={variant ?? "grid"} style={style} aria-hidden="true">
+        {label ? <p className={styles.countdownLabel}>{label}</p> : null}
+        {note ? <p className={styles.countdownNote}>{note}</p> : null}
+      </div>
+    );
+  }
+  const diff = target - now;
+  if (diff <= 0) {
+    return (
+      <div className={styles.countdown} data-variant={variant ?? "grid"} style={style}>
+        <p className={styles.countdownLabel}>{label || "It's here."}</p>
+        {note ? <p className={styles.countdownNote}>{note}</p> : null}
+      </div>
+    );
+  }
+  const s = Math.floor(diff / 1000);
+  const units = [
+    { n: Math.floor(s / 86400), l: "days" },
+    { n: Math.floor((s % 86400) / 3600), l: "hours" },
+    { n: Math.floor((s % 3600) / 60), l: "minutes" },
+    { n: s % 60, l: "seconds" },
+  ];
+  return (
+    <div className={styles.countdown} style={style}>
+      {label ? <p className={styles.countdownLabel}>{label}</p> : null}
+      <div className={styles.countdownGrid} data-variant={variant ?? "grid"}>
+        {units.map((u) => (
+          <div key={u.l} className={styles.countdownCell}>
+            <strong>{String(u.n).padStart(2, "0")}</strong>
+            <span>{u.l}</span>
+          </div>
+        ))}
+      </div>
+      {note ? <p className={styles.countdownNote}>{note}</p> : null}
+    </div>
+  );
+}
+
+/* Draggable before/after comparison. The range input keeps it keyboard- and
+   touch-accessible; the handle follows its value. */
+function BeforeAfter({ before, after, labelBefore, labelAfter, alt }: { before: string; after: string; labelBefore?: string; labelAfter?: string; alt?: string }) {
+  const [pos, setPos] = useState(50);
+  return (
+    <figure className={styles.baFrame}>
+      <div className={styles.baImages} style={{ "--ba-pos": `${pos}%` } as React.CSSProperties}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.baAfter} src={after} alt={alt ?? "After"} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.baBefore} src={before} alt={alt ? `${alt} — before` : "Before"} />
+        <span className={styles.baHandle} aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l-4 6 4 6M15 6l4 6-4 6" />
+          </svg>
+        </span>
+        {labelBefore ? <span className={styles.baTagLeft}>{labelBefore}</span> : null}
+        {labelAfter ? <span className={styles.baTagRight}>{labelAfter}</span> : null}
+        <input
+          className={styles.baRange}
+          type="range"
+          min={0}
+          max={100}
+          value={pos}
+          aria-label="Compare before and after"
+          onChange={(e) => setPos(Number(e.target.value))}
+        />
+      </div>
+    </figure>
+  );
+}
+
+/**
+ * Turn a pasted embed URL into safe iframe HTML for the renderers we support.
+ * Unknown hosts fall back to a link card, so an embed block is never "invalid".
+ */
+function embedFrame(url: string): string | null {
+  if (!url) return null;
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  const host = u.hostname.replace(/^www\./, "");
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  if (host === "youtube.com" || host === "m.youtube.com") {
+    const id = u.pathname.startsWith("/embed/") ? u.pathname.slice(7) : u.searchParams.get("v");
+    if (!id) return null;
+    return `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+  }
+  if (host === "youtu.be") {
+    const id = u.pathname.slice(1);
+    return id ? `<iframe src="https://www.youtube.com/embed/${encodeURIComponent(id)}" title="Embedded video" loading="lazy" allowfullscreen></iframe>` : null;
+  }
+  if (host === "vimeo.com") {
+    const id = u.pathname.slice(1).split("/")[0];
+    if (!/^\d+$/.test(id)) return null;
+    return `<iframe src="https://player.vimeo.com/video/${id}" title="Embedded video" loading="lazy" allowfullscreen></iframe>`;
+  }
+  if (host === "open.spotify.com" && u.pathname.startsWith("/embed/")) {
+    return `<iframe src="${u.toString()}" title="Spotify player" loading="lazy" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+  }
+  if (host === "codepen.io") {
+    const parts = u.pathname.split("/").filter(Boolean); // /user/pen/ID
+    if (parts[1] !== "pen" || !parts[2]) return null;
+    return `<iframe src="https://codepen.io/${parts[0]}/embed/${parts[2]}?default-tab=result" title="CodePen embed" loading="lazy" allowfullscreen></iframe>`;
+  }
+  if (host === "w.soundcloud.com" || host === "soundcloud.com") {
+    const src = host.startsWith("w.") ? url : `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}`;
+    return `<iframe src="${src}" title="SoundCloud player" loading="lazy" allow="autoplay"></iframe>`;
+  }
+  if (host === "google.com" || host === "maps.google.com" || (host === "www.google.com" && u.pathname.startsWith("/maps"))) {
+    return `<iframe src="https://maps.google.com/maps?q=${encodeURIComponent(u.searchParams.get("q") ?? "")}&output=embed" title="Google Maps embed" loading="lazy"></iframe>`;
+  }
+  if (host === "docs.google.com") {
+    return `<iframe src="${url}" title="Google Docs embed" loading="lazy"></iframe>`;
+  }
+  if (host === "gist.github.com") {
+    return `<script src="${url}.js"></script>`;
+  }
+  if (host === "github.com" || host === "githubassets.com") {
+    // Gists render via script above; repo links become a styled card.
+    return embedLinkCard(url, "GitHub");
+  }
+  if (host === "instagram.com" || host === "instagr.am") {
+    const m = u.pathname.match(/\/(?:p|reel|tv)\/([\w-]+)/);
+    if (m) return `<iframe src="https://www.instagram.com/p/${encodeURIComponent(m[1])}/embed/captioned/" title="Instagram post" loading="lazy" style="border:0;max-width:540px;width:100%"></iframe>`;
+    return embedLinkCard(url, "Instagram");
+  }
+  if (host === "x.com" || host === "twitter.com") {
+    const m = u.pathname.match(/\/status\/(\d+)/);
+    const id = m ? m[1] : u.searchParams.get("id");
+    if (id) return `<blockquote class="twitter-tweet"><a href="https://twitter.com/i/status/${encodeURIComponent(id)}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
+    return embedLinkCard(url, "X");
+  }
+  if (host === "threads.net" || host === "threads.com") {
+    const m = u.pathname.match(/\/post\/([\w-]+)/);
+    if (m) return `<div data-embed-url="${esc(url)}" data-embed-kind="threads"><iframe src="https://threads.net/${u.pathname.startsWith("/@") ? "" : ""}embed?href=${encodeURIComponent(url.split("?")[0])}" title="Threads post" loading="lazy" style="border:0;width:100%;min-height:320px"></iframe></div>`;
+    return embedLinkCard(url, "Threads");
+  }
+  if (host === "tiktok.com") {
+    const m = u.pathname.match(/\/video\/(\d+)/);
+    if (m) return `<blockquote class="tiktok-embed"><a href="${esc(url.split("?")[0])}" target="_blank">View this TikTok on TikTok</a></blockquote><script async src="https://embed.tiktok.com/sdk.js"></script>`;
+    return embedLinkCard(url, "TikTok");
+  }
+  if (host === "facebook.com" || host === "fb.watch") {
+    return `<iframe src="https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url.split("?")[0])}&show_text=true&width=500" title="Facebook post" loading="lazy" style="border:none;overflow:hidden;width:100%;max-width:540px;height:420px" scrolling="no" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>`;
+  }
+  if (host === "medium.com" || host.endsWith(".medium.com")) {
+    return embedLinkCard(url, "Medium");
+  }
+  if (host === "discord.com" && u.pathname.startsWith("/channels/")) {
+    return `<iframe src="${esc(url.replace(/^https:\/\/discord\.com\/channels\//, "https://discord.com/widget?id=").replace(/\//g, "-"))}" title="Discord message" loading="lazy" style="border:0;width:100%;min-height:400px"></iframe>`;
+  }
+  if (host === "canva.com") {
+    const m = u.pathname.match(/\/design\/([\w-]+)/);
+    if (m) return `<iframe src="https://www.canva.com/design/${encodeURIComponent(m[1])}/view?embed" title="Canva design" loading="lazy" style="border:0;width:100%;aspect-ratio:16/9"></iframe>`;
+  }
+  if (host === "figma.com") {
+    return `<iframe src="${esc(u.origin + "/embed" + u.pathname + "?embed_key=embed")}" title="Figma file" loading="lazy" style="border:0;width:100%;aspect-ratio:16/10"></iframe>`;
+  }
+  if (host === "notion.so" || host === "notion.site") {
+    return `<iframe src="${esc(url.split("?")[0])}" title="Notion page" loading="lazy" style="border:0;width:100%;min-height:500px"></iframe>`;
+  }
+  if (host === "linkedin.com") {
+    return embedLinkCard(url, "LinkedIn");
+  }
+  // Anything else still renders as a clean link card — never an invalid block.
+  return embedLinkCard(url, u.hostname || "Link");
+}
+
+/** Fallback presentation for hosts without a real embed API. */
+function embedLinkCard(url: string, label: string): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  return `<a class="embed-link-card" href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow"><span class="embed-link-label">${esc(label)}</span><span class="embed-link-host">${esc(new URL(url).hostname)}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a>`;
 }
 
 /* Quote credit, blog.google style: "By Name" on one line and the role under

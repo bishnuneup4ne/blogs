@@ -35,8 +35,8 @@ Do not wrap values in double quotes — dotenv treats them as part of the value.
 
 ### Database (one-time)
 
-1. Supabase dashboard → SQL editor → paste the whole of [`supabase.sql`](./supabase.sql) → Run.
-   It is idempotent and seeds topics, authors, 10 posts, gallery albums/photos and settings.
+1. Supabase dashboard → SQL editor → paste the whole of [`supabase/schema.sql`](./supabase/schema.sql) → Run.
+   It is idempotent and creates every `fn_*` table, RLS policies, triggers and the storage bucket.
 2. Restart `npm run dev`. Verify: open http://localhost:3000/admin/login, sign in with
    `PAGE_ACCESS_PASSWORD`, and Overview should show non-zero counts.
 3. If any API returns `Could not find the table 'public.fn_posts' in the schema cache`:
@@ -98,7 +98,7 @@ src/
     admin/                 shell, kit primitives, post editor, tables
   lib/                     data access, settings, auth, supabase client
   content/                 file-based demo fallbacks
-supabase.sql               full schema + seed (idempotent)
+supabase/schema.sql        full schema (idempotent)
 scripts/migrate-legacy.mjs importer from the previous app version
 ```
 

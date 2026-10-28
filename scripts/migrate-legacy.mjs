@@ -61,7 +61,7 @@ async function count(table) {
 }
 
 console.log("target tables:", { posts: await count("fn_posts"), topics: await count("fn_topics"), subscribers: await count("fn_subscribers") });
-if ((await count("fn_posts")) < 0) throw new Error("Run supabase.sql first (Supabase SQL editor), then re-run this script.");
+if ((await count("fn_posts")) < 0) throw new Error("Run supabase/schema.sql first (Supabase SQL editor), then re-run this script.");
 
 const { data: writeups } = await db.from("writeups").select("*").eq("status", "Published");
 let added = 0;

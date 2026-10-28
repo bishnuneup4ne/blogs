@@ -68,7 +68,7 @@ export function dateOnly(v: unknown): string | null {
 
 export function email(v: unknown): string | null {
   const text = (str(v, 200) ?? "").trim();
-  if (!text) return "";
+  if (!text) return null;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? text : null;
 }
 

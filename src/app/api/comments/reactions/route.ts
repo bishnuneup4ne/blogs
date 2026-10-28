@@ -43,6 +43,16 @@ export async function POST(request: Request) {
   const value = b?.value === "like" || b?.value === "dislike" ? b.value : null;
   if (!slug) return NextResponse.json({ error: "Missing post." }, { status: 400 });
 
+  // Only vote on a published post — otherwise arbitrary slugs accumulate counts.
+  const { data: target, error: checkError } = await db
+    .from("fn_posts")
+    .select("id")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (checkError) return NextResponse.json({ error: "Unavailable.", available: false }, { status: 503 });
+  if (!target) return NextResponse.json({ error: "Post not found." }, { status: 404 });
+
   let voter = readVoter(request);
   if (!voter) {
     voter = crypto.randomUUID();

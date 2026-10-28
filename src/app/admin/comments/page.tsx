@@ -18,6 +18,8 @@ export default function AdminCommentsPage() {
   const [tab, setTab] = useState<Tab>("all");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const counts = useMemo(() => {
     const next: Record<string, number> = { all: commentsC.items.length };
@@ -28,6 +30,15 @@ export default function AdminCommentsPage() {
   }, [commentsC.items]);
 
   const rows = commentsC.items.filter((comment) => tab === "all" || comment.status === tab);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function setStatus(id: string, status: ApiComment["status"]) {
     setBusy(id);
@@ -63,6 +74,7 @@ export default function AdminCommentsPage() {
               email: comment.email,
               body: comment.body,
               status: comment.status,
+              parent_id: comment.parent_id ?? null,
             });
             await commentsC.reload();
             toast("Comment restored", "success");
@@ -76,6 +88,52 @@ export default function AdminCommentsPage() {
       setError(e instanceof Error ? e.message : "Could not delete comment");
     } finally {
       setBusy("");
+    }
+  }
+
+  async function bulk(action: "approve" | "pending" | "spam" | "delete") {
+    const ids = [...selected];
+    if (!ids.length) return;
+    if (action === "delete") {
+      const ok = await confirm({
+        title: `Delete ${ids.length} ${ids.length === 1 ? "comment" : "comments"}`,
+        body: "This removes them permanently. The Undo button on the toast puts them back.",
+        confirmLabel: "Delete",
+      });
+      if (!ok) return;
+    }
+    setBulkBusy(true);
+    setSelected(new Set());
+    setError("");
+    try {
+      const res = await api.post<{ updated?: number; deleted?: number; comments?: unknown[] }>(
+        "/api/admin/comments/bulk",
+        { action, ids },
+      );
+      if (action === "delete") {
+        const snapshot = res.comments ?? [];
+        toast(`${res.deleted ?? ids.length} deleted`, "success", {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              await Promise.all(
+                snapshot.map((c) => api.post("/api/admin/comments", c as Record<string, unknown>)),
+              );
+              await commentsC.reload();
+              toast("Comments restored", "success");
+            } catch (e) {
+              toast(e instanceof Error ? e.message : "Could not restore comments");
+            }
+          },
+        });
+      } else {
+        toast(`${res.updated ?? ids.length} ${action === "approve" ? "approved" : action === "spam" ? "marked as spam" : "held"}`, "success");
+      }
+      await commentsC.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk update failed");
+    } finally {
+      setBulkBusy(false);
     }
   }
 
@@ -104,6 +162,16 @@ export default function AdminCommentsPage() {
               ]}
             />
           </div>
+          {selected.size > 0 ? (
+            <div className={styles.bulk} role="region" aria-label="Bulk actions">
+              <span>{selected.size} selected</span>
+              <Button size="sm" onClick={() => bulk("approve")} disabled={bulkBusy}>Approve</Button>
+              <Button size="sm" variant="outlined" onClick={() => bulk("pending")} disabled={bulkBusy}>Hold</Button>
+              <Button size="sm" variant="outlined" onClick={() => bulk("spam")} disabled={bulkBusy}>Spam</Button>
+              <Button size="sm" variant="text" tone="danger" onClick={() => bulk("delete")} disabled={bulkBusy}>Delete</Button>
+              <Button size="sm" variant="text" onClick={() => setSelected(new Set())} disabled={bulkBusy}>Clear</Button>
+            </div>
+          ) : null}
           {rows.length === 0 ? (
             <p className={styles.emptyNote}>No comments match this filter.</p>
           ) : (
@@ -111,6 +179,14 @@ export default function AdminCommentsPage() {
               <Table>
                 <thead>
                   <tr>
+                    <th className={styles.checkCol}>
+                      <input
+                        type="checkbox"
+                        aria-label="Select all comments"
+                        checked={rows.length > 0 && selected.size === rows.length}
+                        onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                      />
+                    </th>
                     <th>Comment</th>
                     <th>Post</th>
                     <th>Status</th>
@@ -121,6 +197,14 @@ export default function AdminCommentsPage() {
                 <tbody>
                   {rows.map((c) => (
                     <tr key={c.id}>
+                      <td className={styles.checkCol} data-label="Select">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select comment by ${c.name}`}
+                          checked={selected.has(c.id)}
+                          onChange={() => toggle(c.id)}
+                        />
+                      </td>
                       <td data-label="Comment" data-card="title">
                         <p><strong>{c.name}</strong></p>
                         <p className={styles.subCell}>{c.body}</p>

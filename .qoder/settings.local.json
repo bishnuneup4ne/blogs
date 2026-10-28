@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /home/bishnuneup4ne/Downloads/Personal/blogging && npm run typecheck 2>&1 | tail -40)",
+      "Bash(git status --short && echo \"---\" && ls -la && echo \"---STRUCTURE---\" && find src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) | head -100)"
+    ]
+  }
+}

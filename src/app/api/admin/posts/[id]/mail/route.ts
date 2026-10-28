@@ -21,6 +21,7 @@ export const POST = adminRoute(async (req) => {
   const body = await req.json().catch(() => ({}));
   const slug = typeof body?.slug === "string" ? body.slug.trim() : "";
   const test = body?.test === true;
+  const tone = body?.tone === "red" || body?.tone === "green" ? body.tone : "blue";
   if (!slug) return json({ error: "slug is required" }, 400);
 
   const { data: post, error } = await db
@@ -81,6 +82,7 @@ export const POST = adminRoute(async (req) => {
             subject,
             siteUrl: site.url,
             unsubscribeUrl: `${site.url}/unsubscribe?${params}`,
+            tone,
           }),
           headers: {
             "List-Unsubscribe": `<${site.url}/api/unsubscribe?${params}>`,

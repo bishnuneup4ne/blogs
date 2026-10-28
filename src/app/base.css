@@ -92,7 +92,7 @@ a {
 }
 
 a:hover,
-a:focus,
+a:focus:hover,
 a:visited {
   color: var(--blue-900);
 }
@@ -221,7 +221,7 @@ figure {
 }
 
 .btn-primary:hover,
-.btn-primary:focus {
+.btn-primary:focus-visible {
   background: var(--blue-900);
   color: #fff;
   box-shadow: var(--shadow-1);
@@ -238,7 +238,7 @@ figure {
 }
 
 .btn-outline:hover,
-.btn-outline:focus {
+.btn-outline:focus-visible {
   background: #f6f9fe;
   border-color: var(--blue-600);
   color: var(--blue-900);
@@ -254,7 +254,7 @@ figure {
 }
 
 .btn-tonal:hover,
-.btn-tonal:focus {
+.btn-tonal:focus-visible {
   background: var(--blue-100);
   color: var(--blue-900);
 }

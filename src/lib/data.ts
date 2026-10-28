@@ -19,13 +19,14 @@ export type PostStatus = "draft" | "review" | "scheduled" | "published";
    both into cover_alt as `[[cover:h=560;f=30]]`. Strip that tag for display. */
 const COVER_META = /\[\[cover:h=(\d+);f=(\d+)\]\]/;
 
-export function parseCover(src: string, rawAlt: string | null, columnHeight: number) {
+function parseCover(src: string, rawAlt: string | null, columnHeight: number, columnFocal?: number | null) {
   const alt = rawAlt ?? "";
   const match = alt.match(COVER_META);
   // h=0 is the editor's "Auto" state — treat it as no explicit height.
   const packed = Number(match?.[1]) || 0;
   const height = packed > 0 ? packed : columnHeight > 0 ? columnHeight : undefined;
-  const focal = match ? Number(match[2]) : undefined;
+  // Prefer the dedicated column; fall back to the packed tag for older rows.
+  const focal = columnFocal != null ? columnFocal : match ? Number(match[2]) : undefined;
   return { src, alt: alt.replace(COVER_META, "").trim(), height, focal };
 }
 
@@ -45,6 +46,7 @@ interface DbPostRow {
   cover_url: string | null;
   cover_alt: string | null;
   cover_height?: number | null;
+  cover_focal?: number | null;
   date: string;
   reading_minutes: number;
   blocks: unknown;
@@ -88,7 +90,7 @@ async function loadAuthors(): Promise<Map<string, { name: string; role: string; 
 
 function mapPost(row: DbPostRow, authorMap: Map<string, { name: string; role: string; avatar: string }>): Post {
   const blocks = normalizeBlocks(row.blocks);
-  // Reading time is derived from the actual body so it can never go stale.
+  // Word count feeds the reading-time fallback when no stored value exists.
   const words = blocks
     .map((b) => ("html" in b ? b.html : "text" in b ? b.text : "code" in b ? b.code : "items" in b ? b.items.join(" ") : ""))
     .join(" ")
@@ -104,10 +106,10 @@ function mapPost(row: DbPostRow, authorMap: Map<string, { name: string; role: st
     title: row.title,
     description: row.summary,
     date: String(row.date).slice(0, 10),
-    readingMinutes: Math.max(1, Math.round(words / 220)),
+    readingMinutes: row.reading_minutes > 0 ? row.reading_minutes : Math.max(1, Math.round(words / 220)),
     category: (row.topic_slug ?? "engineering") as Post["category"],
     tags: row.tags ?? [],
-    cover: row.cover_url ? parseCover(row.cover_url, row.cover_alt, Number(row.cover_height ?? 0)) : undefined,
+    cover: row.cover_url ? parseCover(row.cover_url, row.cover_alt, Number(row.cover_height ?? 0), row.cover_focal) : undefined,
     featured: Boolean(row.featured),
     author: { name: author.name, role: author.role, avatar: author.avatar },
     blocks,

@@ -58,6 +58,51 @@ export function RichEditor({
     onChange(el.innerHTML === "<br>" ? "" : el.innerHTML);
   }, [onChange]);
 
+  const escapeHtml = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  /* Smart typing: markdown-ish shortcuts convert as you type —
+     `- ` / `1. ` → a real list, `**bold**` → <strong>,
+     `[label](url)` → link, and a bare URL becomes an autolink. */
+  function smartType() {
+    const el = ref.current;
+    if (!el) return;
+    const text = el.innerText ?? "";
+    if (/^(?:[-*•]|\d+[.)])\s$/.test(text)) {
+      const ordered = /^\d/.test(text);
+      el.focus();
+      document.execCommand("selectAll", false);
+      document.execCommand("insertHTML", false, ordered ? "<ol><li><br></li></ol>" : "<ul><li><br></li></ul>");
+      return;
+    }
+    const replaceTail = (pattern: RegExp, build: (m: RegExpMatchArray) => string | null) => {
+      const sel = window.getSelection();
+      if (!sel || !el.contains(sel.anchorNode)) return;
+      const node = sel.anchorNode;
+      if (!node || node.nodeType !== Node.TEXT_NODE) return;
+      const before = node.textContent?.slice(0, sel.anchorOffset) ?? "";
+      const m = before.match(pattern);
+      if (!m || !m[0]) return;
+      const html = build(m);
+      if (!html) return;
+      const range = document.createRange();
+      range.setStart(node, Math.max(0, sel.anchorOffset - m[0].length));
+      range.setEnd(node, sel.anchorOffset);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand("insertHTML", false, html);
+    };
+    replaceTail(/\*\*([^*\n]{1,300})\*\*$/, (m) =>
+      m[1].trim() ? `<strong>${escapeHtml(m[1])}</strong>` : null,
+    );
+    replaceTail(/\[([^\]\n]{1,200})\]\((\/[^\s)]{1,300}|https?:\/\/[^\s)]{1,400})\)$/, (m) =>
+      `<a href="${m[2]}">${escapeHtml(m[1])}</a>`,
+    );
+    replaceTail(/(https?:\/\/[^\s<>"']{6,400})$/, (m) =>
+      m[1] ? `<a href="${m[1]}">${m[1]}</a>` : null,
+    );
+  }
+
   const refreshActive = useCallback(() => {
     const next: Record<string, boolean> = {};
     try {
@@ -413,7 +458,46 @@ export function RichEditor({
         aria-multiline="true"
         data-placeholder={placeholder}
         style={{ minHeight }}
-        onInput={emit}
+        onInput={() => {
+          emit();
+          smartType();
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== "Enter" || e.shiftKey || e.altKey || e.metaKey || e.ctrlKey) return;
+          const el = ref.current;
+          const sel = window.getSelection();
+          if (!el || !sel?.anchorNode || !el.contains(sel.anchorNode)) return;
+          // Find the list item holding the caret, if any.
+          let node: Node | null = sel.anchorNode;
+          let li: HTMLElement | null = null;
+          while (node && node !== el) {
+            if (node instanceof HTMLElement && node.tagName === "LI") {
+              li = node;
+              break;
+            }
+            node = node.parentNode;
+          }
+          if (!li) return; // outside a list — normal Enter
+          if ((li.textContent ?? "").trim()) return; // non-empty: browser continues the list
+          // Enter on an empty bullet ends the list and starts a fresh paragraph.
+          e.preventDefault();
+          const list = li.parentElement;
+          li.remove();
+          const p = document.createElement("p");
+          p.innerHTML = "<br>";
+          if (!list || list.children.length === 0) {
+            list?.remove();
+            el.appendChild(p);
+          } else {
+            list.parentNode?.insertBefore(p, list.nextSibling);
+          }
+          const range = document.createRange();
+          range.selectNodeContents(p);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          emit();
+        }}
         onBlur={() => {
           setFocused(false);
           const sel = window.getSelection();

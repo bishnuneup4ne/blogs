@@ -3,7 +3,6 @@ import Image from "next/image";
 import { ArrowRight } from "@/components/icons/Icons";
 import type { Post } from "@/lib/types";
 import { getCategory } from "@/lib/categories";
-import { relativeDate, shortDate } from "@/lib/dates";
 import styles from "./sections.module.scss";
 
 export function UpdateCard({ post, showByline = false }: { post: Post; showByline?: boolean }) {

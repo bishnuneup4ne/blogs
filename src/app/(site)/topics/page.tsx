@@ -71,11 +71,6 @@ export default async function CategoriesPage() {
                   </span>
                 )}
                 <div className={styles.cardHead}>
-                  <span className={styles.count}>
-                    {category.count > 0
-                      ? `${category.count} ${category.count === 1 ? "story" : "stories"}`
-                      : "No stories yet"}
-                  </span>
                   <h3 className={styles.cardTitle}>
                     <Link href={routes.category(category.slug)}>{category.name}</Link>
                   </h3>
@@ -95,7 +90,7 @@ export default async function CategoriesPage() {
       {series.length > 0 ? (
         <section id="series" className={styles.section} aria-label="Series">
           <h2 className="section-title">Series</h2>
-          <p className={styles.sectionLede}>Reading orders worth following start to finish.</p>
+          <p className={styles.sectionLede}>Reading orders worth following from start to finish.</p>
           <div className={styles.seriesGrid}>
             {series.map((s) => (
               <article key={s.slug} className={styles.seriesCard}>
@@ -107,16 +102,13 @@ export default async function CategoriesPage() {
                   )}
                 </Link>
                 <div className={styles.seriesBody}>
-                  <p className={styles.seriesKicker}>{s.posts.length} part series</p>
                   <h3 className={styles.cardTitle}>
                     <Link href={routes.series(s.slug)}>{s.title}</Link>
                   </h3>
-                  {s.description ? (
+                  {s.description && s.description.trim().toLowerCase() !== s.title.trim().toLowerCase() ? (
                     <p className={styles.cardDesc}>{s.description}</p>
                   ) : (
-                    <p className={styles.cardDesc}>
-                      {s.posts.length === 1 ? "One story" : `${s.posts.length} stories`} worth reading in order.
-                    </p>
+                    <p className={styles.cardDesc}>A reading order worth following from the start.</p>
                   )}
                   <Link href={routes.series(s.slug)} className={styles.cardBtn}>
                     View series <ArrowRight width={18} height={18} />

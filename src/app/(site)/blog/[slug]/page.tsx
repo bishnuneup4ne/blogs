@@ -203,16 +203,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <PostContent blocks={post.blocks} />
 
                 <section className={styles.postedIn} aria-labelledby="posted-in">
-                  <h2 id="posted-in" className={styles.postedTitle}>Posted in:</h2>
+                  <h2 id="posted-in" className={styles.postedTitle}>Posted in</h2>
                   <ul className={styles.postedPills}>
-                    <li>
-                      <Link href={`/blog/category/${category.slug}`} className="pill pill-soft">
-                        {category.name}
-                      </Link>
-                    </li>
                     {post.tags.map((tag) => (
                       <li key={tag}>
-                        <Link href={`/blog/tag/${tagSlug(tag)}`} className="pill pill-soft">
+                        <Link href={routes.tag(tagSlug(tag))} className={styles.postedTag}>
                           {tag}
                         </Link>
                       </li>

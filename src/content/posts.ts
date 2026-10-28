@@ -21,7 +21,6 @@ export const posts: Post[] = [
       p("For two years our dashboards were a museum. Beautiful, expensive, and only ever opened after an incident. When we finally audited them we found 412 metrics, of which <strong>nine</strong> had been looked at in the last quarter."),
       p("This is the story of deleting most of it, keeping the nine, and learning what observability is actually for."),
       note("This is a demo post. Every number below is illustrative, but the workflow is exactly the one I use on real systems."),
-      { type: "jumplinks", title: "Jump to a section" },
       h2("Start from questions, not metrics"),
       p("The mistake is starting with what the tool can collect. Start instead with the questions you want to answer at 3am:"),
       ol(

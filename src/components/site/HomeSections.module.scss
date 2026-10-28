@@ -781,14 +781,15 @@ a:hover .compactMedia .coverImg {
 }
 
 /* Each blog's tile gets its own wash. */
-.heroTileWash-lime     { background: linear-gradient(170deg, #f3fbe0 0%, #ddf2bd 100%); }
-
-.heroTileWash-blue     { background: linear-gradient(170deg, #eaf1ff 0%, #cfe0fa 100%); }
-.heroTileWash-indigo   { background: linear-gradient(170deg, #eef0ff 0%, #d9dcff 100%); }
-.heroTileWash-mint     { background: linear-gradient(170deg, #e9f9f1 0%, #cdeede 100%); }
-.heroTileWash-peach    { background: linear-gradient(170deg, #fff1ea 0%, #ffdcc8 100%); }
-.heroTileWash-butter   { background: linear-gradient(170deg, #fdf6df 0%, #f9ecc4 100%); }
-.heroTileWash-lavender { background: linear-gradient(170deg, #f5efff 0%, #e3d9fb 100%); }
+/* Card washes drawn from the blog.google aurora ramp, so the tiles match the
+   topic pastels used everywhere else (key takeaways, cards, hero). */
+.heroTileWash-lime     { background: var(--gd-green); }
+.heroTileWash-blue     { background: var(--gd-blue); }
+.heroTileWash-indigo   { background: var(--gd-purple); }
+.heroTileWash-mint     { background: var(--gd-aquamarine); }
+.heroTileWash-peach    { background: var(--gd-yellow); }
+.heroTileWash-butter   { background: linear-gradient(209deg, var(--yellow-50) 0.87%, var(--yellow-100) 100%); }
+.heroTileWash-lavender { background: var(--gd-purple); }
 
 
 .heroTileMedia {

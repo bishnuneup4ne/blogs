@@ -31,8 +31,9 @@ export const POST = adminRoute(async (req) => {
   };
   let { data, error } = await db.from("fn_posts").insert(payload).select().single();
   // Older schemas lack cover_height — drop it and retry instead of failing the save.
-  if (error && /cover_height/.test(error.message)) {
+  if (error && /cover_height|cover_focal/.test(error.message)) {
     delete payload.cover_height;
+    delete payload.cover_focal;
     ({ data, error } = await db.from("fn_posts").insert(payload).select().single());
   }
   // On a slug clash, retry once with a unique suffix so "New post" never fails.

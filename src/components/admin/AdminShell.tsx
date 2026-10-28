@@ -31,6 +31,7 @@ const NAV: NavGroup[] = [
       { href: "/admin/gallery", label: "Gallery", icon: svg("M3 7h5v10H3zM10 7h4v10h-4zM16 7h5v10h-5z") },
       { href: "/admin/topics", label: "Topics", icon: svg("M4 7h10l6 5-6 5H4z") },
       { href: "/admin/series", label: "Series", icon: svg("M4 6h16M4 12h16M4 18h10M17 15l3 3-3 3") },
+      { href: "/admin/authors", label: "Authors", icon: svg("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6") },
     ],
   },
   {

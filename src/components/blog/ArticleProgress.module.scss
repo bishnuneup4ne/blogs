@@ -71,9 +71,8 @@
 }
 
 .track {
-  /* The progress rail along the bar's bottom edge. 4px and fully opaque:
-     a 3px band at the very edge rounded away on some zooms and let the
-     paragraph beneath bleed through as a line of "text". */
+  /* The progress rail sits along the article column, not the whole viewport,
+     so it lines up with the prose beneath it. Same 780px measure and gutters. */
   position: absolute;
   bottom: 0;
   left: 0;
@@ -81,6 +80,7 @@
   height: 4px;
   background: var(--gray-150, #e8eaed);
   overflow: hidden;
+  border-radius: 999px;
 }
 
 .fill {

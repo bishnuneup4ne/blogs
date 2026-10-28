@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, useApiCollection, type ApiAlbum, type ApiPost, type ApiUpload, ApiTopic } from "./api";
 import { Button } from "@/components/admin/Button";
-import { useToast } from "@/components/admin/Feedback";
+import { AdminDialog } from "./Dialog";
+import { useConfirm, useToast } from "@/components/admin/Feedback";
 import { StatusChip, statusTone } from "@/components/admin/kit";
 import type { Block, ChartBlock as ChartBlockType, FlowEdge, FlowNode, FlowNodeShape, RowItem, RowSize } from "@/lib/types";
 import { classifyVideo } from "@/lib/external-video";
@@ -13,6 +14,7 @@ import { ChartBlockView, FLOW_SHAPE_OPTIONS } from "@/components/blog/ChartBlock
 
 import { RichEditor } from "./RichEditor";
 import { PostContent } from "@/components/blog/PostContent";
+import { outlineOf, runChecks, scoreChecks, type CheckLevel } from "./post-quality";
 import styles from "./PostEditor.module.scss";
 
 const slugifyTitle = (v: string) =>
@@ -63,7 +65,7 @@ function toDraft(p: ApiPost): EditorDraft {
     tags: p.tags ?? [],
     cover: p.cover_url ?? null,
     coverAlt: stripCoverMeta(p.cover_alt).alt,
-    coverFocal: stripCoverMeta(p.cover_alt).focal ?? 30,
+    coverFocal: p.cover_focal ?? stripCoverMeta(p.cover_alt).focal ?? 30,
     // The schema has no cover_height column, so the value rides in cover_alt.
     coverHeight: p.cover_height ?? stripCoverMeta(p.cover_alt).height,
     featured: Boolean(p.featured),
@@ -102,25 +104,153 @@ const BLOCK_PRESETS: {
   label: string;
   hint: string;
   group: "Text" | "Media" | "Structure" | "Data";
+  keywords?: string;
   icon: React.ReactNode;
 }[] = [
-  { type: "p", label: "Text", hint: "A plain paragraph — just start writing", group: "Text", icon: blockIcon("M4 7h16M4 12h16M4 17h10") },
-  { type: "h2", label: "Heading", hint: "A section title readers can scan", group: "Text", icon: blockIcon("M5 5v14M15 5v14M5 12h10") },
-  { type: "h3", label: "Subheading", hint: "A smaller heading inside a section", group: "Text", icon: blockIcon("M5 8v8M13 8v8M5 12h8") },
-  { type: "quote", label: "Quote", hint: "Pull out a line worth repeating", group: "Text", icon: blockIcon("M7 7h4v6a4 4 0 0 1-4 4M15 7h4v6a4 4 0 0 1-4 4") },
-  { type: "callout", label: "Callout", hint: "A note, tip or warning", group: "Text", icon: blockIcon("M12 8v5M12 17h.01M3 5h18v14H3z") },
-  { type: "list", label: "List", hint: "Bulleted or numbered points", group: "Text", icon: blockIcon("M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01") },
-  { type: "image", label: "Image", hint: "Upload a photo or link to one", group: "Media", icon: blockIcon("M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6") },
-  { type: "row", label: "Media carousel", hint: "A swipeable strip of photos and clips", group: "Media", icon: blockIcon("M2 7h5v10H2zM9 7h6v10H9zM17 7h5v10h-5z") },
-  { type: "video", label: "Video", hint: "YouTube, Vimeo or an MP4 upload", group: "Media", icon: blockIcon("M3 6h18v12H3zM10 9.5l5 2.5-5 2.5z") },
-  { type: "code", label: "Code", hint: "A snippet with a filename and language", group: "Media", icon: blockIcon("M9 8l-4 4 4 4M15 8l4 4-4 4") },
-  { type: "related", label: "Read next", hint: "Link another story as a card", group: "Structure", icon: blockIcon("M4 5h16v14H4zM8 9h8M8 13h5") },
-  { type: "divider", label: "Divider", hint: "A clean break between ideas", group: "Structure", icon: blockIcon("M3 12h18") },
-  { type: "table", label: "Table", hint: "Rows and columns of data", group: "Data", icon: blockIcon("M3 5h18v14H3zM3 10h18M3 15h18M9 5v14") },
-  { type: "chart", label: "Chart", hint: "Bars, lines, pies, stats and flows", group: "Data", icon: blockIcon("M4 20V10M10 20V4M16 20v-7M22 20H2") },
+  { type: "p", label: "Text", hint: "A plain paragraph — just start writing", group: "Text", keywords: "paragraph body prose", icon: blockIcon("M4 7h16M4 12h16M4 17h10") },
+  { type: "h2", label: "Heading", hint: "A section title readers can scan", group: "Text", keywords: "h2 title section", icon: blockIcon("M5 5v14M15 5v14M5 12h10") },
+  { type: "h3", label: "Subheading", hint: "A smaller heading inside a section", group: "Text", keywords: "h3 subtitle", icon: blockIcon("M5 8v8M13 8v8M5 12h8") },
+  { type: "quote", label: "Quote", hint: "Pull out a line worth repeating", group: "Text", keywords: "blockquote pull quote cite testimonial", icon: blockIcon("M7 7h4v6a4 4 0 0 1-4 4M15 7h4v6a4 4 0 0 1-4 4") },
+  { type: "callout", label: "Callout", hint: "A note, tip or warning", group: "Text", keywords: "note tip warning alert aside box", icon: blockIcon("M12 8v5M12 17h.01M3 5h18v14H3z") },
+  { type: "list", label: "List", hint: "Bulleted or numbered points", group: "Text", keywords: "bullets ordered numbered checklist ul ol", icon: blockIcon("M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01") },
+  { type: "image", label: "Image", hint: "Upload a photo or link to one", group: "Media", keywords: "photo picture screenshot figure", icon: blockIcon("M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6") },
+  { type: "imgtext", label: "Image + text", hint: "A photo beside a paragraph", group: "Media", keywords: "side by side float wrap split", icon: blockIcon("M3 5h7v14H3zM13 7h8M13 12h8M13 17h5") },
+  { type: "row", label: "Media carousel", hint: "A swipeable strip of photos and clips", group: "Media", keywords: "gallery slider carousel strip", icon: blockIcon("M2 7h5v10H2zM9 7h6v10H9zM17 7h5v10h-5z") },
+  { type: "video", label: "Video", hint: "YouTube, Vimeo or an MP4 upload", group: "Media", keywords: "youtube vimeo embed mp4 clip movie", icon: blockIcon("M3 6h18v12H3zM10 9.5l5 2.5-5 2.5z") },
+  { type: "embed", label: "Embed", hint: "Paste a link that renders inline", group: "Media", keywords: "oembed tweet codepen spotify gist soundcloud", icon: blockIcon("M8 4h8l4 4v12H4V4zM16 4v4h4") },
+  { type: "code", label: "Code", hint: "A snippet with a filename and language", group: "Media", keywords: "snippet pre terminal shell script", icon: blockIcon("M9 8l-4 4 4 4M15 8l4 4-4 4") },
+  { type: "related", label: "Read next", hint: "Link another story as a card", group: "Structure", keywords: "card link related story recommendation", icon: blockIcon("M4 5h16v14H4zM8 9h8M8 13h5") },
+  { type: "divider", label: "Divider", hint: "A clean break between ideas", group: "Structure", keywords: "hr line separator rule", icon: blockIcon("M3 12h18") },
+  { type: "table", label: "Table", hint: "Rows and columns of data", group: "Data", keywords: "grid rows columns spreadsheet", icon: blockIcon("M3 5h18v14H3zM3 10h18M3 15h18M9 5v14") },
+  { type: "stats", label: "Stats", hint: "A row of big numbers with captions", group: "Data", keywords: "stats numbers figures pull quote metrics kpi", icon: blockIcon("M4 19V9M10 19V5M16 19v-7M22 19H2") },
+  { type: "timestrip", label: "Timeline", hint: "A horizontal strip of dated moments", group: "Structure", keywords: "timeline history dates milestones chronology", icon: blockIcon("M3 12h18M7 12a2 2 0 1 0 0 .01M17 12a2 2 0 1 0 0 .01") },
+  { type: "bafter", label: "Before / after", hint: "A draggable slider comparing two photos", group: "Media", keywords: "before after slider compare transform image", icon: blockIcon("M12 3v18M3 5h18v14H3zM7 12l-2 2 2 2M17 12l2 2-2 2") },
+  { type: "accordion", label: "FAQ", hint: "Collapsible questions and answers", group: "Text", keywords: "faq questions answers accordion details collapsible", icon: blockIcon("M4 6h16M4 12h16M4 18h10") },
+  { type: "steps", label: "Steps", hint: "A numbered walkthrough", group: "Structure", keywords: "how to tutorial numbered guide process", icon: blockIcon("M7 5h13M7 12h13M7 19h13M3 5h.01M3 12h.01M3 19h.01") },
+  { type: "proscons", label: "Pros and cons", hint: "Two columns weighing a decision", group: "Structure", keywords: "pros cons tradeoffs comparison verdict", icon: blockIcon("M4 5h7v14H4zM13 5h7v14h-7z") },
+  { type: "glossary", label: "Glossary", hint: "Terms with short definitions", group: "Data", keywords: "terms definitions dictionary glossary jargon", icon: blockIcon("M5 4h11l3 3v13H5zM8 9h7M8 13h7") },
+  { type: "diff", label: "Before / after code", hint: "Two code panes side by side", group: "Data", keywords: "diff patch code compare old new refactor", icon: blockIcon("M4 5h7v14H4zM13 5h7v14h-7zM7 9l-1 1 1 1") },
+  { type: "person", label: "Person card", hint: "A named quote or contributor", group: "Structure", keywords: "author person profile contributor bio avatar testimonial", icon: blockIcon("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6") },
+  { type: "progress", label: "Progress bar", hint: "A labelled percentage meter", group: "Data", keywords: "progress meter percent bar loading score completion", icon: blockIcon("M3 12h18M3 12a0 0 0 0 0 0 0M7 8v8M12 8v8M17 8v8") },
+  { type: "linkcards", label: "Link cards", hint: "Clickable resource tiles", group: "Structure", keywords: "links resources cards external references buttons grid", icon: blockIcon("M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z") },
+  { type: "compare", label: "Comparison table", hint: "Feature rows across two options", group: "Data", keywords: "compare versus table checkmark feature matrix a b", icon: blockIcon("M4 5h16M4 12h16M4 19h16M9 5v14M15 5v14") },
+  { type: "countdown", label: "Countdown", hint: "Live timer to a date", group: "Media", keywords: "countdown timer event launch date live days hours", icon: blockIcon("M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM12 10v4l3 2") },
+  { type: "keypoints", label: "Key takeaways", hint: "A short checklist readers can scan", group: "Data", keywords: "summary checklist takeaways tl;dr bullets", icon: blockIcon("M4 6.5 6 8.5 9 5M4 12.5 6 14.5 9 11M12 6.5h8M12 13h8M12 19h5") },
+  { type: "chart", label: "Chart", hint: "Bars, lines, pies, stats and flows", group: "Data", keywords: "graph data viz stats funnel gauge timeline", icon: blockIcon("M4 20V10M10 20V4M16 20v-7M22 20H2") },
 ];
 
+type Preset = (typeof BLOCK_PRESETS)[number];
+
+function searchPresets(presets: Preset[], query: string): Preset[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return presets;
+  return presets.filter((b) => `${b.label} ${b.hint} ${b.group} ${b.type} ${b.keywords ?? ""}`.toLowerCase().includes(q));
+}
+
+const RECENT_KEY = "studio:recent-blocks";
+
+function readRecent(): Block["type"][] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    return Array.isArray(saved)
+      ? saved.filter((t): t is Block["type"] => BLOCK_PRESETS.some((b) => b.type === t)).slice(0, 3)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberBlock(type: Block["type"]) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([type, ...readRecent().filter((t) => t !== type)].slice(0, 3)));
+  } catch {
+    // Private mode or a full quota — recents are a nicety, not a requirement.
+  }
+}
+
+/** One-line preview of a block for the sidebar list. */
+function blockSummary(block: Block): string {
+  const plain = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim();
+  const text = (() => {
+    switch (block.type) {
+      case "h2":
+      case "h3":
+        return block.text;
+      case "p":
+      case "quote":
+      case "callout":
+        return plain(block.html);
+      case "list":
+      case "keypoints":
+        return block.items.map(plain).filter(Boolean).join(", ");
+      case "code":
+        return block.filename || block.lang;
+      case "image":
+      case "imgtext":
+        return block.alt;
+      case "video":
+        return block.url;
+      case "embed":
+        return block.url;
+      case "related":
+        return block.title || block.slug;
+      case "cta":
+        return block.label;
+      case "table":
+        return block.head.join(" · ");
+      case "chart":
+        return block.chart.title ?? block.chart.kind;
+      case "stats":
+        return block.items.map((i) => i.value).join(" · ");
+      case "timestrip":
+        return block.title ?? "";
+      case "bafter":
+        return block.labelBefore ? `${block.labelBefore} / ${block.labelAfter ?? ""}` : "";
+      case "row":
+        return `${block.items.length} slides`;
+      case "footnote":
+        return block.text;
+      case "accordion":
+        return `${block.items.length} question${block.items.length === 1 ? "" : "s"}`;
+      case "steps":
+        return block.items.map((i) => i.title).filter(Boolean).join(" → ");
+      case "proscons":
+        return `${block.pros.length} pro · ${block.cons.length} con`;
+      case "glossary":
+        return block.terms.map((t) => t.term).filter(Boolean).join(", ");
+      case "diff":
+        return block.filename || "Before / after";
+      case "person":
+        return [block.name, block.role].filter(Boolean).join(" — ");
+      case "progress":
+        return `${block.label || "Progress"} · ${Math.round((block.value / (block.max || 100)) * 100)}%`;
+      case "linkcards":
+        return `${block.items.length} link${block.items.length === 1 ? "" : "s"}`;
+      case "compare":
+        return `${block.columns[0]} vs ${block.columns[1]}`;
+      case "countdown":
+        return block.label || block.date;
+      default:
+        return "";
+    }
+  })();
+  return text.length > 64 ? `${text.slice(0, 64).trimEnd()}…` : text;
+}
+
 const blockLabel = (type: Block["type"]) => BLOCK_PRESETS.find((b) => b.type === type)?.label ?? "Block";
+
+/** What a pasted bare URL should become — or null to keep it as text/link. */
+function urlBlockKind(url: string): "image" | "embed" | null {
+  if (/\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(url) || /imgur\.com\//.test(url)) return "image";
+  if (/(youtube\.com|youtu\.be|vimeo\.com\/)\S+/.test(url)) return "embed";
+  if (/(open\.spotify\.com|codepen\.io|soundcloud\.com|w\.soundcloud\.com|maps\.google\.|gist\.github\.com|docs\.google\.com)/.test(url)) return "embed";
+  return null;
+}
+
+/** True for an empty or only-whitespace rich-text paragraph. */
+function richIsEmpty(html: string): boolean {
+  return html.replace(/&nbsp;/g, " ").replace(/<br\s*\/?>/g, " ").replace(/<[^>]+>/g, "").trim().length === 0;
+}
 
 function newBlock(type: Block["type"]): Block {
   switch (type) {
@@ -147,6 +277,42 @@ function newBlock(type: Block["type"]): Block {
       return { type, head: ["Column", "Column"], rows: [["", ""]] };
     case "chart":
       return { type, chart: defaultChart("column") };
+    case "imgtext":
+      return { type, src: "", alt: "", html: "", side: "left" };
+    case "embed":
+      return { type, url: "", caption: "" };
+    case "keypoints":
+      return { type, title: "Key takeaways", items: [""] };
+    case "cta":
+      return { type, label: "", href: "" };
+    case "footnote":
+      return { type, text: "" };
+    case "stats":
+      return { type, items: [{ value: "", label: "" }, { value: "", label: "" }], columns: 3 };
+    case "timestrip":
+      return { type, items: [{ date: "", title: "" }], title: "" };
+    case "bafter":
+      return { type, before: "", after: "", labelBefore: "Before", labelAfter: "After" };
+    case "accordion":
+      return { type, title: "Questions", items: [{ q: "", html: "" }] };
+    case "steps":
+      return { type, title: "", items: [{ title: "", detail: "" }] };
+    case "proscons":
+      return { type, pros: [""], cons: [""], prosLabel: "Worth it", consLabel: "Trade-offs" };
+    case "glossary":
+      return { type, title: "Terms", terms: [{ term: "", def: "" }] };
+    case "diff":
+      return { type, before: "", after: "", filename: "" };
+    case "person":
+      return { type, name: "", role: "", avatar: "", html: "", links: [] };
+    case "progress":
+      return { type, label: "", value: 60, max: 100, unit: "%", note: "" };
+    case "linkcards":
+      return { type, title: "Resources", items: [{ title: "", href: "", desc: "" }] };
+    case "compare":
+      return { type, columns: ["Option A", "Option B"], rows: [{ feature: "", a: "", b: "" }] };
+    case "countdown":
+      return { type, label: "Launching in", date: "", note: "" };
     case "divider":
       return { type };
     default:
@@ -167,6 +333,7 @@ const TOUT_SWATCHES = [
 export function PostEditor({ postId }: { postId: string }) {
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const topicsC = useApiCollection<ApiTopic>("/api/admin/topics", "topics");
   const albumsC = useApiCollection<ApiAlbum>("/api/admin/albums", "albums");
   const uploadsC = useApiCollection<ApiUpload>("/api/admin/upload", "files");
@@ -194,18 +361,72 @@ export function PostEditor({ postId }: { postId: string }) {
   const [draft, setDraft] = useState<EditorDraft | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
-  const [tab, setTab] = useState<"write" | "preview">("write");
+  const [tab, setTab] = useState<"write" | "preview" | "settings" | "insights">("write");
   const [dirty, setDirty] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeBlock, setActiveBlock] = useState<number | null>(null);
   const [paletteAfter, setPaletteAfter] = useState<number | null>(null);
   const [paletteQuery, setPaletteQuery] = useState("");
   const [paletteActive, setPaletteActive] = useState(0);
+  const [recentBlocks, setRecentBlocks] = useState<Block["type"][]>([]);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const dragFrom = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const slugTouched = useRef(Boolean(postId && postId !== "new"));
+
+  /* Revision history — snapshots are taken server-side on every save; this
+     lists them and restores one by PATCHing the stored snapshot back. */
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [revisions, setRevisions] = useState<{ id: string; title: string; status: string; created_at: string }[]>([]);
+  const [revisionsLoading, setRevisionsLoading] = useState(false);
+  const [revisionsError, setRevisionsError] = useState("");
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+
+  async function loadRevisions() {
+    if (!existing) return;
+    setRevisionsLoading(true);
+    setRevisionsError("");
+    try {
+      const res = await api.get<{ revisions: typeof revisions; needsSetup?: boolean }>(`/api/admin/posts/${existing.id}/revisions`);
+      setRevisions(res.revisions ?? []);
+      if (res.needsSetup) {
+        setRevisionsError("Revision history needs one table — run the fn_post_revisions block from supabase/schema.sql once, then reopen this panel.");
+      }
+    } catch (e) {
+      setRevisionsError(e instanceof Error ? e.message : "Could not load revisions");
+    } finally {
+      setRevisionsLoading(false);
+    }
+  }
+
+  function openHistory() {
+    setHistoryOpen(true);
+    void loadRevisions();
+  }
+
+  async function restoreRevision(revisionId: string) {
+    if (!existing || restoringId) return;
+    const ok = await confirm({
+      title: "Restore this version?",
+      body: "The current content is snapshotted first, so you can undo a restore.",
+      confirmLabel: "Restore version",
+    });
+    if (!ok) return;
+    setRestoringId(revisionId);
+    try {
+      const res = await api.post<{ post: ApiPost }>(`/api/admin/posts/${existing.id}/revisions`, { revisionId });
+      setExisting(res.post);
+      setDraft(toDraft(res.post));
+      setDirty(false);
+      setHistoryOpen(false);
+      toast("Version restored", "success");
+      await loadRevisions();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not restore that version");
+    } finally {
+      setRestoringId(null);
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -246,9 +467,7 @@ export function PostEditor({ postId }: { postId: string }) {
   }, [draft]);
 
   const paletteResults = useMemo(() => {
-    const q = paletteQuery.trim().toLowerCase();
-    if (!q) return BLOCK_PRESETS;
-    return BLOCK_PRESETS.filter((b) => `${b.label} ${b.hint} ${b.group} ${b.type}`.toLowerCase().includes(q));
+    return searchPresets(BLOCK_PRESETS, paletteQuery);
   }, [paletteQuery]);
 
   useEffect(() => {
@@ -264,6 +483,40 @@ export function PostEditor({ postId }: { postId: string }) {
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   }, [draft?.summary, tab]);
+
+  /* Warn before a tab close, and before any in-app link, when work is unsaved. */
+  useEffect(() => {
+    if (!dirty) return;
+    const onBefore = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBefore);
+    return () => window.removeEventListener("beforeunload", onBefore);
+  }, [dirty]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = (event.target as HTMLElement | null)?.closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor || anchor.target === "_blank") return;
+      const href = anchor.getAttribute("href") || "";
+      if (!href.startsWith("/") || href === window.location.pathname) return;
+      event.preventDefault();
+      const go = () => window.location.assign(href);
+      void confirm({
+        title: "Leave without saving?",
+        body: "This post has changes that were not saved yet.",
+        confirmLabel: "Leave",
+        cancelLabel: "Keep editing",
+      }).then((leave) => {
+        if (leave) go();
+      });
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [dirty, confirm]);
 
   if (loadError) {
     return (
@@ -322,6 +575,7 @@ export function PostEditor({ postId }: { postId: string }) {
   }
 
   function openPalette(after: number) {
+    setRecentBlocks(readRecent());
     setPaletteAfter(after);
     setPaletteQuery("");
     setPaletteActive(0);
@@ -334,6 +588,7 @@ export function PostEditor({ postId }: { postId: string }) {
 
   function insertBlock(i: number, type: Block["type"]) {
     setDirty(true);
+    rememberBlock(type);
     setDraft((d) => {
       if (!d) return d;
       const next = [...d.blocks];
@@ -345,6 +600,37 @@ export function PostEditor({ postId }: { postId: string }) {
       const node = document.querySelector<HTMLElement>(`[data-block-index="${i + 1}"]`);
       node?.querySelector<HTMLElement>("input, textarea, [contenteditable='true']")?.focus();
     }, 30);
+  }
+
+  /** Smart paste: swap an (almost) empty paragraph for the media block it should be. */
+  function replaceParagraphWithBlock(i: number, pBlock: { type: "p"; html: string }, kind: "image" | "embed") {
+    const node = document.querySelector<HTMLElement>(`[data-block-index="${i}"] [contenteditable='true']`);
+    const url = node?.textContent?.trim() ?? "";
+    if (!url || !/^https?:\/\/\S+$/.test(url) || !urlBlockKind(url)) return;
+    setDirty(true);
+    setDraft((d) => {
+      if (!d) return d;
+      const next = [...d.blocks];
+      const replacement: Block =
+        kind === "image" ? { type: "image", src: url, alt: "" } : { type: "embed", url, caption: "" };
+      const keepK = (pBlock as unknown as { __k?: string }).__k ?? Math.random().toString(36).slice(2);
+      next.splice(i, 1, ...(richIsEmpty(pBlock.html)
+        ? [{ ...replacement, __k: keepK } as unknown as Block]
+        : [pBlock as unknown as Block, { ...replacement, __k: Math.random().toString(36).slice(2) } as unknown as Block]));
+      return { ...d, blocks: next };
+    });
+  }
+
+  /** Duplicate a block in place. */
+  function duplicateBlock(i: number) {
+    setDirty(true);
+    setDraft((d) => {
+      if (!d) return d;
+      const copy = { ...d.blocks[i], __k: Math.random().toString(36).slice(2) } as unknown as Block;
+      const next = [...d.blocks];
+      next.splice(i + 1, 0, copy);
+      return { ...d, blocks: next };
+    });
   }
 
   async function mailPost(test: boolean) {
@@ -436,6 +722,28 @@ export function PostEditor({ postId }: { postId: string }) {
     }
   }
 
+  const quality = runChecks({
+    title: draft.title,
+    slug: draft.slug,
+    summary: draft.summary,
+    cover: draft.cover,
+    coverAlt: draft.coverAlt,
+    blocks: draft.blocks,
+    tags: draft.tags,
+    category: draft.category,
+    words,
+  });
+  const qualityScore = scoreChecks(quality);
+  const outline = outlineOf(draft.blocks);
+  const issues = quality.filter((c) => c.level !== "pass").length;
+  const readMinutes = Math.max(1, Math.round(words / 220));
+
+  function jumpToBlock(index: number) {
+    const node = document.querySelector<HTMLElement>(`[data-block-index="${index}"]`);
+    node?.scrollIntoView({ behavior: "smooth", block: "center" });
+    node?.querySelector<HTMLElement>("input, textarea, [contenteditable='true']")?.focus({ preventScroll: true });
+  }
+
   const topicName = state.topics.find((t) => t.slug === draft.category)?.name ?? draft.category;
   const dateLabel = draft.date
     ? new Date(`${draft.date}T12:00:00`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
@@ -446,12 +754,30 @@ export function PostEditor({ postId }: { postId: string }) {
     <div
       className={styles.editor}
       onKeyDown={(e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        const mod = e.metaKey || e.ctrlKey;
+        const key = e.key.toLowerCase();
+        const typing = /^(input|textarea|select|\/)/i.test((e.target as HTMLElement | null)?.tagName ?? "") || (e.target as HTMLElement | null)?.isContentEditable;
+
+        if (mod && key === "s") {
           e.preventDefault();
           if (!saving) void save("draft");
-        } else if (e.key === "Escape") {
-          if (paletteAfter !== null) closePalette();
-          else if (settingsOpen) setSettingsOpen(false);
+        } else if (mod && key === "enter") {
+          e.preventDefault();
+          if (!saving) void save("published");
+        } else if (mod && key === "k") {
+          e.preventDefault();
+          openPalette(activeBlock ?? draft.blocks.length - 1);
+        } else if (mod && key === "d" && !typing && activeBlock !== null) {
+          e.preventDefault();
+          duplicateBlock(activeBlock);
+        } else if (e.altKey && (key === "arrowup" || key === "arrowdown") && activeBlock !== null) {
+          e.preventDefault();
+          moveBlock(activeBlock, key === "arrowup" ? -1 : 1);
+        } else if (mod && /^[1-4]$/.test(key) && !typing) {
+          e.preventDefault();
+          setTab((["write", "settings", "insights", "preview"] as const)[Number(key) - 1]);
+        } else if (e.key === "Escape" && paletteAfter !== null) {
+          closePalette();
         }
       }}
     >
@@ -473,31 +799,27 @@ export function PostEditor({ postId }: { postId: string }) {
         </div>
 
         <div className={styles.viewSwitch} role="tablist" aria-label="Editor view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "write"}
-            className={tab === "write" ? styles.viewSwitchOn : styles.viewSwitchBtn}
-            onClick={() => setTab("write")}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" />
-            </svg>
-            Write
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "preview"}
-            className={tab === "preview" ? styles.viewSwitchOn : styles.viewSwitchBtn}
-            onClick={() => setTab("preview")}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" />
-              <circle cx="12" cy="12" r="2.6" />
-            </svg>
-            Preview
-          </button>
+          {([
+            { id: "write", label: "Write", badge: null, icon: <path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" /> },
+            { id: "settings", label: "Settings", badge: null, icon: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></> },
+            { id: "insights", label: "Insights", badge: issues || null, icon: <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" /> },
+            { id: "preview", label: "Preview", badge: null, icon: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="2.6" /></> },
+          ] as const).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              className={tab === item.id ? styles.viewSwitchOn : styles.viewSwitchBtn}
+              onClick={() => setTab(item.id)}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {item.icon}
+              </svg>
+              {item.label}
+              {item.badge ? <span className={styles.tabBadge}>{item.badge}</span> : null}
+            </button>
+          ))}
         </div>
 
         <div className={styles.barActions}>
@@ -523,7 +845,7 @@ export function PostEditor({ postId }: { postId: string }) {
               </>
             )}
           </span>
-          <button type="button" className={styles.settingsToggle} aria-label="Open post details" title="Post details" onClick={() => setSettingsOpen(true)}>
+          <button type="button" className={styles.settingsToggle} aria-label="Open post settings" title="Post settings" onClick={() => setTab("settings")}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z" />
@@ -570,9 +892,14 @@ export function PostEditor({ postId }: { postId: string }) {
                   Send test to me
                 </button>
               ) : null}
-              <button type="button" className={`${styles.moreItem} ${styles.moreMobile}`} onClick={() => { setSettingsOpen(true); }}>
+              <button type="button" className={`${styles.moreItem} ${styles.moreMobile}`} onClick={() => setTab("settings")}>
                 Post details
               </button>
+              {existing ? (
+                <button type="button" className={styles.moreItem} onClick={openHistory}>
+                  Revision history
+                </button>
+              ) : null}
               <button type="button" className={`${styles.moreItem} ${styles.moreMobile}`} onClick={() => save("draft")} disabled={saving}>
                 Save draft
               </button>
@@ -601,6 +928,35 @@ export function PostEditor({ postId }: { postId: string }) {
 
       <div className={styles.workspace}>
         <main className={styles.canvas}>
+          {tab === "settings" ? (
+            <section className={styles.settingsPage} aria-label="Post settings">
+              <header className={styles.pageHead}>
+                <h2 className={styles.pageTitle}>Post settings</h2>
+                <p className={styles.pageLede}>Publishing, cover, taxonomy and prominence. Changes save with the post.</p>
+              </header>
+              <SettingsPanel
+                draft={draft}
+                patch={patch}
+                slugTouched={slugTouched}
+                topics={state.topics}
+                authorName={authorName}
+                coverOptions={(uploadsC.items ?? []).filter((u) => u.type.startsWith("image/"))}
+                onUploadCover={async (file: File) => {
+                  const r = await api.upload(file);
+                  uploadsC.reload();
+                  return r.src;
+                }}
+              />
+            </section>
+          ) : tab === "insights" ? (
+            <InsightsPage
+              checks={quality}
+              score={qualityScore}
+              words={words}
+              readMinutes={readMinutes}
+              onJump={jumpToBlock}
+            />
+          ) : (
           <article className={styles.paper}>
             {tab === "preview" ? (
               <Preview draft={draft} authorName={authorName} topicName={topicName} dateLabel={dateLabel} words={words} />
@@ -766,6 +1122,8 @@ export function PostEditor({ postId }: { postId: string }) {
                             onChange={(b) => patchBlock(i, b)}
                             imageOptions={imageOptions}
                             postOptions={postsC.items.filter((p) => p.slug !== draft?.slug).map((p) => ({ slug: p.slug, title: p.title, summary: p.summary, cover: p.cover_url ?? "" }))}
+                            onOpenPaletteInsert={activeBlock === i ? () => openPalette(i) : undefined}
+                            onImportUrl={activeBlock === i ? (pBlock, kind) => replaceParagraphWithBlock(i, pBlock, kind) : undefined}
                           />
                         </div>
                         <div className={styles.blockTools}>
@@ -778,6 +1136,9 @@ export function PostEditor({ postId }: { postId: string }) {
                           </button>
                           <button type="button" className={styles.toolBtn} onClick={() => moveBlock(i, 1)} disabled={i === draft.blocks.length - 1} aria-label="Move block down" title="Move down">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                          </button>
+                          <button type="button" className={styles.toolBtn} onClick={() => duplicateBlock(i)} aria-label="Duplicate block" title="Duplicate block">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                           </button>
                           <button type="button" className={`${styles.toolBtn} ${styles.toolBtnDanger}`} onClick={() => removeBlock(i)} aria-label="Delete block" title="Delete block">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" /></svg>
@@ -810,29 +1171,72 @@ export function PostEditor({ postId }: { postId: string }) {
               </>
             )}
           </article>
+          )}
         </main>
 
-        {settingsOpen ? (
-          <button type="button" className={styles.sideScrim} aria-label="Close post details" onClick={() => setSettingsOpen(false)} />
-        ) : null}
-        <aside className={settingsOpen ? `${styles.sideRail} ${styles.sideRailOpen}` : styles.sideRail} aria-label="Post details">
-          <div className={styles.sideRailHead}>
-            <h2 className={styles.sideRailTitle}>Post details</h2>
-            <button type="button" className={styles.sideClose} onClick={() => setSettingsOpen(false)} aria-label="Close post details">×</button>
+        <aside className={styles.sideRail} aria-label="Editor sidebar">
+          <div className={styles.railTabs} role="tablist" aria-label="Sidebar view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab !== "insights"}
+              className={tab !== "insights" ? styles.railTabOn : styles.railTab}
+              onClick={() => setTab("write")}
+            >
+              Blocks
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "insights"}
+              className={tab === "insights" ? styles.railTabOn : styles.railTab}
+              onClick={() => setTab("insights")}
+            >
+              Outline
+            </button>
           </div>
-          <SettingsPanel
-            draft={draft}
-            patch={patch}
-            slugTouched={slugTouched}
-            topics={state.topics}
-            authorName={authorName}
-            coverOptions={(uploadsC.items ?? []).filter((u) => u.type.startsWith("image/"))}
-            onUploadCover={async (file: File) => {
-              const r = await api.upload(file);
-              uploadsC.reload();
-              return r.src;
-            }}
-          />
+
+          {tab === "insights" ? (
+            <div className={styles.railBody}>
+              <div className={styles.railStats}>
+                <span><strong>{words.toLocaleString()}</strong> words</span>
+                <span><strong>{readMinutes}</strong> min</span>
+                <span><strong>{draft.blocks.length}</strong> blocks</span>
+              </div>
+              <OutlineList items={outline} onJump={jumpToBlock} />
+            </div>
+          ) : (
+            <div className={styles.railBody}>
+              <div className={styles.railStats}>
+                <span><strong>{qualityScore.passed}/{qualityScore.total}</strong> checks</span>
+                <span><strong>{draft.blocks.length}</strong> blocks</span>
+                <span><strong>{outline.length}</strong> headings</span>
+              </div>
+              <button type="button" className={styles.railAdd} onClick={() => openPalette(draft.blocks.length - 1)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                Add block
+              </button>
+              <ul className={styles.railBlocks}>
+                {draft.blocks.map((block, i) => (
+                  <li key={i} className={activeBlock === i ? `${styles.railBlock} ${styles.railBlockOn}` : styles.railBlock}>
+                    <button type="button" className={styles.railBlockBtn} onClick={() => jumpToBlock(i)}>
+                      <span className={styles.railBlockIndex}>{String(i + 1).padStart(2, "0")}</span>
+                      <span className={styles.railBlockLabel}>{blockLabel(block.type)}</span>
+                      <span className={styles.railBlockText}>{blockSummary(block)}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className={styles.railFoot}>
+                <button type="button" className={styles.railFootBtn} onClick={() => setTab("insights")}>
+                  Show outline
+                </button>
+                <button type="button" className={styles.railFootBtn} onClick={() => setTab("settings")}>
+                  Post settings
+                </button>
+              </div>
+            </div>
+          )}
         </aside>
       </div>
 
@@ -881,6 +1285,31 @@ export function PostEditor({ postId }: { postId: string }) {
               <kbd className={styles.paletteKbd}>esc</kbd>
             </div>
             <div className={styles.paletteList} role="listbox" aria-label="Blocks">
+              {!paletteQuery.trim() && recentBlocks.length ? (
+                <div className={styles.paletteQuick}>
+                  <p className={styles.paletteGroup}>Recent</p>
+                  <div className={styles.paletteQuickRow}>
+                    {recentBlocks.map((type) => {
+                      const preset = BLOCK_PRESETS.find((b) => b.type === type);
+                      if (!preset) return null;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          className={styles.paletteQuickChip}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            if (paletteAfter !== null) insertBlock(paletteAfter, type);
+                          }}
+                        >
+                          {preset.icon}
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
               {paletteResults.length === 0 ? (
                 <p className={styles.paletteEmpty}>No blocks match “{paletteQuery}”.</p>
               ) : (
@@ -916,7 +1345,157 @@ export function PostEditor({ postId }: { postId: string }) {
           </div>
         </div>
       ) : null}
+
+      {historyOpen ? (
+        <AdminDialog
+          variant="modal"
+          title="Revision history"
+          onClose={() => setHistoryOpen(false)}
+          footer={<Button variant="outlined" onClick={() => setHistoryOpen(false)}>Close</Button>}
+        >
+          <p className={styles.historyNote}>
+            A snapshot is saved every time you save. Restoring one puts its content back and snapshots the current state, so a restore can itself be undone.
+          </p>
+          {revisionsLoading ? <p className={styles.muted}>Loading…</p> : null}
+          {!revisionsLoading && revisionsError ? <p role="alert" className={styles.saveError}>{revisionsError}</p> : null}
+          {!revisionsLoading && !revisionsError && revisions.length === 0 ? (
+            <p className={styles.muted}>No earlier versions yet — they appear after your next save.</p>
+          ) : null}
+          {!revisionsLoading && revisions.length > 0 ? (
+            <ul className={styles.historyList}>
+              {revisions.map((rev) => (
+                <li key={rev.id} className={styles.historyItem}>
+                  <div className={styles.historyMeta}>
+                    <strong>{rev.title || "Untitled"}</strong>
+                    <span>{new Date(rev.created_at).toLocaleString()}</span>
+                    <StatusChip status={rev.status} tone={statusTone(rev.status)} />
+                  </div>
+                  <Button size="sm" variant="outlined" disabled={restoringId !== null} onClick={() => void restoreRevision(rev.id)}>
+                    {restoringId === rev.id ? "Restoring…" : "Restore"}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AdminDialog>
+      ) : null}
     </div>
+  );
+}
+
+const LEVEL_ICON: Record<CheckLevel, React.ReactNode> = {
+  pass: <path d="m5 12 5 5L20 7" />,
+  warn: <><path d="M12 8v5M12 17h.01" /><path d="M10.3 3.9 2.6 17a1.8 1.8 0 0 0 1.6 2.7h15.6A1.8 1.8 0 0 0 21.4 17L13.7 3.9a1.9 1.9 0 0 0-3.4 0Z" /></>,
+  fail: <><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5h.01" /></>,
+};
+
+const GROUP_LABEL: Record<string, string> = { search: "Search", content: "Content", media: "Media" };
+
+/** The Insights tab: a quality score plus every check, grouped. */
+function InsightsPage({
+  checks,
+  score,
+  words,
+  readMinutes,
+  onJump,
+}: {
+  checks: { id: string; group: string; label: string; level: CheckLevel; detail: string }[];
+  score: { passed: number; total: number; pct: number };
+  words: number;
+  readMinutes: number;
+  onJump: (index: number) => void;
+}) {
+  const groups = ["search", "content", "media"] as const;
+  const tone = score.pct >= 80 ? "good" : score.pct >= 55 ? "ok" : "low";
+  return (
+    <section className={styles.insightsPage} aria-label="Post insights">
+      <header className={styles.scoreCard} data-tone={tone}>
+        <div className={styles.scoreRing} style={{ "--pct": `${score.pct}%` } as React.CSSProperties}>
+          <svg viewBox="0 0 72 72" aria-hidden="true">
+            <circle cx="36" cy="36" r="30" className={styles.scoreTrack} />
+            <circle cx="36" cy="36" r="30" className={styles.scoreValue} />
+          </svg>
+          <span className={styles.scoreNum}>{score.pct}</span>
+        </div>
+        <div className={styles.scoreText}>
+          <h2 className={styles.pageTitle}>Readiness</h2>
+          <p className={styles.pageLede}>
+            {score.passed} of {score.total} checks passing · {words.toLocaleString()} words · {readMinutes} min read
+          </p>
+          <div className={styles.scoreOther}>
+            <button type="button" className={styles.scoreJump} onClick={() => onJump(0)}>
+              Jump to the start
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section className={styles.checkGroup} aria-label="Keyboard shortcuts">
+        <h3 className={styles.checkGroupTitle}>Shortcuts</h3>
+        <ul className={styles.shortcutList}>
+          {[
+            ["⌘S", "Save draft"],
+            ["⌘↵", "Publish"],
+            ["⌘K", "Insert block"],
+            ["⌘1–4", "Switch tab"],
+            ["⌘D", "Duplicate block"],
+            ["Alt↑↓", "Move block"],
+          ].map(([keys, label]) => (
+            <li key={keys}>
+              <kbd>{keys}</kbd>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className={styles.checkGroups}>
+        {groups.map((group) => {
+          const items = checks.filter((c) => c.group === group);
+          if (!items.length) return null;
+          return (
+            <section key={group} className={styles.checkGroup}>
+              <h3 className={styles.checkGroupTitle}>{GROUP_LABEL[group]}</h3>
+              <ul className={styles.checkList}>
+                {items.map((check) => (
+                  <li key={check.id} className={styles.checkItem} data-level={check.level}>
+                    <span className={styles.checkIcon} aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        {LEVEL_ICON[check.level]}
+                      </svg>
+                    </span>
+                    <div className={styles.checkText}>
+                      <strong>{check.label}</strong>
+                      <span>{check.detail}</span>
+                    </div>
+                    <span className={styles.srOnly}>{check.level}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Right-rail outline for long posts: every heading, click to jump. */
+function OutlineList({ items, onJump }: { items: { id: string; text: string; level: number; index: number }[]; onJump: (index: number) => void }) {
+  if (!items.length) {
+    return <p className={styles.railEmpty}>Add a heading and it shows up here.</p>;
+  }
+  return (
+    <ol className={styles.outlineList}>
+      {items.map((h, i) => (
+        <li key={`${h.id}-${i}`} data-level={h.level}>
+          <button type="button" className={styles.outlineItem} onClick={() => onJump(h.index)}>
+            <span className={styles.outlineText}>{h.text}</span>
+            <span className={styles.outlineLevel}>H{h.level}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -1214,10 +1793,87 @@ function TagEditor({ tags, onChange }: { tags: string[]; onChange: (tags: string
   );
 }
 
-function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[]; postOptions?: { slug: string; title: string; summary: string; cover: string }[] }) {
+/* Selectable UI styles per block type. The first entry is the default look;
+   picking one writes block.variant, which the renderer maps to a CSS class. */
+const BLOCK_VARIANTS: Record<string, { value: string; label: string }[]> = {
+  quote: [{ value: "bar", label: "Bar" }, { value: "card", label: "Card" }, { value: "big", label: "Big statement" }, { value: "plain", label: "Plain italic" }],
+  callout: [{ value: "chip", label: "Icon chip" }, { value: "left", label: "Left rule" }, { value: "outline", label: "Outline" }, { value: "filled", label: "Filled" }],
+  table: [{ value: "default", label: "Default" }, { value: "striped", label: "Striped rows" }, { value: "cards", label: "Cards" }],
+  cta: [{ value: "button", label: "Button" }, { value: "banner", label: "Banner" }, { value: "link", label: "Text link" }],
+  related: [{ value: "tout", label: "Split tout" }, { value: "banner", label: "Wide banner" }, { value: "minimal", label: "Minimal" }],
+  keypoints: [{ value: "card", label: "Summary card" }, { value: "plain", label: "Plain" }, { value: "checklist", label: "Checklist" }],
+  stats: [{ value: "cards", label: "Banded row" }, { value: "plain", label: "Plain" }, { value: "grid", label: "Grid tiles" }],
+  timestrip: [{ value: "spine", label: "Timeline spine" }, { value: "cards", label: "Cards" }, { value: "rows", label: "Rows" }],
+  accordion: [{ value: "cards", label: "Cards" }, { value: "divided", label: "Divided list" }, { value: "numbered", label: "Numbered" }],
+  proscons: [{ value: "columns", label: "Two columns" }, { value: "split", label: "Split panel" }, { value: "stacked", label: "Stacked" }],
+  steps: [{ value: "numbered", label: "Numbered" }, { value: "connected", label: "Connected" }, { value: "cards", label: "Cards" }],
+  glossary: [{ value: "rows", label: "Grouped rows" }, { value: "grid", label: "Grid" }, { value: "chips", label: "Chips" }],
+  diff: [{ value: "sidebyside", label: "Side by side" }, { value: "unified", label: "Stacked" }],
+  person: [{ value: "profile", label: "Google profile" }, { value: "card", label: "Horizontal card" }, { value: "inline", label: "Inline" }, { value: "quote", label: "Quote accent" }],
+  progress: [{ value: "bar", label: "Bar" }, { value: "ring", label: "Ring" }, { value: "segmented", label: "Segmented" }],
+  linkcards: [{ value: "grid", label: "Grid" }, { value: "list", label: "List" }, { value: "tiles", label: "Tiles" }],
+  compare: [{ value: "table", label: "Table" }, { value: "columns", label: "Columns" }],
+  countdown: [{ value: "grid", label: "Countdown grid" }, { value: "inline", label: "Inline" }],
+};
+
+/** Named colour presets — each sets accent + background + text together so a
+    block can be re-skinned in one click. "Custom" reveals free pickers. */
+const COLOR_TEMPLATES = [
+  { id: "default", label: "Default", accent: "", bg: "", text: "" },
+  { id: "blue", label: "Blue", accent: "#1a73e8", bg: "#e8f0fe", text: "#174ea6" },
+  { id: "green", label: "Green", accent: "#188038", bg: "#e6f4ea", text: "#0d652d" },
+  { id: "purple", label: "Purple", accent: "#8430ce", bg: "#f3e8fd", text: "#5b1fa0" },
+  { id: "amber", label: "Amber", accent: "#b06000", bg: "#fef7e0", text: "#7a4100" },
+  { id: "red", label: "Red", accent: "#d93025", bg: "#fce8e6", text: "#a50e0e" },
+  { id: "slate", label: "Slate", accent: "#3c4043", bg: "#f1f3f4", text: "#202124" },
+] as const;
+
+function templateFor(a?: string, b?: string, c?: string): string {
+  const hit = COLOR_TEMPLATES.find((t) => (t.accent || undefined) === (a || undefined) && (t.bg || undefined) === (b || undefined) && (t.text || undefined) === (c || undefined));
+  return hit?.id ?? "custom";
+}
+
+/** A compact "Style:" segmented control shown at the top of a block's editor. */
+function VariantPicker({ type, value, onChange }: { type: string; value?: string; onChange: (v: string | undefined) => void }) {
+  const options = BLOCK_VARIANTS[type];
+  if (!options || options.length < 2) return null;
+  return (
+    <div className={styles.variantRow} role="group" aria-label="Block style">
+      <span className={styles.variantLabel}>Style</span>
+      <div className={styles.variantSeg}>
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            className={value === o.value ? styles.variantOn : styles.variantBtn}
+            aria-pressed={value === o.value}
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BlockEditor({ block, onChange, imageOptions, postOptions = [], onOpenPaletteInsert, onImportUrl }: { block: Block; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[]; postOptions?: { slug: string; title: string; summary: string; cover: string }[]; onOpenPaletteInsert?: () => void; onImportUrl?: (fromBlock: { type: "p"; html: string }, kind: "image" | "embed") => void }) {
   const toast = useToast();
   const headingRef = useRef<HTMLTextAreaElement>(null);
   const headingText = block.type === "h2" || block.type === "h3" ? block.text : null;
+
+  /* Focus a row in the list block (scoped to its own block container). */
+  function focusListItem(i: number) {
+    // Resolve the block now — the trigger input may unmount on re-render.
+    const scope = (document.activeElement as HTMLElement | null)?.closest("[data-block-index]") ?? document;
+    window.setTimeout(() => {
+      const el = scope.querySelector<HTMLInputElement>(`input[data-list-item="${i}"]`);
+      if (!el) return;
+      el.focus();
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+    }, 30);
+  }
 
   useEffect(() => {
     const el = headingRef.current;
@@ -1226,291 +1882,932 @@ function BlockEditor({ block, onChange, imageOptions, postOptions = [] }: { bloc
     el.style.height = `${el.scrollHeight}px`;
   }, [headingText, block.type]);
 
-  switch (block.type) {
-    case "h2":
-    case "h3":
-      return (
-        <textarea
-          ref={headingRef}
-          rows={1}
-          className={block.type === "h2" ? styles.blockH2 : styles.blockH3}
-          value={block.text}
-          placeholder={block.type === "h2" ? "Section heading" : "Subheading"}
-          onChange={(e) => onChange({ ...block, text: e.target.value, id: slugifyTitle(e.target.value) })}
+  /* Prepend the style picker to any block that offers variants. */
+  const withVariant = (node: React.ReactNode) => {
+    const styled = block as { variant?: string; accent?: string; bg?: string; text?: string };
+    const hasVariants = Boolean(BLOCK_VARIANTS[block.type]);
+    // Colour controls are useful on any visual block, but not on a bare
+    // paragraph or heading (they inherit the article's own styling).
+    const noColors = block.type === "p" || block.type === "h2" || block.type === "h3";
+    if (!hasVariants && noColors) return node;
+    const activeTemplate = templateFor(styled.accent, styled.bg, styled.text);
+    const customOpen = activeTemplate === "custom";
+    const colorField = (key: "accent" | "bg" | "text", label: string, fallback: string) => (
+      <div className={styles.accentGroup}>
+        <span className={styles.variantLabel}>{label}</span>
+        <input
+          type="color"
+          aria-label={`Block ${label.toLowerCase()} colour`}
+          value={styled[key] ?? fallback}
+          onChange={(e) => onChange({ ...block, [key]: e.target.value } as unknown as Block)}
         />
-      );
-    case "quote":
-      return (
-        <div className={styles.quoteWrap}>
-          <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Quote text" minHeight={44} />
-          <input
-            className={styles.quoteCite}
-            value={block.cite ?? ""}
-            placeholder="Attribution (optional)"
-            onChange={(e) => onChange({ ...block, cite: e.target.value })}
-          />
-          <div className={styles.rowQuoteMeta}>
-            <select
-              aria-label="Quote style"
-              value={block.variant ?? "bar"}
-              onChange={(e) => onChange({ ...block, variant: e.target.value as "bar" | "card" })}
-            >
-              <option value="bar">Style: left bar</option>
-              <option value="card">Style: author card</option>
-            </select>
-            <select
-              aria-label="Quote size"
-              value={block.size ?? "md"}
-              onChange={(e) => {
-                const v = e.target.value;
-                onChange({ ...block, size: v === "md" ? undefined : (v as "sm" | "lg") });
-              }}
-            >
-              <option value="sm">Size: small</option>
-              <option value="md">Size: medium</option>
-              <option value="lg">Size: large</option>
-            </select>
-          </div>
-          <label className={styles.quoteColor}>
-            Background
-            <input
-              type="color"
-              value={block.bg ?? (block.variant === "card" ? "#eef2ff" : "#ffffff")}
-              onChange={(e) => onChange({ ...block, bg: e.target.value })}
-            />
-            {block.bg ? (
-              <button type="button" onClick={() => onChange({ ...block, bg: undefined })}>Reset</button>
-            ) : null}
-          </label>
-        </div>
-      );
-    case "callout":
-      return (
-        <div className={styles.calloutWrap}>
-          <select
-            value={block.tone}
-            onChange={(e) => onChange({ ...block, tone: e.target.value as "note" | "tip" | "warning" })}
-          >
-            <option value="note">Note</option>
-            <option value="tip">Tip</option>
-            <option value="warning">Warning</option>
-          </select>
-          <input
-            value={block.title ?? ""}
-            placeholder="Title (optional)"
-            onChange={(e) => onChange({ ...block, title: e.target.value })}
-          />
-          <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Callout text" minHeight={44} />
-        </div>
-      );
-    case "list":
-      return (
-        <div className={styles.listWrap}>
-          <label className={styles.listType}>
-            <input
-              type="checkbox"
-              checked={Boolean(block.ordered)}
-              onChange={(e) => onChange({ ...block, ordered: e.target.checked })}
-            />
-            Numbered
-          </label>
-          {block.items.map((item, i) => (
-            <div key={i} className={styles.listItem}>
-              <input
-                value={item}
-                placeholder={`Item ${i + 1}`}
-                onChange={(e) => onChange({ ...block, items: block.items.map((x, idx) => (idx === i ? e.target.value : x)) })}
-              />
-              <button type="button" onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
-            </div>
-          ))}
-          <button type="button" className={styles.linkBtn} onClick={() => onChange({ ...block, items: [...block.items, ""] })}>
-            + Add item
-          </button>
-        </div>
-      );
-    case "code":
-      return (
-        <div className={styles.codeWrap}>
-          <div className={styles.codeBar}>
-            <input
-              value={block.filename ?? ""}
-              placeholder="filename (optional)"
-              onChange={(e) => onChange({ ...block, filename: e.target.value })}
-            />
-            <input
-              className={styles.langInput}
-              value={block.lang}
-              placeholder="language"
-              spellCheck={false}
-              onChange={(e) => onChange({ ...block, lang: e.target.value })}
-            />
-          </div>
-          <textarea
-            className={styles.code}
-            value={block.code}
-            placeholder="Paste code"
-            rows={6}
-            spellCheck={false}
-            onChange={(e) => onChange({ ...block, code: e.target.value })}
-          />
-        </div>
-      );
-    case "image":
-      return <MediaBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
-    case "row": {
-      return <RowBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
-    }
-    case "video":
-      return (
-        <div className={styles.imageWrap}>
-          <input
-            value={block.url}
-            placeholder="YouTube or Vimeo link… or upload a video below"
-            onChange={(e) => onChange({ ...block, url: e.target.value })}
-          />
-          {!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
-            <label className={styles.uploadBtn}>
-              Upload video (MP4/WebM)
-              <input
-                type="file"
-                accept="video/mp4,video/webm"
-                hidden
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    const { src } = await api.upload(file);
-                    onChange({ ...block, url: src });
-                  } catch (err) {
-                    toast(err instanceof Error ? err.message : "Upload failed");
-                  }
-                  e.target.value = "";
-                }}
-              />
-            </label>
-          ) : null}
-          {block.url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={`https://img.youtube.com/vi/${(block.url.match(/(?:v=|youtu\.be\/)([\w-]{6,})/)?.[1] ?? "")}/hqdefault.jpg`} alt="" hidden={!/youtu/i.test(block.url)} style={{ width: 220, borderRadius: 10 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-          ) : null}
-          <input value={block.poster ?? ""} placeholder="Poster image URL (optional)" onChange={(e) => onChange({ ...block, poster: e.target.value })} />
-          {!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
-            <label className={styles.mediaCheck}>
-              <input type="checkbox" checked={Boolean(block.autoplay)} onChange={(e) => onChange({ ...block, autoplay: e.target.checked })} />
-              <span>
-                <strong>Autoplay muted + loop</strong>
-                <em>Use for ambient inline clips. Direct video files only.</em>
-              </span>
-            </label>
-          ) : null}
-          <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
-        </div>
-      );
-    case "table":
-      return (
-        <div className={styles.tableWrap}>
-          <div className={styles.tableRow}>
-            {block.head.map((h, i) => (
-              <input
-                key={i}
-                value={h}
-                onChange={(e) => onChange({ ...block, head: block.head.map((x, idx) => (idx === i ? e.target.value : x)) })}
-              />
-            ))}
-          </div>
-          {block.rows.map((row, r) => (
-            <div key={r} className={styles.tableRow}>
-              {row.map((cell, c) => (
-                <input
-                  key={c}
-                  value={cell}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      rows: block.rows.map((rr, ri) => (ri === r ? rr.map((cc, ci) => (ci === c ? e.target.value : cc)) : rr)),
-                    })
-                  }
-                />
-              ))}
-            </div>
-          ))}
+        {styled[key] ? (
           <button
             type="button"
-            className={styles.linkBtn}
-            onClick={() => onChange({ ...block, rows: [...block.rows, block.head.map(() => "")] })}
+            className={styles.accentClear}
+            onClick={() => onChange({ ...block, [key]: undefined } as unknown as Block)}
           >
-            + Add row
+            Reset
           </button>
-        </div>
-      );
-    case "related":
-      return (
-        <div className={styles.imageWrap}>
-          <span style={{ fontSize: 12, color: "#5f6368" }}>Inserts a “Related Article” card linking to one of your posts.</span>
-          <select
-            value={block.slug}
-            onChange={(e) => {
-              const pick = postOptions.find((o) => o.slug === e.target.value);
-              onChange(pick ? { ...block, slug: pick.slug, title: pick.title, description: pick.summary, image: pick.cover } : { ...block, slug: e.target.value });
-            }}
-          >
-            <option value="">Pick a post to feature…</option>
-            {postOptions.map((o) => (
-              <option key={o.slug} value={o.slug}>{o.title}</option>
-            ))}
-          </select>
-          <input value={block.title} placeholder="Title (shown on the card)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
-          <input value={block.description ?? ""} placeholder="One-line description" onChange={(e) => onChange({ ...block, description: e.target.value })} />
-          <div className={styles.rowQuoteMeta}>
-            <input value={block.eyebrow ?? ""} placeholder="Eyebrow (Related Article)" onChange={(e) => onChange({ ...block, eyebrow: e.target.value })} />
-            <input value={block.cta ?? ""} placeholder="Link label (See more)" onChange={(e) => onChange({ ...block, cta: e.target.value })} />
-          </div>
-          <select value={block.image ?? ""} onChange={(e) => onChange({ ...block, image: e.target.value })}>
-            <option value="">Card image (optional)…</option>
-            {imageOptions.map((g) => (
-              <option key={g.src} value={g.src}>{g.label}</option>
-            ))}
-          </select>
-          <div>
-            <span style={{ fontSize: 12, color: "#5f6368", display: "block", marginBottom: 6 }}>Card colour</span>
-            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-              {TOUT_SWATCHES.map((t) => (
+        ) : null}
+      </div>
+    );
+    return (
+      <>
+        {hasVariants ? (
+          <VariantPicker
+            type={block.type}
+            value={styled.variant}
+            onChange={(v) => onChange({ ...block, variant: v } as unknown as Block)}
+          />
+        ) : null}
+        {!noColors ? (
+          <div className={styles.colorBar}>
+            <div className={styles.swatchRow} role="group" aria-label="Colour template">
+              {COLOR_TEMPLATES.map((t) => (
                 <button
                   key={t.id}
                   type="button"
+                  className={activeTemplate === t.id ? styles.swatchOn : styles.swatch}
                   title={t.label}
-                  aria-label={t.label}
-                  onClick={() => onChange({ ...block, color: block.color === t.id ? undefined : t.id })}
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    cursor: "pointer",
-                    background: t.css,
-                    border: block.color === t.id ? "2px solid #202124" : "1px solid #dadce0",
-                    boxShadow: block.color === t.id ? "0 0 0 2px #fff, 0 0 0 3px #202124" : "none",
+                  aria-pressed={activeTemplate === t.id}
+                  onClick={() =>
+                    onChange(
+                      { ...block, accent: t.accent || undefined, bg: t.bg || undefined, text: t.text || undefined } as unknown as Block,
+                    )
+                  }
+                >
+                  {t.id === "default" ? (
+                    <span className={styles.swatchDefault} aria-hidden="true">Aa</span>
+                  ) : (
+                    <span className={styles.swatchChip} style={{ background: t.bg, color: t.text, boxShadow: `inset 0 -3px 0 ${t.accent}` }} aria-hidden="true">
+                      Aa
+                    </span>
+                  )}
+                  <em>{t.label}</em>
+                </button>
+              ))}
+              <button
+                type="button"
+                className={customOpen ? styles.swatchOn : styles.swatch}
+                title="Pick custom colours"
+                aria-pressed={customOpen}
+                onClick={() => onChange({ ...block, accent: styled.accent ?? "#1a73e8", bg: styled.bg ?? "#f8f9fa", text: styled.text ?? "#202124" } as unknown as Block)}
+              >
+                <span className={styles.swatchCustom} aria-hidden="true">＋</span>
+                <em>Custom</em>
+              </button>
+            </div>
+            {customOpen ? (
+              <div className={styles.accentRow}>
+                {colorField("accent", "Accent", "#1a73e8")}
+                {colorField("bg", "Background", "#f8f9fa")}
+                {colorField("text", "Text", "#202124")}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        {node}
+      </>
+    );
+  };
+
+  return withVariant((() => {
+    switch (block.type) {
+      case "h2":
+      case "h3":
+        return (
+          <textarea
+            ref={headingRef}
+            rows={1}
+            className={block.type === "h2" ? styles.blockH2 : styles.blockH3}
+            value={block.text}
+            placeholder={block.type === "h2" ? "Section heading" : "Subheading"}
+            onChange={(e) => onChange({ ...block, text: e.target.value, id: slugifyTitle(e.target.value) })}
+          />
+        );
+      case "quote":
+        return (
+          <div className={styles.quoteWrap}>
+            <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Quote text" minHeight={44} />
+            <input
+              className={styles.quoteCite}
+              value={block.cite ?? ""}
+              placeholder="Attribution (optional)"
+              onChange={(e) => onChange({ ...block, cite: e.target.value })}
+            />
+            <div className={styles.rowQuoteMeta}>
+              <select
+                aria-label="Quote style"
+                value={block.variant ?? "bar"}
+                onChange={(e) => onChange({ ...block, variant: e.target.value as "bar" | "card" })}
+              >
+                <option value="bar">Style: left bar</option>
+                <option value="card">Style: author card</option>
+              </select>
+              <select
+                aria-label="Quote size"
+                value={block.size ?? "md"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  onChange({ ...block, size: v === "md" ? undefined : (v as "sm" | "lg") });
+                }}
+              >
+                <option value="sm">Size: small</option>
+                <option value="md">Size: medium</option>
+                <option value="lg">Size: large</option>
+              </select>
+            </div>
+            <label className={styles.quoteColor}>
+              Background
+              <input
+                type="color"
+                value={block.bg ?? (block.variant === "card" ? "#eef2ff" : "#ffffff")}
+                onChange={(e) => onChange({ ...block, bg: e.target.value })}
+              />
+              {block.bg ? (
+                <button type="button" onClick={() => onChange({ ...block, bg: undefined })}>Reset</button>
+              ) : null}
+            </label>
+          </div>
+        );
+      case "callout":
+        return (
+          <div className={styles.calloutWrap}>
+            <select
+              value={block.tone}
+              onChange={(e) => onChange({ ...block, tone: e.target.value as "note" | "tip" | "warning" | "info" })}
+            >
+              <option value="note">Note</option>
+              <option value="tip">Tip</option>
+              <option value="warning">Warning</option>
+              <option value="info">Info</option>
+            </select>
+            <input
+              value={block.icon ?? ""}
+              maxLength={4}
+              placeholder="Emoji icon (optional)"
+              onChange={(e) => onChange({ ...block, icon: e.target.value })}
+            />
+            <input
+              value={block.title ?? ""}
+              placeholder="Title (optional)"
+              onChange={(e) => onChange({ ...block, title: e.target.value })}
+            />
+            <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Callout text" minHeight={44} />
+          </div>
+        );
+      case "list":
+        return (
+          <div className={styles.listWrap}>
+            <label className={styles.listType}>
+              <input
+                type="checkbox"
+                checked={Boolean(block.ordered)}
+                onChange={(e) => onChange({ ...block, ordered: e.target.checked })}
+              />
+              Numbered
+            </label>
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input
+                  value={item}
+                  placeholder={`Item ${i + 1}`}
+                  data-list-item={i}
+                  onChange={(e) => onChange({ ...block, items: block.items.map((x, idx) => (idx === i ? e.target.value : x)) })}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    // Enter starts the next bullet; Enter on an empty item ends the list.
+                    if (!item.trim() && block.items.length > 1) {
+                      const rest = block.items.filter((_, idx) => idx !== i);
+                      onChange({ ...block, items: rest });
+                      focusListItem(i - 1);
+                    } else if (item.trim()) {
+                      onChange({ ...block, items: [...block.items.slice(0, i + 1), "", ...block.items.slice(i + 1)] });
+                      focusListItem(i + 1);
+                    }
                   }}
+                />
+                <button type="button" onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <button type="button" className={styles.linkBtn} onClick={() => onChange({ ...block, items: [...block.items, ""] })}>
+              + Add item
+            </button>
+          </div>
+        );
+      case "code":
+        return (
+          <div className={styles.codeWrap}>
+            <div className={styles.codeBar}>
+              <input
+                value={block.filename ?? ""}
+                placeholder="filename (optional)"
+                onChange={(e) => onChange({ ...block, filename: e.target.value })}
+              />
+              <input
+                className={styles.langInput}
+                value={block.lang}
+                placeholder="language"
+                spellCheck={false}
+                onChange={(e) => onChange({ ...block, lang: e.target.value })}
+              />
+            </div>
+            <textarea
+              className={styles.code}
+              value={block.code}
+              placeholder="Paste code"
+              rows={6}
+              spellCheck={false}
+              onChange={(e) => onChange({ ...block, code: e.target.value })}
+            />
+          </div>
+        );
+      case "image":
+        return <MediaBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
+      case "imgtext":
+        return (
+          <div className={styles.listWrap}>
+            <MediaBlockEditor
+              block={{ type: "image", src: block.src, alt: block.alt, caption: "" }}              onChange={(next) =>
+                  onChange({ ...block, src: "src" in next ? next.src ?? "" : "", alt: "alt" in next ? next.alt ?? "" : "" })
+                }
+              imageOptions={imageOptions}
+            />
+            <select
+              aria-label="Photo placement"
+              value={block.side ?? "left"}
+              onChange={(e) => onChange({ ...block, side: e.target.value as "left" | "right" })}
+            >
+              <option value="left">Photo on the left</option>
+              <option value="right">Photo on the right</option>
+            </select>
+            <RichEditor value={block.html} onChange={(html) => onChange({ ...block, html })} placeholder="Text beside the photo" minHeight={88} />
+          </div>
+        );
+      case "row": {
+        return <RowBlockEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
+      }
+      case "video":
+        return (
+          <div className={styles.imageWrap}>
+            <input
+              value={block.url}
+              placeholder="YouTube or Vimeo link… or upload a video below"
+              onChange={(e) => onChange({ ...block, url: e.target.value })}
+            />
+            {!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
+              <label className={styles.uploadBtn}>
+                Upload video (MP4/WebM)
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      const { src } = await api.upload(file);
+                      onChange({ ...block, url: src });
+                    } catch (err) {
+                      toast(err instanceof Error ? err.message : "Upload failed");
+                    }
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            ) : null}
+            {block.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`https://img.youtube.com/vi/${(block.url.match(/(?:v=|youtu\.be\/)([\w-]{6,})/)?.[1] ?? "")}/hqdefault.jpg`} alt="" hidden={!/youtu/i.test(block.url)} style={{ width: 220, borderRadius: 10 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            ) : null}
+            <input value={block.poster ?? ""} placeholder="Poster image URL (optional)" onChange={(e) => onChange({ ...block, poster: e.target.value })} />
+            {!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)/i.test(block.url) ? (
+              <label className={styles.mediaCheck}>
+                <input type="checkbox" checked={Boolean(block.autoplay)} onChange={(e) => onChange({ ...block, autoplay: e.target.checked })} />
+                <span>
+                  <strong>Autoplay muted + loop</strong>
+                  <em>Use for ambient inline clips. Direct video files only.</em>
+                </span>
+              </label>
+            ) : null}
+            <input value={block.caption ?? ""} placeholder="Caption (optional)" onChange={(e) => onChange({ ...block, caption: e.target.value })} />
+          </div>
+        );
+      case "table":
+        return (
+          <div className={styles.tableWrap}>
+            <div className={styles.tableRow}>
+              {block.head.map((h, i) => (
+                <input
+                  key={i}
+                  value={h}
+                  onChange={(e) => onChange({ ...block, head: block.head.map((x, idx) => (idx === i ? e.target.value : x)) })}
                 />
               ))}
             </div>
+            {block.rows.map((row, r) => (
+              <div key={r} className={styles.tableRow}>
+                {row.map((cell, c) => (
+                  <input
+                    key={c}
+                    value={cell}
+                    onChange={(e) =>
+                      onChange({
+                        ...block,
+                        rows: block.rows.map((rr, ri) => (ri === r ? rr.map((cc, ci) => (ci === c ? e.target.value : cc)) : rr)),
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            ))}
+            <button
+              type="button"
+              className={styles.linkBtn}
+              onClick={() => onChange({ ...block, rows: [...block.rows, block.head.map(() => "")] })}
+            >
+              + Add row
+            </button>
           </div>
-        </div>
-      );
-    case "chart":
-      return <ChartEditor chart={block.chart} onChange={(chart) => onChange({ type: "chart", chart })} />;
-    case "divider":
-      return <hr className={styles.divider} />;
-    default: {
-      const html = "html" in block ? block.html : "";
-      return (
-        <RichEditor
-          value={html}
-          onChange={(next) => onChange({ ...(block as { type: "p"; html: string }), html: next })}
-        />
-      );
+        );
+      case "related":
+        return (
+          <div className={styles.imageWrap}>
+            <span style={{ fontSize: 12, color: "#5f6368" }}>Inserts a “Related Article” card linking to one of your posts.</span>
+            <select
+              value={block.slug}
+              onChange={(e) => {
+                const pick = postOptions.find((o) => o.slug === e.target.value);
+                onChange(pick ? { ...block, slug: pick.slug, title: pick.title, description: pick.summary, image: pick.cover } : { ...block, slug: e.target.value });
+              }}
+            >
+              <option value="">Pick a post to feature…</option>
+              {postOptions.map((o) => (
+                <option key={o.slug} value={o.slug}>{o.title}</option>
+              ))}
+            </select>
+            <input value={block.title} placeholder="Title (shown on the card)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            <input value={block.description ?? ""} placeholder="One-line description" onChange={(e) => onChange({ ...block, description: e.target.value })} />
+            <div className={styles.rowQuoteMeta}>
+              <input value={block.eyebrow ?? ""} placeholder="Eyebrow (Related Article)" onChange={(e) => onChange({ ...block, eyebrow: e.target.value })} />
+              <input value={block.cta ?? ""} placeholder="Link label (See more)" onChange={(e) => onChange({ ...block, cta: e.target.value })} />
+            </div>
+            <select value={block.image ?? ""} onChange={(e) => onChange({ ...block, image: e.target.value })}>
+              <option value="">Card image (optional)…</option>
+              {imageOptions.map((g) => (
+                <option key={g.src} value={g.src}>{g.label}</option>
+              ))}
+            </select>
+            <div>
+              <span style={{ fontSize: 12, color: "#5f6368", display: "block", marginBottom: 6 }}>Card colour</span>
+              <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+                {TOUT_SWATCHES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    title={t.label}
+                    aria-label={t.label}
+                    onClick={() => onChange({ ...block, color: block.color === t.id ? undefined : t.id })}
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      background: t.css,
+                      border: block.color === t.id ? "2px solid #202124" : "1px solid #dadce0",
+                      boxShadow: block.color === t.id ? "0 0 0 2px #fff, 0 0 0 3px #202124" : "none",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case "chart":
+        return <ChartEditor chart={block.chart} onChange={(chart) => onChange({ type: "chart", chart })} />;
+      case "divider":
+        return <hr className={styles.divider} />;
+      case "cta":
+        return (
+          <div className={styles.calloutWrap}>
+            <input value={block.label} placeholder="Button label — e.g. Read the series" onChange={(e) => onChange({ ...block, label: e.target.value })} />
+            <input value={block.href} placeholder="Link URL (/newsletter, https://…)" onChange={(e) => onChange({ ...block, href: e.target.value })} />
+            <select aria-label="Button style" value={block.style ?? "primary"} onChange={(e) => onChange({ ...block, style: e.target.value as "primary" | "outline" })}>
+              <option value="primary">Filled button</option>
+              <option value="outline">Outline button</option>
+            </select>
+            <input value={block.note ?? ""} placeholder="Small note beside the button (optional)" onChange={(e) => onChange({ ...block, note: e.target.value })} />
+          </div>
+        );
+      case "footnote":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.text} placeholder="Footnote text — numbered automatically on the site" onChange={(e) => onChange({ ...block, text: e.target.value })} />
+          </div>
+        );
+      case "stats":
+        return (
+          <div className={styles.listWrap}>
+            <p className={styles.blockNote}>Big figures with a short caption each — three or four read best.</p>
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input value={item.value} placeholder="Value — e.g. 1.2M" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, value: e.target.value } : v)) })} />
+                <input value={item.label} placeholder="Label — e.g. monthly readers" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, label: e.target.value } : v)) })} />
+                <input value={item.note ?? ""} placeholder="Note (optional)" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, note: e.target.value } : v)) })} />
+                <button type="button" aria-label={`Remove stat ${i + 1}`} onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, { value: "", label: "" }] })}>+ Add stat</Button>
+          </div>
+        );
+      case "timestrip":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.title ?? ""} placeholder="Strip heading (optional)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input value={item.date} placeholder="Date — e.g. 2019" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, date: e.target.value } : v)) })} />
+                <input value={item.title} placeholder="Milestone" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, title: e.target.value } : v)) })} />
+                <input value={item.detail ?? ""} placeholder="Detail (optional)" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, detail: e.target.value } : v)) })} />
+                <button type="button" aria-label={`Remove milestone ${i + 1}`} onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, { date: "", title: "" }] })}>+ Add milestone</Button>
+          </div>
+        );
+      case "bafter":
+        return <BeforeAfterEditor block={block} onChange={onChange} imageOptions={imageOptions} />;
+      case "accordion":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.title ?? ""} placeholder="Heading above the questions (optional)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listWrap} style={{ paddingLeft: 10, borderLeft: "2px solid var(--line)" }}>
+                <div className={styles.listItem}>
+                  <input
+                    value={item.q}
+                    placeholder={`Question ${i + 1}`}
+                    onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, q: e.target.value } : v)) })}
+                  />
+                  <button type="button" aria-label={`Remove question ${i + 1}`} onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+                </div>
+                <RichEditor
+                  value={item.html}
+                  onChange={(html) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, html } : v)) })}
+                  placeholder="Answer"
+                  minHeight={40}
+                />
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, { q: "", html: "" }] })}>+ Add question</Button>
+          </div>
+        );
+      case "steps":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.title ?? ""} placeholder="Steps heading (optional)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <span className={styles.stepBadge}>{i + 1}</span>
+                <input value={item.title} placeholder={`Step ${i + 1}`} onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, title: e.target.value } : v)) })} />
+                <input value={item.detail ?? ""} placeholder="Detail (optional)" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, detail: e.target.value } : v)) })} />
+                <button type="button" aria-label={`Remove step ${i + 1}`} onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, { title: "", detail: "" }] })}>+ Add step</Button>
+          </div>
+        );
+      case "proscons":
+        return (
+          <div className={styles.listWrap}>
+            <div className={styles.formGrid}>
+              <label className={styles.formField}>
+                <span>Left label</span>
+                <input value={block.prosLabel ?? ""} placeholder="Worth it" onChange={(e) => onChange({ ...block, prosLabel: e.target.value })} />
+              </label>
+              <label className={styles.formField}>
+                <span>Right label</span>
+                <input value={block.consLabel ?? ""} placeholder="Trade-offs" onChange={(e) => onChange({ ...block, consLabel: e.target.value })} />
+              </label>
+            </div>
+            {(["pros", "cons"] as const).map((side) => (
+              <div key={side} className={styles.listWrap}>
+                <p className={styles.blockNote}>{side === "pros" ? "Points in favour" : "Points against"}</p>
+                {block[side].map((item, i) => (
+                  <div key={i} className={styles.listItem}>
+                    <input
+                      value={item}
+                      placeholder={`${side === "pros" ? "Pro" : "Con"} ${i + 1}`}
+                      onChange={(e) => onChange({ ...block, [side]: block[side].map((v, idx) => (idx === i ? e.target.value : v)) })}
+                    />
+                    <button type="button" aria-label={`Remove ${side} ${i + 1}`} onClick={() => onChange({ ...block, [side]: block[side].filter((_, idx) => idx !== i) })}>×</button>
+                  </div>
+                ))}
+                <Button variant="text" size="sm" onClick={() => onChange({ ...block, [side]: [...block[side], ""] })}>
+                  + Add {side === "pros" ? "pro" : "con"}
+                </Button>
+              </div>
+            ))}
+          </div>
+        );
+      case "glossary":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.title ?? ""} placeholder="Glossary heading (optional)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            {block.terms.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input value={item.term} placeholder="Term" onChange={(e) => onChange({ ...block, terms: block.terms.map((v, idx) => (idx === i ? { ...v, term: e.target.value } : v)) })} />
+                <input value={item.def} placeholder="Definition" onChange={(e) => onChange({ ...block, terms: block.terms.map((v, idx) => (idx === i ? { ...v, def: e.target.value } : v)) })} />
+                <button type="button" aria-label={`Remove term ${i + 1}`} onClick={() => onChange({ ...block, terms: block.terms.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, terms: [...block.terms, { term: "", def: "" }] })}>+ Add term</Button>
+          </div>
+        );
+      case "diff":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.filename ?? ""} placeholder="File name (optional)" onChange={(e) => onChange({ ...block, filename: e.target.value })} />
+            <label className={styles.formField}>
+              <span>Before</span>
+              <textarea
+                rows={6}
+                value={block.before}
+                placeholder="Old version"
+                spellCheck={false}
+                onChange={(e) => onChange({ ...block, before: e.target.value })}
+              />
+            </label>
+            <label className={styles.formField}>
+              <span>After</span>
+              <textarea
+                rows={6}
+                value={block.after}
+                placeholder="New version"
+                spellCheck={false}
+                onChange={(e) => onChange({ ...block, after: e.target.value })}
+              />
+            </label>
+          </div>
+        );
+      case "person":
+        return (
+          <PersonEditor block={block} onChange={onChange} />
+        );
+      case "progress":
+        return (
+          <div className={styles.calloutWrap}>
+            <input value={block.label ?? ""} placeholder="Label — e.g. Coverage" onChange={(e) => onChange({ ...block, label: e.target.value })} />
+            <div className={styles.formGrid}>
+              <label className={styles.formField}><span>Value</span><input type="number" value={block.value} onChange={(e) => onChange({ ...block, value: Number(e.target.value) })} /></label>
+              <label className={styles.formField}><span>Max</span><input type="number" value={block.max ?? 100} onChange={(e) => onChange({ ...block, max: Number(e.target.value) || 100 })} /></label>
+              <label className={styles.formField}><span>Unit</span><input value={block.unit ?? ""} placeholder="%" onChange={(e) => onChange({ ...block, unit: e.target.value })} /></label>
+            </div>
+            <input value={block.note ?? ""} placeholder="Note below the bar (optional)" onChange={(e) => onChange({ ...block, note: e.target.value })} />
+          </div>
+        );
+      case "linkcards":
+        return (
+          <div className={styles.listWrap}>
+            <input value={block.title ?? ""} placeholder="Section heading (optional)" onChange={(e) => onChange({ ...block, title: e.target.value })} />
+            {block.items.map((c, i) => (
+              <div key={i} className={styles.listWrap} style={{ paddingLeft: 10, borderLeft: "2px solid var(--line)" }}>
+                <div className={styles.listItem}>
+                  <input value={c.title} placeholder={`Card ${i + 1} title`} onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, title: e.target.value } : v)) })} />
+                  <button type="button" aria-label={`Remove card ${i + 1}`} onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}>×</button>
+                </div>
+                <input value={c.href} placeholder="https://… or /path" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, href: e.target.value } : v)) })} />
+                <input value={c.desc ?? ""} placeholder="Description (optional)" onChange={(e) => onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? { ...v, desc: e.target.value } : v)) })} />
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, { title: "", href: "", desc: "" }] })}>+ Add link card</Button>
+          </div>
+        );
+      case "compare":
+        return (
+          <div className={styles.listWrap}>
+            <div className={styles.formGrid}>
+              <label className={styles.formField}><span>Column A</span><input value={block.columns[0]} onChange={(e) => onChange({ ...block, columns: [e.target.value, block.columns[1]] })} /></label>
+              <label className={styles.formField}><span>Column B</span><input value={block.columns[1]} onChange={(e) => onChange({ ...block, columns: [block.columns[0], e.target.value] })} /></label>
+            </div>
+            {block.rows.map((r, i) => (
+              <div key={i} className={styles.listItem}>
+                <input value={r.feature} placeholder="Feature" onChange={(e) => onChange({ ...block, rows: block.rows.map((v, idx) => (idx === i ? { ...v, feature: e.target.value } : v)) })} />
+                <input value={r.a} placeholder="A — ✓ / ✗ / text" onChange={(e) => onChange({ ...block, rows: block.rows.map((v, idx) => (idx === i ? { ...v, a: e.target.value } : v)) })} />
+                <input value={r.b} placeholder="B — ✓ / ✗ / text" onChange={(e) => onChange({ ...block, rows: block.rows.map((v, idx) => (idx === i ? { ...v, b: e.target.value } : v)) })} />
+                <button type="button" aria-label={`Remove row ${i + 1}`} onClick={() => onChange({ ...block, rows: block.rows.filter((_, idx) => idx !== i) })}>×</button>
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, rows: [...block.rows, { feature: "", a: "", b: "" }] })}>+ Add row</Button>
+          </div>
+        );
+      case "countdown":
+        return (
+          <div className={styles.calloutWrap}>
+            <input value={block.label ?? ""} placeholder="Heading — e.g. Launching in" onChange={(e) => onChange({ ...block, label: e.target.value })} />
+            <label className={styles.formField}>
+              <span>Date &amp; time</span>
+              <input type="datetime-local" value={block.date?.slice(0, 16)} onChange={(e) => onChange({ ...block, date: e.target.value })} />
+            </label>
+            <input value={block.note ?? ""} placeholder="Note (optional)" onChange={(e) => onChange({ ...block, note: e.target.value })} />
+          </div>
+        );
+      case "embed": {
+        const known = [
+          ["YouTube", "youtube.com"], ["X / Twitter", "x.com"], ["Instagram", "instagram.com"],
+          ["Threads", "threads.net"], ["TikTok", "tiktok.com"], ["Facebook", "facebook.com"],
+          ["LinkedIn", "linkedin.com"], ["Medium", "medium.com"], ["GitHub", "github.com"],
+          ["CodePen", "codepen.io"], ["Spotify", "open.spotify.com"], ["SoundCloud", "soundcloud.com"],
+          ["Vimeo", "vimeo.com"], ["Google Maps", "maps.google.com"], ["Notion", "notion.so"],
+          ["Figma", "figma.com"], ["Canva", "canva.com"], ["Discord", "discord.com"],
+        ] as const;
+        return (
+          <div className={styles.listWrap}>
+            <input
+              value={block.url}
+              placeholder="Paste any link — YouTube, X, Instagram, TikTok, GitHub, Notion…"
+              onChange={(e) => onChange({ ...block, url: e.target.value })}
+            />
+            <input
+              value={block.caption ?? ""}
+              placeholder="Caption (optional)"
+              onChange={(e) => onChange({ ...block, caption: e.target.value })}
+            />
+            <details className={styles.embedHelp}>
+              <summary>Supported platforms</summary>
+              <p className={styles.blockNote}>
+                These render as native embeds. Any other URL still saves and shows as a styled link card.
+              </p>
+              <div className={styles.embedChips}>
+                {known.map(([label, host]) => (
+                  <span key={host} className={styles.embedChip}>{label}</span>
+                ))}
+              </div>
+            </details>
+          </div>
+        );
+      }
+      case "keypoints":
+        return (
+          <div className={styles.listWrap}>
+            <input
+              value={block.title ?? ""}
+              placeholder="Heading (e.g. Key takeaways)"
+              onChange={(e) => onChange({ ...block, title: e.target.value })}
+            />
+            {block.items.map((item, i) => (
+              <div key={i} className={styles.listItem}>
+                <input
+                  value={item}
+                  placeholder={`Takeaway ${i + 1}`}
+                  onChange={(e) =>
+                    onChange({ ...block, items: block.items.map((v, idx) => (idx === i ? e.target.value : v)) })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      onChange({ ...block, items: [...block.items.slice(0, i + 1), "", ...block.items.slice(i + 1)] });
+                    }
+                  }}
+                />
+                {block.items.length > 1 ? (
+                  <button
+                    type="button"
+                    aria-label={`Remove takeaway ${i + 1}`}
+                    onClick={() => onChange({ ...block, items: block.items.filter((_, idx) => idx !== i) })}
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            <Button variant="text" size="sm" onClick={() => onChange({ ...block, items: [...block.items, ""] })}>
+              + Add takeaway
+            </Button>
+          </div>
+        );
+      default: {
+        const html = typeof (block as { html?: unknown }).html === "string" ? (block as { html: string }).html : "";
+        return (
+          <div
+            onPaste={(e) => {
+              // Smart paste: a bare image/video/embed URL becomes its own block.
+              const pBlock = block as { type: "p"; html: string };
+              const text = e.clipboardData.getData("text/plain").trim();
+              if (onImportUrl && text && /^https?:\/\/\S+$/.test(text) && richIsEmpty(pBlock.html)) {
+                const kind = urlBlockKind(text);
+                if (kind) {
+                  e.preventDefault();
+                  onImportUrl(pBlock, kind);
+                  return;
+                }
+              }
+              // Slash menu: “/” in an empty paragraph opens the insert palette.
+              if (onOpenPaletteInsert && richIsEmpty(pBlock.html)) {
+                const el = e.currentTarget as HTMLElement;
+                window.setTimeout(() => {
+                  if (el.textContent?.trim() === "/") onOpenPaletteInsert();
+                }, 0);
+              }
+            }}
+          >
+            <RichEditor
+              value={html}
+              onChange={(next) => onChange({ ...(block as { type: "p"; html: string }), html: next })}
+            />
+          </div>
+        );
+      }
+    }
+  })());
+}
+
+/* Before/after comparison: two photos + labels; the site renders a draggable
+   slider between them. */
+/* Social presets: filling the label and icon from the host keeps a person's
+   links consistent without the author hand-picking icons every time. */
+const SOCIAL_PRESETS = [
+  { id: "github", label: "GitHub", host: "github.com" },
+  { id: "linkedin", label: "LinkedIn", host: "linkedin.com" },
+  { id: "x", label: "X", host: "x.com" },
+  { id: "twitter", label: "Twitter", host: "twitter.com" },
+  { id: "threads", label: "Threads", host: "threads.com" },
+  { id: "instagram", label: "Instagram", host: "instagram.com" },
+  { id: "youtube", label: "YouTube", host: "youtube.com" },
+  { id: "facebook", label: "Facebook", host: "facebook.com" },
+  { id: "email", label: "Email", host: "mailto:" },
+];
+
+const LINK_ICONS = ["github", "linkedin", "x", "threads", "instagram", "youtube", "facebook", "email", "website"];
+
+/** Detect the social network from a URL so pasting a link fills the icon. */
+function iconForHref(href: string): string {
+  const h = href.toLowerCase();
+  const hit = SOCIAL_PRESETS.find((p) => h.includes(p.host));
+  return hit ? hit.id : /^https?:/.test(h) ? "website" : "email";
+}
+
+function PersonEditor({ block, onChange }: { block: Extract<Block, { type: "person" }>; onChange: (b: Block) => void }) {
+  const toast = useToast();
+  const [uploading, setUploading] = useState(false);
+  const links = block.links ?? [];
+
+  function setLinks(next: { label: string; href: string; icon?: string }[]) {
+    onChange({ ...block, links: next });
+  }
+
+  function addPreset(preset: (typeof SOCIAL_PRESETS)[number]) {
+    if (links.some((l) => l.icon === preset.id)) {
+      toast(`${preset.label} is already added`);
+      return;
+    }
+    setLinks([...links, { label: preset.label, href: preset.host === "mailto:" ? "mailto:" : "", icon: preset.id }]);
+  }
+
+  async function uploadAvatar(file: File) {
+    setUploading(true);
+    try {
+      const { src } = await api.upload(file);
+      onChange({ ...block, avatar: src });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
     }
   }
+
+  return (
+    <div className={styles.personEditor}>
+      <div className={styles.personTop}>
+        <label className={styles.personAvatarPick} aria-label="Upload avatar">
+          {block.avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={block.avatar} alt="" />
+          ) : (
+            <span>{block.name.trim().slice(0, 1).toUpperCase() || "?"}</span>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadAvatar(f);
+              e.target.value = "";
+            }}
+          />
+          <em>{uploading ? "…" : "Photo"}</em>
+        </label>
+        <div className={styles.personFields}>
+          <input value={block.name} placeholder="Name" onChange={(e) => onChange({ ...block, name: e.target.value })} />
+          <input value={block.role ?? ""} placeholder="Role — e.g. Security researcher" onChange={(e) => onChange({ ...block, role: e.target.value })} />
+        </div>
+      </div>
+
+      <input value={block.avatar ?? ""} placeholder="Avatar URL (or upload above)" onChange={(e) => onChange({ ...block, avatar: e.target.value })} />
+
+      <RichEditor value={block.html ?? ""} onChange={(html) => onChange({ ...block, html })} placeholder="Short bio or quote (optional)" minHeight={48} />
+
+      <div className={styles.personLinksHead}>
+        <span>Links</span>
+        <div className={styles.socialRow}>
+          {SOCIAL_PRESETS.map((p) => (
+            <button key={p.id} type="button" className={styles.socialChip} onClick={() => addPreset(p)} title={`Add ${p.label}`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {links.length === 0 ? <p className={styles.blockNote}>No links yet — pick a network above or add a custom one.</p> : null}
+
+      {links.map((l, i) => (
+        <div key={i} className={styles.personLinkRow}>
+          <select
+            aria-label={`Icon for link ${i + 1}`}
+            value={l.icon ?? iconForHref(l.href)}
+            onChange={(e) => setLinks(links.map((v, idx) => (idx === i ? { ...v, icon: e.target.value } : v)))}
+          >
+            {LINK_ICONS.map((id) => (
+              <option key={id} value={id}>{id}</option>
+            ))}
+          </select>
+          <input
+            value={l.label}
+            placeholder="Label"
+            onChange={(e) => setLinks(links.map((v, idx) => (idx === i ? { ...v, label: e.target.value } : v)))}
+          />
+          <input
+            value={l.href}
+            placeholder="https://… or mailto:"
+            onChange={(e) => {
+              const href = e.target.value;
+              setLinks(links.map((v, idx) => {
+                if (idx !== i) return v;
+                // Auto-fill the icon while the author types a known host.
+                const auto = /^https?:|^mailto:/i.test(href) ? iconForHref(href) : v.icon;
+                return { ...v, href, ...(auto ? { icon: auto } : {}) };
+              }));
+            }}
+          />
+          <div className={styles.personLinkTools}>
+            <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => {
+              const next = [...links];
+              [next[i - 1], next[i]] = [next[i], next[i - 1]];
+              setLinks(next);
+            }}>↑</button>
+            <button type="button" aria-label="Move down" disabled={i === links.length - 1} onClick={() => {
+              const next = [...links];
+              [next[i + 1], next[i]] = [next[i], next[i + 1]];
+              setLinks(next);
+            }}>↓</button>
+            <button type="button" aria-label={`Remove link ${i + 1}`} onClick={() => setLinks(links.filter((_, idx) => idx !== i))}>×</button>
+          </div>
+        </div>
+      ))}
+
+      <Button variant="text" size="sm" onClick={() => setLinks([...links, { label: "", href: "", icon: "website" }])}>
+        + Add custom link
+      </Button>
+    </div>
+  );
+}
+
+function BeforeAfterEditor({ block, onChange, imageOptions }: { block: Extract<Block, { type: "bafter" }>; onChange: (b: Block) => void; imageOptions: { src: string; label: string }[] }) {
+  const side = (which: "before" | "after") => (
+    <div className={styles.listWrap}>
+      <select
+        value={imageOptions.some((g) => g.src === block[which]) || !block[which] ? block[which] : ""}
+        onChange={(e) => onChange({ ...block, [which]: e.target.value })}
+      >
+        <option value="">Choose an image…</option>
+        {imageOptions.map((g) => (
+          <option key={g.src} value={g.src}>{g.label}</option>
+        ))}
+      </select>
+      <input
+        value={block[which]}
+        placeholder={`Image URL for “${which}”`}
+        onChange={(e) => onChange({ ...block, [which]: e.target.value.trim() })}
+      />
+      <input
+        value={block[which === "before" ? "labelBefore" : "labelAfter"] ?? ""}
+        placeholder={`Label — ${which}`}
+        onChange={(e) => onChange({ ...block, [which === "before" ? "labelBefore" : "labelAfter"]: e.target.value })}
+      />
+    </div>
+  );
+  return (
+    <div className={styles.imageWrap}>
+      <p className={styles.blockNote}>Pick two photos of the same frame — readers drag the slider between them.</p>
+      <strong>Before</strong>
+      {side("before")}
+      <strong>After</strong>
+      {side("after")}
+    </div>
+  );
 }
 
 /* Image block that also accepts video: a YouTube/Vimeo link or an uploaded

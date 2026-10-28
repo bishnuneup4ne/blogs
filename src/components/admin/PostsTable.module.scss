@@ -104,17 +104,27 @@
 
 .thumb {
   flex: none;
+  display: block;
   width: 52px;
   height: 38px;
+  padding: 0;
+  border: none;
   border-radius: 9px;
   overflow: hidden;
   background: var(--gray-100);
+  cursor: pointer;
 
   img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
+}
+
+.thumb:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 2px;
 }
 
 .postText {
@@ -124,13 +134,19 @@
 }
 
 .postTitle {
+  display: block;
+  max-width: 360px;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
   font-size: 13.5px;
   font-weight: 500;
   color: var(--gray-900);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 360px;
 }
 
 .postTitle:hover {
@@ -192,5 +208,20 @@
 
   .postTitle {
     max-width: none;
+  }
+}
+
+/* Featured-only toggle inside the toolbar. */
+.featureToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted, var(--gray-600, #5f6368));
+  cursor: pointer;
+  white-space: nowrap;
+
+  input {
+    accent-color: var(--blue-600, #1a73e8);
   }
 }

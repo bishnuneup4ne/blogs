@@ -7,8 +7,7 @@ import { countLabel, formatDate } from "@/lib/dates";
 import { routes } from "@/lib/routes";
 import styles from "./blog.module.scss";
 
-const description =
-  "Every post from newest to oldest: engineering, security, field notes, life, photography and essays.";
+const description = "Every post from newest to oldest.";
 
 export const metadata: Metadata = {
   title: "Feed",

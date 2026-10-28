@@ -64,10 +64,12 @@
 
 .brand {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 7px;
   flex: none;
   min-width: 0;
+  /* Comfortable hit area on touch; the visible wordmark stays the same size. */
+  min-height: 44px;
   text-decoration: none;
 }
 
@@ -434,12 +436,21 @@
 }
 
 @media (max-width: 560px) {
+  /* A bare wordmark reads as a username; keep the kicker so the masthead
+     still says what this is, sized down to fit the bar. */
   .brandName {
-    font-size: 19px;
+    font-size: 17px;
+    letter-spacing: -0.3px;
   }
 
   .brandKicker {
-    display: none;
+    font-size: 9.5px;
+  }
+
+  .brand {
+    gap: 5px;
+    flex-wrap: wrap;
+    align-content: center;
   }
 
   .cta {

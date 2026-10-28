@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface ApiPost {
   id: string;
@@ -14,6 +14,7 @@ export interface ApiPost {
   cover_url: string | null;
   cover_alt: string | null;
   cover_height?: number | null;
+  cover_focal?: number | null;
   date: string;
   reading_minutes: number;
   blocks: unknown[];
@@ -39,8 +40,10 @@ export interface ApiAuthor {
   role: string;
   email: string;
   avatar_url: string;
-  short_bio: string;
-  bio: string;
+  short_bio?: string;
+  bio?: string;
+  status?: "active" | "inactive";
+  social_links?: { label: string; url: string; icon?: string }[];
   sort_order: number;
 }
 
@@ -85,10 +88,30 @@ export interface ApiSubscriber {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    headers: { "content-type": "application/json" },
-    ...init,
-  });
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      ...init,
+      // Merge rather than replace, so a caller's headers survive. FormData
+      // bodies must NOT carry content-type — the browser sets the multipart
+      // boundary itself, and overriding it makes the POST fail outright.
+      headers: {
+        ...(init?.body instanceof FormData ? {} : { "content-type": "application/json" }),
+        ...(init?.headers as Record<string, string> | undefined),
+      },
+      // A wedged request would otherwise spin forever with no message.
+      signal: init?.signal ?? AbortSignal.timeout(30_000),
+    });
+  } catch (error) {
+    // Navigating away cancels in-flight fetches; that is not a failure.
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    const timedOut = error instanceof DOMException && error.name === "TimeoutError";
+    throw new Error(
+      timedOut
+        ? "The server took too long to respond. Check your connection and try again."
+        : "Could not reach the server. Check your connection and try again.",
+    );
+  }
   if (!res.ok) {
     // An expired session turns every screen into "Unauthorized" with no way
     // out — send the editor back to sign-in instead.
@@ -107,16 +130,28 @@ export function useApiCollection<T>(path: string, key: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await request<{ [k: string]: T[] }>(path);
+      if (!alive.current) return;
       setItems(data[key] ?? []);
       setError("");
     } catch (e) {
+      // An aborted request means the screen went away — no banner for that.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      if (!alive.current) return;
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
-      setLoading(false);
+      if (alive.current) setLoading(false);
     }
   }, [path, key]);
 
@@ -169,6 +204,7 @@ export interface ApiMessage {
 export interface ApiComment {
   id: string;
   post_slug: string;
+  parent_id?: string | null;
   name: string;
   email: string;
   body: string;

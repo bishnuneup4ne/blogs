@@ -38,7 +38,7 @@
 }
 
 .studio .btn-primary:hover,
-.studio .btn-primary:focus {
+.studio .btn-primary:focus-visible {
   background: var(--blue-900);
   color: var(--white);
   box-shadow: var(--shadow-1);

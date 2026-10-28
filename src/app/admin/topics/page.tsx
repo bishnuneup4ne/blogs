@@ -89,6 +89,8 @@ export default function AdminTopicsPage() {
               description: topic.description,
               pastel: topic.pastel,
               color: topic.color,
+              image_url: topic.image_url,
+              shape: topic.shape,
               sort_order: topic.sort_order,
             });
             await topicsC.reload();

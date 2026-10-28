@@ -148,24 +148,6 @@ export function EmptyState({
   );
 }
 
-export function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className={styles.field}>
-      <span className={styles.fieldLabel}>{label}</span>
-      {children}
-      {hint ? <span className={styles.fieldHint}>{hint}</span> : null}
-    </label>
-  );
-}
-
 export function Segmented<T extends string>({
   options,
   value,

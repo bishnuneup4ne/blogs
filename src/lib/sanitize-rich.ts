@@ -1,4 +1,4 @@
-import type { Block, ChartBlock, FlowEdge, FlowNode, FlowNodeShape } from "@/lib/types";
+import type { AccordionItem, Block, ChartBlock, CompareRow, FlowEdge, FlowNode, FlowNodeShape, GlossaryTerm, LinkCard, PersonLink, StatItem, StepItem, TimeStripItem } from "@/lib/types";
 
 const ALLOWED_TAGS = new Set([
   "a", "p", "br", "strong", "em", "b", "i", "u", "s", "strike", "mark", "sub", "sup", "small", "kbd", "code", "pre", "ul", "ol", "li",
@@ -114,6 +114,21 @@ function escapeText(value: string): string {
 
 function escapeAttr(value: string): string {
   return value.replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+/** Links humans click: any http(s) host, relative path, mailto or anchor.
+    Unlike safeUrl (used for media) this is not tied to the storage host. */
+function safeLinkUrl(raw: string): string | null {
+  const value = raw.trim();
+  if (!value || /[\u0000-\u001f\u007f\s]/.test(value)) return null;
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+  if (value.startsWith("#") || /^mailto:[^\s]+$/i.test(value)) return value;
+  if (!/^https?:\/\//i.test(value)) return null;
+  try {
+    return new URL(value).toString();
+  } catch {
+    return null;
+  }
 }
 
 function safeUrl(raw: string, image = false, allowedHostnames: Set<string> | null = null): string | null {
@@ -271,6 +286,11 @@ function text(value: unknown, max = 20_000): string | undefined {
 
 function number(value: unknown): number | undefined {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+/** Keep a variant string only if it's one of the block's allowed styles. */
+function variant<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
+  return typeof value === "string" && (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
 }
 
 function stringList(value: unknown, maxItems = 100, maxLength = 2_000): string[] {
@@ -494,18 +514,19 @@ function normaliseBlock(raw: unknown): Block | null {
       return { type, text: heading, id };
     }
     case "quote": {
-      const variant = source.variant === "card" ? "card" : source.variant === "bar" ? "bar" : undefined;
+      const qVariant = variant(source.variant, ["bar", "card", "big", "plain"]);
       // Only simple hex/rgb values — anything else could smuggle `url(...)`.
       const bg = typeof source.bg === "string" && /^#[0-9a-f]{3,8}$/i.test(source.bg.trim()) ? source.bg.trim() : undefined;
       const size = source.size === "sm" || source.size === "lg" ? source.size : undefined;
       return {
         type, html: sanitizeRichText(String(source.html ?? "")), cite: text(source.cite, 300),
-        ...(variant ? { variant } : {}), ...(bg ? { bg } : {}), ...(size ? { size } : {}),
+        ...(qVariant ? { variant: qVariant } : {}), ...(bg ? { bg } : {}), ...(size ? { size } : {}),
       };
     }
     case "callout": {
-      const tone = source.tone === "tip" || source.tone === "warning" ? source.tone : "note";
-      return { type, tone, title: text(source.title, 200), html: sanitizeRichText(String(source.html ?? "")) };
+      const tone = source.tone === "tip" || source.tone === "warning" || source.tone === "info" ? source.tone : "note";
+      const v = variant(source.variant, ["chip", "left", "outline", "filled"]);
+      return { type, tone, title: text(source.title, 200), html: sanitizeRichText(String(source.html ?? "")), icon: text(source.icon, 8) ?? undefined, ...(v ? { variant: v } : {}) };
     }
     case "code":
       return {
@@ -574,9 +595,10 @@ function normaliseBlock(raw: unknown): Block | null {
       const eyebrow = text(source.eyebrow, 80);
       const cta = text(source.cta, 80);
       const color = ["blue", "green", "mint", "yellow", "red", "purple", "gray"].includes(String(source.color)) ? String(source.color) : null;
+      const v = variant(source.variant, ["tout", "banner", "minimal"]);
       return {
         type, slug: relSlug, title: relTitle, description: text(source.description, 600),
-        ...(image ? { image } : {}), ...(eyebrow ? { eyebrow } : {}), ...(cta ? { cta } : {}), ...(color ? { color } : {}),
+        ...(image ? { image } : {}), ...(eyebrow ? { eyebrow } : {}), ...(cta ? { cta } : {}), ...(color ? { color } : {}), ...(v ? { variant: v } : {}),
       };
     }
     case "table": {
@@ -587,7 +609,8 @@ function normaliseBlock(raw: unknown): Block | null {
             .slice(0, 100)
             .map((row) => stringList(row, 20, 2_000))
         : [];
-      return { type, head, rows };
+      const v = variant(source.variant, ["default", "striped", "cards"]);
+      return { type, head, rows, ...(v ? { variant: v } : {}) };
     }
     case "chart": {
       const chart = chartBlock(source.chart);
@@ -597,19 +620,289 @@ function normaliseBlock(raw: unknown): Block | null {
       const label = text(source.label, 80)?.trim() ?? "";
       const rawHref = String(source.href ?? "").trim();
       const href = rawHref ? (safeUrl(rawHref, false) ?? "") : "";
+      const v = variant(source.variant, ["button", "banner", "link"]);
       return {
         type,
         label,
         href,
         style: source.style === "outline" ? "outline" : "primary",
         note: text(source.note, 200) ?? undefined,
+        ...(v ? { variant: v } : {}),
       };
     }
     case "footnote": {
       return { type, text: text(source.text, 800)?.trim() ?? "" };
     }
+    case "embed": {
+      // Embeds are external players (Instagram, X, TikTok, GitHub, CodePen…),
+      // so the Supabase-storage host restriction that applies to images must
+      // not apply here — only require a well-formed http(s)/relative URL.
+      const raw = String(source.url ?? "").trim();
+      if (!raw) return { type, url: "", caption: text(source.caption, 600) ?? undefined };
+      let parsed: URL | null = null;
+      try {
+        parsed = new URL(raw);
+      } catch {
+        parsed = null;
+      }
+      const ok = parsed
+        ? parsed.protocol === "https:" || parsed.protocol === "http:"
+        : raw.startsWith("/") && !raw.startsWith("//");
+      if (!ok) return null;
+      return { type, url: raw.slice(0, 2_000), caption: text(source.caption, 600) ?? undefined };
+    }
+    case "keypoints": {
+      // Drop empty rows rather than the whole block — they are the normal
+      // state of a freshly inserted takeaway list.
+      const items = stringList(source.items)
+        .map((item) => sanitizeRichText(item))
+        .filter((item) => item.replace(/<[^>]+>/g, "").trim() || /<img|iframe|video/i.test(item))
+        .slice(0, 12);
+      const kpV = variant(source.variant, ["card", "plain", "checklist"]);
+      return { type, title: text(source.title, 200) ?? undefined, items, ...(kpV ? { variant: kpV } : {}) };
+    }
+    case "imgtext": {
+      const rawSrc = String(source.src ?? "").trim();
+      const src = rawSrc ? safeUrl(rawSrc, true) : "";
+      if (rawSrc && !src) return null;
+      return {
+        type,
+        src: src ?? "",
+        alt: text(source.alt, 400) ?? "",
+        html: sanitizeRichText(String(source.html ?? "")),
+        ...(source.side === "right" ? { side: "right" as const } : {}),
+      };
+    }
+    case "stats": {
+      const items = Array.isArray(source.items)
+        ? source.items
+            .slice(0, 6)
+            .map((it): StatItem | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const value = text(o.value, 40)?.trim();
+              const label = text(o.label, 160)?.trim();
+              if (!value && !label) return null;
+              const note = text(o.note, 200);
+              return { value: value ?? "", label: label ?? "", ...(note ? { note } : {}) };
+            })
+            .filter((x): x is StatItem => x !== null)
+        : [];
+      if (!items.length) return null;
+      const cols = Number(source.columns);
+      const v = variant(source.variant, ["cards", "plain", "grid"]);
+      return { type, items, ...(Number.isFinite(cols) ? { columns: Math.min(4, Math.max(2, Math.round(cols))) } : {}), ...(v ? { variant: v } : {}) };
+    }
+    case "timestrip": {
+      const items = Array.isArray(source.items)
+        ? source.items
+            .slice(0, 24)
+            .map((it): TimeStripItem | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const date = text(o.date, 40)?.trim();
+              const title = text(o.title, 200)?.trim();
+              if (!date && !title) return null;
+              const detail = text(o.detail, 600);
+              return { date: date ?? "", title: title ?? "", ...(detail ? { detail } : {}) };
+            })
+            .filter((x): x is TimeStripItem => x !== null)
+        : [];
+      if (!items.length) return null;
+      const v = variant(source.variant, ["spine", "cards", "rows"]);
+      return { type, items, title: text(source.title, 120) ?? undefined, ...(v ? { variant: v } : {}) };
+    }
+    case "bafter": {
+      const before = String(source.before ?? "").trim();
+      const after = String(source.after ?? "").trim();
+      // A freshly inserted block has no images yet — keep it so saves round-trip.
+      if (!before && !after) {
+        return { type, before: "", after: "", labelBefore: text(source.labelBefore, 40), labelAfter: text(source.labelAfter, 40) };
+      }
+      const b = before ? safeUrl(before, true) : "";
+      const a = after ? safeUrl(after, true) : "";
+      if ((before && !b) || (after && !a)) return null;
+      return {
+        type,
+        before: b ?? "",
+        after: a ?? "",
+        labelBefore: text(source.labelBefore, 40),
+        labelAfter: text(source.labelAfter, 40),
+        alt: text(source.alt, 400) ?? undefined,
+      };
+    }
     case "jumplinks":
-      return { type, title: text(source.title, 80) ?? undefined };
+      // Legacy block: no longer rendered, but must still round-trip a save.
+      return { type, title: text(source.title, 200) ?? undefined };
+    case "accordion": {
+      const items = Array.isArray(source.items)
+        ? source.items
+            .slice(0, 30)
+            .map((it): AccordionItem | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const q = text(o.q, 300)?.trim();
+              if (!q) return null;
+              return { q, html: sanitizeRichText(String(o.html ?? "")) };
+            })
+            .filter((x): x is AccordionItem => x !== null)
+        : [];
+      if (!items.length) return null;
+      const v = variant(source.variant, ["cards", "divided", "numbered"]);
+      return { type, title: text(source.title, 120) ?? undefined, items, ...(v ? { variant: v } : {}) };
+    }
+    case "proscons": {
+      const pros = stringList(source.pros, 20, 400).map((item) => sanitizeRichText(item));
+      const cons = stringList(source.cons, 20, 400).map((item) => sanitizeRichText(item));
+      if (!pros.length && !cons.length) return null;
+      const v = variant(source.variant, ["columns", "split", "stacked"]);
+      return {
+        type,
+        pros,
+        cons,
+        prosLabel: text(source.prosLabel, 60) ?? undefined,
+        consLabel: text(source.consLabel, 60) ?? undefined,
+        ...(v ? { variant: v } : {}),
+      };
+    }
+    case "steps": {
+      const items = Array.isArray(source.items)
+        ? source.items
+            .slice(0, 30)
+            .map((it): StepItem | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const t = text(o.title, 200)?.trim();
+              if (!t) return null;
+              const detail = text(o.detail, 800);
+              return { title: t, ...(detail ? { detail } : {}) };
+            })
+            .filter((x): x is StepItem => x !== null)
+        : [];
+      if (!items.length) return null;
+      const v = variant(source.variant, ["numbered", "connected", "cards"]);
+      return { type, title: text(source.title, 120) ?? undefined, items, ...(v ? { variant: v } : {}) };
+    }
+    case "glossary": {
+      const terms = Array.isArray(source.terms)
+        ? source.terms
+            .slice(0, 50)
+            .map((it): GlossaryTerm | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const term = text(o.term, 120)?.trim();
+              const def = text(o.def, 600)?.trim();
+              if (!term || !def) return null;
+              return { term, def };
+            })
+            .filter((x): x is GlossaryTerm => x !== null)
+        : [];
+      if (!terms.length) return null;
+      const v = variant(source.variant, ["rows", "grid", "chips"]);
+      return { type, title: text(source.title, 120) ?? undefined, terms, ...(v ? { variant: v } : {}) };
+    }
+    case "diff": {
+      const before = String(source.before ?? "").slice(0, 20_000);
+      const after = String(source.after ?? "").slice(0, 20_000);
+      if (!before.trim() && !after.trim()) return null;
+      const dv = variant(source.variant, ["sidebyside", "unified"]);
+      return {
+        type,
+        lang: text(source.lang, 40) ?? undefined,
+        filename: text(source.filename, 200) ?? undefined,
+        before,
+        after,
+        ...(dv ? { variant: dv } : {}),
+      };
+    }
+    case "person": {
+      const name = text(source.name, 120)?.trim();
+      if (!name) return null;
+      const links = Array.isArray(source.links)
+        ? source.links
+            .slice(0, 8)
+            .map((it): PersonLink | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const label = text(o.label, 60)?.trim();
+              const href = safeLinkUrl(String(o.href ?? ""));
+              if (!label || !href) return null;
+              const icon = text(o.icon, 24)?.trim().toLowerCase();
+              return { label, href, ...(icon ? { icon } : {}) };
+            })
+            .filter((x): x is PersonLink => x !== null)
+        : [];
+      const avatar = source.avatar ? safeUrl(String(source.avatar), true) : null;
+      const pv = variant(source.variant, ["profile", "card", "inline", "quote"]);
+      return {
+        type,
+        name,
+        role: text(source.role, 120) ?? undefined,
+        ...(avatar ? { avatar } : {}),
+        html: sanitizeRichText(String(source.html ?? "")) || undefined,
+        ...(links.length ? { links } : {}),
+        ...(pv ? { variant: pv } : {}),
+      };
+    }
+    case "progress": {
+      const max = number(source.max) ?? 100;
+      const value = number(source.value);
+      if (typeof value !== "number" || max <= 0) return null;
+      const color = /^#[0-9a-f]{3,8}$/i.test(String(source.color ?? "").trim()) ? String(source.color).trim() : undefined;
+      const v = variant(source.variant, ["bar", "ring", "segmented"]);
+      return {
+        type,
+        label: text(source.label, 120) ?? undefined,
+        value: Math.min(Math.max(value, 0), max),
+        max,
+        unit: text(source.unit, 24) ?? undefined,
+        note: text(source.note, 200) ?? undefined,
+        ...(color ? { color } : {}),
+        ...(v ? { variant: v } : {}),
+      };
+    }
+    case "linkcards": {
+      const items = Array.isArray(source.items)
+        ? source.items
+            .slice(0, 12)
+            .map((it): LinkCard | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const title = text(o.title, 120)?.trim();
+              const href = safeLinkUrl(String(o.href ?? ""));
+              if (!title || !href) return null;
+              const desc = text(o.desc, 200);
+              return { title, href, ...(desc ? { desc } : {}) };
+            })
+            .filter((x): x is LinkCard => x !== null)
+        : [];
+      if (!items.length) return null;
+      const v = variant(source.variant, ["grid", "list", "tiles"]);
+      return { type, title: text(source.title, 120) ?? undefined, items, ...(v ? { variant: v } : {}) };
+    }
+    case "compare": {
+      const columnsRaw = Array.isArray(source.columns) ? source.columns.slice(0, 2) : [];
+      const columns: [string, string] = [String(columnsRaw[0] ?? "Option A").slice(0, 60), String(columnsRaw[1] ?? "Option B").slice(0, 60)];
+      const rows = Array.isArray(source.rows)
+        ? source.rows
+            .slice(0, 30)
+            .map((it): CompareRow | null => {
+              const o = (it ?? {}) as Record<string, unknown>;
+              const feature = text(o.feature, 160)?.trim();
+              if (!feature) return null;
+              return { feature, a: String(o.a ?? "").slice(0, 120), b: String(o.b ?? "").slice(0, 120) };
+            })
+            .filter((x): x is CompareRow => x !== null)
+        : [];
+      if (!rows.length) return null;
+      const v = variant(source.variant, ["table", "columns"]);
+      return { type, columns, rows, ...(v ? { variant: v } : {}) };
+    }
+    case "countdown": {
+      const date = text(source.date, 40)?.trim();
+      if (!date || Number.isNaN(Date.parse(date))) return null;
+      const v = variant(source.variant, ["grid", "inline"]);
+      return {
+        type,
+        label: text(source.label, 120) ?? undefined,
+        date,
+        note: text(source.note, 200) ?? undefined,
+        ...(v ? { variant: v } : {}),
+      };
+    }
     case "divider":
       return { type };
     default:
@@ -617,11 +910,38 @@ function normaliseBlock(raw: unknown): Block | null {
   }
 }
 
+/** Types the sanitizer refuses, so a save can say which block to fix. */
+export function findInvalidBlock(value: unknown): { index: number; type: string } | null {
+  if (!Array.isArray(value)) return null;
+  for (let i = 0; i < Math.min(value.length, MAX_BLOCKS); i++) {
+    if (normaliseBlock(value[i]) === null) {
+      const type = String((value[i] as Record<string, unknown> | null)?.type ?? "unknown");
+      return { index: i, type };
+    }
+  }
+  return null;
+}
+
+/** Colour keys every block may carry; applied by the renderer as CSS vars. */
+const BLOCK_COLOR_KEYS = ["accent", "bg", "text"] as const;
+
+function withBlockColors(block: Block | null, source: Record<string, unknown>): Block | null {
+  if (!block) return null;
+  for (const key of BLOCK_COLOR_KEYS) {
+    const raw = source[key];
+    if (typeof raw !== "string") continue;
+    const value = raw.trim();
+    // Only plain hex reaches CSS — anything else could inject url() or a quote.
+    if (/^#[0-9a-f]{3,8}$/i.test(value)) (block as Record<string, unknown>)[key] = value;
+  }
+  return block;
+}
+
 export function normalizeBlocks(value: unknown): Block[] {
   if (!Array.isArray(value)) return [];
   const blocks = value
     .slice(0, MAX_BLOCKS)
-    .map(normaliseBlock)
+    .map((raw) => withBlockColors(normaliseBlock(raw), (raw ?? {}) as Record<string, unknown>))
     .filter((block): block is Block => block !== null);
   const seen = new Map<string, number>();
   for (const block of blocks) {

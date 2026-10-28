@@ -9,16 +9,6 @@ export function formatDate(iso: string, opts: { long?: boolean } = {}): string {
   }).format(date);
 }
 
-export function shortDate(iso: string): string {
-  const date = new Date(iso);
-  if (!iso || Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "long",
-    timeZone: "UTC",
-  }).format(date);
-}
-
 export function relativeDate(iso: string): string {
   const date = new Date(iso);
   if (!iso || Number.isNaN(date.getTime())) return "";

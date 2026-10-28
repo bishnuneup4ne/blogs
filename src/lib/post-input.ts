@@ -1,6 +1,6 @@
 import "server-only";
 
-import { normalizeBlocks, safeImageUrl } from "@/lib/sanitize-rich";
+import { findInvalidBlock, normalizeBlocks, safeImageUrl } from "@/lib/sanitize-rich";
 import type { Block } from "@/lib/types";
 
 const STATUSES = ["draft", "review", "scheduled", "published"] as const;
@@ -117,6 +117,7 @@ export function parsePostInput(input: unknown, options: { partial: boolean; titl
 
     // Write the real columns when the schema has them...
     if (hasCoverHeight() && hasHeight) data.cover_height = Math.round(h);
+    if (hasCoverHeight()) data.cover_focal = focal;
 
     // ...and ALWAYS mirror into cover_alt, which every schema has. The read
     // path prefers the columns and falls back to this tag, so the value
@@ -141,7 +142,15 @@ export function parsePostInput(input: unknown, options: { partial: boolean; titl
   if (has("blocks")) {
     if (!Array.isArray(input.blocks)) return { ok: false, error: "Blocks must be an array" };
     const blocks = normalizeBlocks(input.blocks);
-    if (blocks.length !== input.blocks.length) return { ok: false, error: "One or more content blocks are invalid" };
+    if (blocks.length !== input.blocks.length) {
+      const bad = findInvalidBlock(input.blocks);
+      return {
+        ok: false,
+        error: bad
+          ? `Block ${bad.index + 1} (“${bad.type}”) is invalid — remove or replace it, then save again.`
+          : "One or more content blocks are invalid",
+      };
+    }
     data.blocks = blocks;
   } else if (!options.partial) {
     data.blocks = [];

@@ -73,9 +73,12 @@ export default function AdminLoginPage() {
 
         <div className={styles.body}>
           <div className={styles.intro}>
-            <p className={styles.eyebrow}>Private studio</p>
+            <p className={styles.eyebrow}>
+              <span className={styles.eyebrowDot} aria-hidden="true" />
+              Private studio
+            </p>
             <h1 id="studio-title" className={styles.title}>
-              Sign in to write.
+              Sign in to <span className={styles.accent}>write.</span>
             </h1>
             <p className={styles.sub}>
               The archive, the drafts, and the mailing list live behind one password.
@@ -144,7 +147,12 @@ export default function AdminLoginPage() {
                   Checking…
                 </>
               ) : (
-                "Sign in"
+                <>
+                  Sign in
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </>
               )}
             </button>
 
@@ -167,6 +175,7 @@ export default function AdminLoginPage() {
       <aside className={styles.art} aria-hidden="true">
         <div className={styles.glowA} />
         <div className={styles.glowB} />
+        <div className={styles.artGrid} />
         <div className={styles.preview}>
           <div className={styles.previewTop}>
             <span className={styles.chip}>Draft</span>
@@ -182,6 +191,12 @@ export default function AdminLoginPage() {
             <span className={styles.dot} />
             Autosaved just now
           </div>
+        </div>
+
+        <div className={styles.floatCard}>
+          <span className={styles.floatLabel}>Subscribers</span>
+          <strong className={styles.floatValue}>1,204</strong>
+          <span className={styles.floatTrend}>↑ 38 this week</span>
         </div>
       </aside>
     </main>

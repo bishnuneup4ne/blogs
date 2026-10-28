@@ -223,8 +223,9 @@
 }
 
 .card:hover .cardCta {
-  border-color: var(--gray-900);
+  border-color: var(--blue-600);
   background: var(--white);
+  color: var(--blue-700);
 
   svg {
     transform: translateX(2px);

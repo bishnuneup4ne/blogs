@@ -102,7 +102,24 @@
   align-items: stretch;
 }
 
-/* Shared action pill — always below the content, never over an image */
+/* Section heads get an editorial treatment: rule + label rhythm. */
+.section h2.section-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gray-200), transparent);
+  }
+}
+
+/* Shared action pill — always below the content, never over an image.\n   Inverts to ink-on-white → white-on-ink on hover, arrow slides. */
 .cardBtn {
   margin-top: auto;
   align-self: flex-start;
@@ -110,48 +127,71 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 46px;
+  height: 44px;
   padding: 0 20px;
-  border: 1px solid var(--gray-300);
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--white);
-  color: var(--gray-900);
+  background: var(--blue-600);
+  color: var(--white);
   font-family: var(--font-ui);
   font-size: 15px;
   font-weight: 500;
   white-space: nowrap;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+
+  svg {
+    transition: transform 160ms ease;
+  }
 
   &:hover {
-    border-color: var(--gray-900);
-    background: var(--gray-50);
+    background: var(--blue-900);
+    color: var(--white);
+    box-shadow: 0 10px 22px -14px rgb(32 33 36 / 55%);
+
+    svg {
+      transform: translateX(3px);
+    }
   }
 }
 
 /* ---------- Topic card — white with hairline; wash tile when no image ---- */
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 22px;
-  border-radius: var(--radius-card);
+  gap: 14px;
+  padding: 24px;
+  border-radius: 22px;
   border: 1px solid var(--gray-200);
   background: var(--white);
-  transition: border-color 250ms ease, box-shadow 250ms ease;
+  overflow: hidden;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease, border-color 220ms ease;
+
+  /* Colour wash anchored top-left behind the avatar. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -40% -20% auto -30%;
+    height: 160%;
+    background: radial-gradient(closest-side, var(--card-bg, var(--blue-50)), transparent 72%);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+  }
 
   &:hover {
+    transform: translateY(-4px);
     border-color: var(--gray-300);
-    box-shadow: 0 14px 32px -24px rgba(32, 33, 36, 0.35);
+    box-shadow: 0 22px 44px -26px rgb(32 33 36 / 45%);
   }
 }
 
 .cardTinted {
-  background: var(--card-bg, var(--white));
+  background: var(--white);
   border-color: transparent;
-
-  &:hover {
-    border-color: transparent;
-  }
 }
 
 .cardTop {
@@ -161,53 +201,67 @@
 }
 
 .cardHead {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   gap: 4px;
   min-width: 0;
 }
 
-.count {
-  font-size: 13px;
-  color: var(--gray-700);
-}
+
 
 .cardShape {
   flex: none;
-  width: 64px;
-  height: 64px;
+  width: 74px;
+  height: 74px;
   object-fit: cover;
-  transition: border-radius 250ms ease;
+  border-radius: 24px;
+  border: 3px solid rgb(255 255 255 / 92%);
+  box-shadow: 0 8px 20px -10px rgb(32 33 36 / 45%);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 220ms ease;
+}
+
+.card:hover .cardShape {
+  transform: scale(1.05) rotate(-2deg);
+  border-radius: 20px;
 }
 
 .shapeFallback {
   flex: none;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 74px;
+  height: 74px;
+  border-radius: 24px;
   background: var(--white);
+  border: 3px solid rgb(255 255 255 / 92%);
+  box-shadow: 0 8px 20px -10px rgb(32 33 36 / 45%);
   font-family: var(--font-ui);
-  font-size: 24px;
-  font-weight: 500;
+  font-size: 26px;
+  font-weight: 600;
   color: var(--gray-700);
 }
 
 .cardTitle {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.24;
-  letter-spacing: -0.2px;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
   color: var(--gray-900);
 
   a {
     color: inherit;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-size: 0% 2px;
+    background-position: 0 100%;
+    transition: background-size 220ms ease;
 
     &:hover {
-      text-decoration: underline;
-      text-underline-offset: 3px;
+      text-decoration: none;
+      background-size: 100% 2px;
     }
   }
 }
@@ -235,24 +289,35 @@
 .seriesCard {
   display: flex;
   flex-direction: column;
-  border-radius: var(--radius-card);
+  border-radius: 22px;
   border: 1px solid var(--gray-200);
   background: var(--white);
   overflow: hidden;
-  transition: border-color 250ms ease, box-shadow 250ms ease;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease, border-color 220ms ease;
 
   &:hover {
+    transform: translateY(-4px);
     border-color: var(--gray-300);
-    box-shadow: 0 16px 36px -22px rgba(32, 33, 36, 0.38);
+    box-shadow: 0 24px 48px -26px rgb(32 33 36 / 45%);
   }
 }
 
 .seriesMedia {
   position: relative;
   display: block;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   background: var(--gray-100);
   overflow: hidden;
+
+  /* Scrim so any cover blends into the card body. */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(transparent, rgb(32 33 36 / 14%));
+    pointer-events: none;
+  }
 }
 
 .seriesImg {
@@ -273,19 +338,11 @@
 .seriesBody {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 18px 20px 22px;
+  gap: 10px;
+  padding: 20px 22px 24px;
   flex: 1;
 }
 
-.seriesKicker {
-  margin: 0;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--gray-600);
-}
 
 /* ---------- Photo collection card ---------- */
 .albumCard {

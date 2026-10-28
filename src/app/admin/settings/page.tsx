@@ -389,43 +389,6 @@ function LinkEditor({
   );
 }
 
-function ListEditor({
-  label,
-  hint,
-  items,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  items: { label: string; href: string }[];
-  onChange: (items: { label: string; href: string }[]) => void;
-}) {
-  return (
-    <div className={styles.field}>
-      <span>{label}</span>
-      <em>{hint}</em>
-      {items.map((item, i) => (
-        <div key={i} className={styles.listRow}>
-          <input
-            value={item.label}
-            placeholder="Label"
-            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
-          />
-          <input
-            value={item.href}
-            placeholder="/href or https://…"
-            onChange={(e) => onChange(items.map((x, j) => (j === i ? { ...x, href: e.target.value } : x)))}
-          />
-          <button type="button" className={styles.listRemove} aria-label={`Remove ${item.label}`} onClick={() => onChange(items.filter((_, j) => j !== i))}>
-            ×
-          </button>
-        </div>
-      ))}
-      <button type="button" className={styles.listAdd} onClick={() => onChange([...items, { label: "", href: "" }])}>+ Add</button>
-    </div>
-  );
-}
-
 function EntryEditor({
   label,
   hint,

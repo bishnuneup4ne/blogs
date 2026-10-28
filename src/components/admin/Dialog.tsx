@@ -16,6 +16,7 @@ export function AdminDialog({
   footerStart,
   onClose,
   variant = "modal",
+  wide = false,
 }: {
   title: string;
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function AdminDialog({
   footerStart?: React.ReactNode;
   onClose: () => void;
   variant?: "panel" | "modal";
+  wide?: boolean;
 }) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -95,7 +97,7 @@ export function AdminDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={variant === "panel" ? styles.panel : styles.modal}
+        className={`${variant === "panel" ? styles.panel : styles.modal}${wide ? ` ${styles.wide}` : ""}`}
       >
         <header className={styles.head}>
           <h2 id={titleId} className={styles.title}>

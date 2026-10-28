@@ -20,6 +20,8 @@ export default function AdminSubscribersPage() {
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: state.subscribers.length };
@@ -78,6 +80,62 @@ export default function AdminSubscribersPage() {
       setError(e instanceof Error ? e.message : "Could not remove subscriber");
     } finally {
       setBusy("");
+    }
+  }
+
+  function toggle(email: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(email)) next.delete(email);
+      else next.add(email);
+      return next;
+    });
+  }
+
+  async function bulk(action: "unsubscribe" | "subscribe" | "delete") {
+    const emails = [...selected];
+    if (!emails.length) return;
+    if (action === "delete") {
+      const ok = await confirm({
+        title: `Remove ${emails.length} ${emails.length === 1 ? "subscriber" : "subscribers"}`,
+        body: "This deletes them from the list. The Undo button on the toast puts them back.",
+        confirmLabel: "Remove",
+      });
+      if (!ok) return;
+    }
+    const snapshot = state.subscribers.filter((s) => selected.has(s.email));
+    setBulkBusy(true);
+    setSelected(new Set());
+    setError("");
+    try {
+      if (action === "delete") {
+        await Promise.all(emails.map((e) => api.del(`/api/admin/subscribers?email=${encodeURIComponent(e)}`)));
+        toast(`${emails.length} removed`, "success", {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              await Promise.all(
+                snapshot.map((s) =>
+                  api.post("/api/admin/subscribers", { email: s.email, name: s.name, status: s.status, source: s.source }),
+                ),
+              );
+              await subsC.reload();
+              toast("Subscribers restored", "success");
+            } catch (e) {
+              toast(e instanceof Error ? e.message : "Could not restore subscribers");
+            }
+          },
+        });
+      } else {
+        const status = action === "unsubscribe" ? "unsubscribed" : "subscribed";
+        await Promise.all(emails.map((e) => api.patch("/api/admin/subscribers", { email: e, status })));
+        toast(`${emails.length} ${action === "unsubscribe" ? "unsubscribed" : "resubscribed"}`, "success");
+      }
+      await subsC.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bulk update failed");
+    } finally {
+      setBulkBusy(false);
     }
   }
 
@@ -157,6 +215,16 @@ export default function AdminSubscribersPage() {
         />
       </div>
 
+      {selected.size > 0 ? (
+        <div className={styles.bulk} role="region" aria-label="Bulk actions">
+          <span>{selected.size} selected</span>
+          <Button size="sm" onClick={() => bulk("unsubscribe")} disabled={bulkBusy}>Unsubscribe</Button>
+          <Button size="sm" variant="outlined" onClick={() => bulk("subscribe")} disabled={bulkBusy}>Resubscribe</Button>
+          <Button size="sm" variant="text" tone="danger" onClick={() => bulk("delete")} disabled={bulkBusy}>Remove</Button>
+          <Button size="sm" variant="text" onClick={() => setSelected(new Set())} disabled={bulkBusy}>Clear</Button>
+        </div>
+      ) : null}
+
       {subsC.loading || subsC.error ? null : rows.length === 0 ? (
         <p className={styles.emptyNote}>No subscribers match this view.</p>
       ) : (
@@ -164,6 +232,14 @@ export default function AdminSubscribersPage() {
         <Table>
           <thead>
             <tr>
+              <th className={styles.checkCol}>
+                <input
+                  type="checkbox"
+                  aria-label="Select all subscribers"
+                  checked={rows.length > 0 && selected.size === rows.length}
+                  onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.email)) : new Set())}
+                />
+              </th>
               <th>Subscriber</th>
               <th>Status</th>
               <th>Source</th>
@@ -174,6 +250,14 @@ export default function AdminSubscribersPage() {
           <tbody>
             {rows.map((s) => (
               <tr key={s.id}>
+                <td className={styles.checkCol} data-label="Select">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${s.email}`}
+                    checked={selected.has(s.email)}
+                    onChange={() => toggle(s.email)}
+                  />
+                </td>
                 <td data-label="Subscriber" data-card="title">
                   <div className={styles.person}>
                     <span className={styles.avatar}>{s.name.split(" ").map((x) => x[0]).join("")}</span>

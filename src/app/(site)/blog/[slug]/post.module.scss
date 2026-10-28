@@ -60,22 +60,8 @@
   background: var(--bg);
   padding-top: var(--spacer-3);
 
-  /* Soft category wash behind the title/date/byline block only — it fades
-     out before the article body starts, never over the cover photo. */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: clamp(520px, 62vh, 720px);
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--wash, #d7e6fd) 46%, transparent) 0%,
-      color-mix(in srgb, var(--wash-2, #e8f0fe) 22%, transparent) 46%,
-      transparent 100%
-    );
-    border-radius: 44px 44px 0 0;
-    pointer-events: none;
-  }
+  /* The header sits on plain white. A topic wash here tinted every article
+     blue regardless of its category, so the tint lives on cards instead. */
 }
 
 /* Mirrors blog.google's article page: a 12-column grid inside a 1440px
@@ -127,7 +113,9 @@
 
 /* Hero block — breadcrumb, title, abstract, byline (cols 3–10) */
 .articleFlow {
-  grid-column: 3 / span 8;
+  /* Header text runs on the same measure as the body below it (cols 4–9),
+     so the headline lines up with the first paragraph. */
+  grid-column: 4 / span 6;
   grid-row: 1;
   min-width: 0;
 }
@@ -348,19 +336,41 @@
 }
 
 .postedTitle {
-  font-size: 20px;
-  font-weight: 400;
-  color: var(--gray-700);
-  margin-bottom: var(--spacer-2);
+  margin: 0 0 16px;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--gray-900);
 }
 
 .postedPills {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+/* Topic and tags — soft tinted pills, blog.google restrained palette. */
+.postedTag {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  transition: background-color 160ms ease, color 160ms ease;
+
+  &:hover {
+    background: var(--gray-200);
+    color: var(--gray-900);
+  }
 }
 
 .related {

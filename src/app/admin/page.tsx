@@ -23,7 +23,7 @@ export default function AdminOverview() {
 
   const loadError = postsC.error || topicsC.error || subsC.error || analyticsError;
   // Same phrases isMissingSchema() checks server-side: only a truly absent
-  // schema should tell the editor to run supabase.sql.
+  // schema should tell the editor to run supabase/schema.sql.
   const needsSetup = /does not exist|Could not find the table|schema cache|PGRST205|42P01/i.test(loadError);
   const state = {
     posts: postsC.items.map((p) => ({ id: p.id, title: p.title, slug: p.slug, status: p.status, date: String(p.date).slice(0,10), cover: p.cover_url, tags: p.tags ?? [], category: p.topic_slug ?? "", authorId: p.author_id ?? "", views: analytics.top.find((t) => t.slug === p.slug)?.views ?? 0, updatedAt: String(p.updated_at ?? p.date), blocks: [] as unknown[] })),
@@ -41,6 +41,12 @@ export default function AdminOverview() {
     return date.toISOString().slice(0, 10);
   });
   const viewSeries = viewDays.map((day) => analytics.byDay?.[day] ?? 0);
+
+  // Posts whose date falls on each of the last 30 days — the publishing rhythm.
+  const publishSeries = viewDays.map(
+    (day) => published.filter((p) => p.date === day).length,
+  );
+  const maxPublishDay = Math.max(...publishSeries);
 
   const byTopic = state.topics
     .map((t) => ({ ...t, n: state.posts.filter((p) => p.category === t.slug).length }))
@@ -67,7 +73,7 @@ export default function AdminOverview() {
           <p className={styles.setupTitle}>{needsSetup ? "The database schema has not been created yet" : "Some data could not be loaded"}</p>
           <p className={styles.setupBody}>
             {needsSetup
-              ? "Run supabase.sql in the Supabase SQL editor once. It creates the fn_* tables, policies and seed rows, then reload this page."
+              ? "Run supabase/schema.sql in the Supabase SQL editor once. It creates the fn_* tables, policies and seed rows, then reload this page."
               : loadError}
           </p>
         </div>
@@ -135,6 +141,26 @@ export default function AdminOverview() {
                 <span className={styles.readsValue}>{analytics.totalViews.toLocaleString()}</span>
                 <Sparkline points={viewSeries} />
                 <span className={styles.readsFoot}>Across published posts</span>
+              </>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <CardHead title="Publishing rhythm" action={<span className={styles.muted}>Last 30 days</span>} />
+          <div className={styles.reads}>
+            {publishSeries.length && maxPublishDay > 0 ? (
+              <>
+                <span className={styles.readsValue}>{publishSeries.reduce((a, b) => a + b, 0)}</span>
+                <Sparkline points={publishSeries} />
+                <span className={styles.readsFoot}>
+                  {publishedThisMonth} published this month
+                </span>
+              </>
+            ) : (
+              <>
+                <span className={styles.readsValue}>0</span>
+                <span className={styles.readsFoot}>Nothing published in the last 30 days</span>
               </>
             )}
           </div>
