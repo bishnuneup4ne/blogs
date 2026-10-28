@@ -5,13 +5,16 @@ import styles from "./PostMetaBar.module.scss";
 
 /* Read-aloud built on the Web Speech API.
 
-   Three things break naive speechSynthesis use, all handled here:
+   Four things break naive speechSynthesis use, all handled here:
    1. getVoices() is empty until the browser finishes loading them — we wait
       for `voiceschanged` and fall back to any English voice.
    2. Chrome silently stops any utterance longer than ~15 seconds, so the
       article is split into sentence-sized chunks fed one at a time.
    3. Selecting a voice we don't actually have throws, so the choice is
-      validated before it is used. */
+      validated before it is used.
+   4. Chrome's speak()/pause() are flaky: speak() can be swallowed right
+      after cancel(), and pause() sometimes never takes effect — hence the
+      small delays and the speaking-state watchdog below. */
 export function ArticleTools({ title, body }: { title: string; body: string }) {
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -21,6 +24,7 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
   const indexRef = useRef(0);
   const cancelledRef = useRef(false);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const startedRef = useRef(false);
 
   /* Prefer a local English voice; the network ones are slow to start and often
      unavailable offline. */
@@ -57,6 +61,7 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
   const speakFrom = useCallback(
     (index: number) => {
       const synth = window.speechSynthesis;
+      if (cancelledRef.current) return;
       const chunk = chunksRef.current[index];
       if (!chunk) {
         setSpeaking(false);
@@ -71,13 +76,13 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
       utterance.lang = voiceRef.current?.lang ?? "en-US";
       if (voiceRef.current) utterance.voice = voiceRef.current;
 
-      utterance.onend = () => {
-        if (cancelledRef.current) return;
-        // Chrome fires onend immediately after cancel(); ignore that.
-        if (!synth.speaking && !synth.pending && indexRef.current === index) {
-          speakFrom(index + 1);
-        }
+      let ended = false;
+      const next = () => {
+        if (ended || cancelledRef.current) return;
+        ended = true;
+        speakFrom(index + 1);
       };
+      utterance.onend = next;
       utterance.onerror = (event) => {
         // "interrupted"/"canceled" are expected when the user stops playback.
         if (event.error === "interrupted" || event.error === "canceled") return;
@@ -95,6 +100,7 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
     if (!synth) return;
 
     cancelledRef.current = false;
+    startedRef.current = true;
     synth.cancel();
 
     // Refresh the voice in case voices finished loading since mount.
@@ -104,7 +110,11 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
     indexRef.current = 0;
     setSpeaking(true);
     setPaused(false);
-    speakFrom(0);
+    // Chrome swallows speak() calls made synchronously after cancel(); wait a
+    // beat so the queue is actually empty before feeding it.
+    window.setTimeout(() => {
+      if (!cancelledRef.current) speakFrom(0);
+    }, 80);
   }
 
   function toggleListen() {
@@ -129,11 +139,16 @@ export function ArticleTools({ title, body }: { title: string; body: string }) {
     } else {
       synth.pause();
       setPaused(true);
+      // Desktop Chrome occasionally ignores pause(); verify and retry once.
+      window.setTimeout(() => {
+        if (synth.speaking && !synth.paused) synth.pause();
+      }, 120);
     }
   }
 
   function stopListen() {
     cancelledRef.current = true;
+    startedRef.current = false;
     window.speechSynthesis?.cancel();
     setSpeaking(false);
     setPaused(false);

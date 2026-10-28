@@ -144,6 +144,11 @@
 @media (max-width: 560px) {
   .wrap {
     margin-top: var(--spacer-5);
+    padding-top: var(--spacer-3);
+  }
+
+  .inner {
+    gap: 22px;
   }
 
   .title {
@@ -155,7 +160,13 @@
     line-height: 26px;
   }
 
+  /* Edge-to-edge sheet instead of a floating card with a doodle dangling
+     outside the viewport — cleaner on phones. */
   .formCard {
-    padding: 18px;
+    padding: 18px 16px 20px;
+    border: none;
+    border-radius: var(--radius-card, 20px);
+    background: var(--gray-50, #f8f9fa);
+    box-shadow: none;
   }
 }

@@ -126,12 +126,18 @@
 @media (max-width: 560px) {
   .form {
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
+  /* Pill rows don't survive stacking — go fully round on both pieces. */
   .input,
   .submit {
     width: 100%;
     border-radius: var(--radius-pill);
+  }
+
+  .submit {
+    height: 52px;
+    font-size: 17px;
   }
 }

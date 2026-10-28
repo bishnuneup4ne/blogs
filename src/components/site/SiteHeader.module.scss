@@ -25,6 +25,11 @@
   transform: none;
 }
 
+/* The X toggle gets a soft disc so it reads as the control that closes this. */
+.shellOpen .burger {
+  background: var(--gray-100, #f1f3f4);
+}
+
 /* An overlay above us: taps must not reach the bar's controls. */
 .shell[data-overlay] .headerInner {
   pointer-events: none;
@@ -514,9 +519,10 @@
   inset: var(--header-h, 72px) 0 0;
   z-index: 80;
   background: var(--white, #fff);
-  padding: 14px var(--container-pad, 20px) 48px;
+  padding: 18px var(--container-pad, 20px) 32px;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
-  border-top: 1px solid var(--gray-150, #e8eaed);
   animation: drawerIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -576,8 +582,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 26px;
+  gap: 8px;
+  margin-top: auto;
+  padding-block: 16px;
   width: 100%;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--blue-600, #1a73e8);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--blue-800, #185abc);
+    color: #fff;
+  }
 }
 
 @keyframes drawerIn {
@@ -681,9 +701,29 @@
   transition: color 140ms ease;
 }
 
-.drawerLink:hover,
-.drawerLinkActive {
+.drawerLink:hover {
   color: var(--blue-700, #1967d2);
+}
+
+/* Current page: blue text plus a leading bar so it reads as "you are here",
+   not just a hover colour. */
+.drawerLinkActive {
+  position: relative;
+  padding-left: 18px;
+  color: var(--blue-700, #1967d2);
+  font-weight: 600;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 4px;
+    height: 22px;
+    transform: translateY(-50%);
+    border-radius: 4px;
+    background: var(--blue-600, #1a73e8);
+  }
 }
 
 .drawerIndex {
