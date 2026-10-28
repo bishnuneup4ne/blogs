@@ -50,12 +50,10 @@ function cleanDate(value: string): string | null {
 
 let coverHeightOk: boolean | null = null;
 function hasCoverHeight(): boolean {
-  // Cheap capability probe cached per process; updated by posts route on first write.
+  // Cheap capability probe cached per process. The API retries without these
+  // columns when an older schema rejects them, so this only skips a round trip.
   if (coverHeightOk === null) coverHeightOk = process.env.FN_POSTS_HAS_COVER_HEIGHT !== "0";
   return coverHeightOk;
-}
-export function setCoverHeightCapability(ok: boolean) {
-  coverHeightOk = ok;
 }
 
 export function parsePostInput(input: unknown, options: { partial: boolean; title?: string }): Result {
