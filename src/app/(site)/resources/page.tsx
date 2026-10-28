@@ -23,7 +23,6 @@ export default function ResourcesPage() {
       <Breadcrumb items={[{ label: "Home", href: routes.home }, { label: "Resources" }]} />
 
       <header className={styles.head}>
-        <p className={styles.kicker}>Library</p>
         <h1 className={styles.title}>Resources</h1>
         <p className={styles.lede}>
           Everything I cite in an article, collected in one place: {total} books, courses, videos and

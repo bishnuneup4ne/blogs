@@ -62,6 +62,16 @@ const TOUT_MEDIA_TINT: Record<string, string> = {
   gray: "toutGray",
 };
 
+/* Intrinsic size of each diagram, so next/image reserves the right box. */
+const DIAGRAM_SIZE: Record<string, [number, number]> = {
+  "hw-block-diagram.gif": [960, 540],
+  "hw-memory-storage.gif": [960, 540],
+  "hw-os-layers.gif": [960, 540],
+  "hw-binary-count.gif": [960, 540],
+  "hw-keystroke.gif": [960, 540],
+  "hw-instruction-cycle.png": [1200, 520],
+};
+
 export function PostContent({ blocks }: { blocks: Block[] }) {
   // Cover URLs can 404 before hydration (no onError fires then), so read
   // naturalWidth on mount as well and remember failures by block index.
@@ -147,7 +157,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                 <figure key={key} className={`${styles.figure}${block.width && block.width !== "full" ? ` ${styles[`fig${block.width[0].toUpperCase()}${block.width.slice(1)}`]}` : ""}`}>
                   {/* Article photos are not zoomable — the caption carries everything
                       a reader needs, and a lightbox interrupted the scroll. */}
-                  <div className={styles.imageWrap}>
+                  <div className={block.variant === "diagram" ? `${styles.imageWrap} ${styles.imageWrapDiagram}` : styles.imageWrap}>
                     {remote ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={block.src} alt={block.alt} loading="lazy" className={styles.image} />
@@ -155,8 +165,10 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
                       <Image
                         src={block.src}
                         alt={block.alt}
-                        width={1400}
-                        height={933}
+                        /* Diagrams letterbox at their own ratio, so the declared
+                           dimensions must match the file rather than assume 3:2. */
+                        width={block.variant === "diagram" ? DIAGRAM_SIZE[block.src.split("/").pop() ?? ""]?.[0] ?? 1200 : 1400}
+                        height={block.variant === "diagram" ? DIAGRAM_SIZE[block.src.split("/").pop() ?? ""]?.[1] ?? 520 : 933}
                         sizes="(max-width: 640px) 100vw, (max-width: 1440px) calc(100vw - 64px), 1376px"
                         className={styles.image}
                       />

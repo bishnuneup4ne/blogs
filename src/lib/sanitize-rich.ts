@@ -546,7 +546,10 @@ function normaliseBlock(raw: unknown): Block | null {
       const src = safeUrl(rawSrc, true);
       if (!src) return null;
       const width = ["full", "wide", "medium", "small"].includes(String(source.width)) ? (String(source.width) as "full" | "wide" | "medium" | "small") : undefined;
-      return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}) };
+      // "diagram" opts out of the 16/9 crop — charts and screenshots carry
+      // labels to their edges and lose words when cropped to fill.
+      const variant = source.variant === "diagram" ? ("diagram" as const) : undefined;
+      return { type, src, alt: text(source.alt, 400) ?? "", caption: text(source.caption, 600), ...(width ? { width } : {}), ...(variant ? { variant } : {}) };
     }
     case "row": {
       const ROW_SIZES = ["full", "square", "portrait", "wide"] as const;

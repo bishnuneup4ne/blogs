@@ -383,6 +383,19 @@
   }
 }
 
+/* Diagrams carry labels right to their edges, so cropping cuts words off.
+   Drop the fixed 16/9 box entirely and let the drawing set its own height. */
+.imageWrapDiagram {
+  aspect-ratio: auto;
+  background: var(--white, #fff);
+
+  img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+}
+
 /* Narrower placements for portraits, so nothing is stretched to the column. */
 .figMedium {
   width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 720px);
