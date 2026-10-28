@@ -338,12 +338,6 @@
 .tone-warning { background: var(--red-50); border-color: var(--red-100); }
 .tone-warning .calloutIcon { color: var(--red-900); box-shadow: inset 0 0 0 1px var(--red-100); }
 
-/* Layout variants using ID-based selectors (pure) */
-.co-left { grid-template-columns: 1fr; gap: 4px; padding: 16px 20px; border-left: 4px solid currentColor; border-radius: var(--radius-12); }
-.co-left .calloutIcon { width: auto; height: auto; background: none; box-shadow: none; justify-self: start; }
-.co-outline { background: transparent; border: 1.5px solid var(--border); }
-.co-filled { border-color: transparent; }
-
 /* ---- Media figure ---------------------------------------------------------- */
 
 .figure {
@@ -1878,30 +1872,6 @@
 
 /* ---- Link card variants --------------------------------------------------- */
 
-
-/* ---- Compare variants ----------------------------------------------------- */
-
-.cp-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  border: none;
-}
-
-.cp-columns .cmpHead { display: none; }
-.cp-columns .cmpRow {
-  display: grid;
-  gap: 2px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-16);
-  padding: 12px 14px;
-}
-
-/* ---- Countdown inline variant -------------------------------------------- */
-
-.cd-inline .countdownGrid { flex-direction: row; gap: 18px; }
-.cd-inline .countdownCell { min-width: 0; box-shadow: none; background: none; padding: 0; }
-.cd-inline .countdownCell strong { font-size: 22px; }
 
 /* ---- Responsive ----------------------------------------------------------- */
 
