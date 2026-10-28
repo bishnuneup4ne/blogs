@@ -909,6 +909,10 @@ function normaliseBlock(raw: unknown): Block | null {
     case "divider":
       return { type };
     default:
+      // Legacy "toc" blocks: the sidebar InThisArticle component now renders
+      // the table of contents automatically, so drop them silently instead of
+      // failing the whole save.
+      if (type === "toc") return { type: "divider" };
       return null;
   }
 }
