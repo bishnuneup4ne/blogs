@@ -1,8 +1,8 @@
 /* Content-based recommender: TF-IDF over title/description/tags/body with
-   cosine similarity, boosted by shared tags and topic. Used for "Related
-   stories" and "Read next". */
+   cosine similarity, boosted by shared tags, topic, series membership, and
+   cross-links between stories. Used for "Related stories" and "Read next". */
 
-import type { Post } from "./types";
+import type { Post, Series } from "./types";
 
 const STOPWORDS = new Set(
   `a about above after again against all am an and any are aren't as at be because been before being below between both but by can cannot could couldn't did didn't do does doesn't doing don't down during each few for from further had hadn't has hasn't have haven't having he her here hers herself him himself his how i if in into is isn't it its itself let's me more most must my myself no nor not of off on once only or other ought our ours ourselves out over own same shan't she should shouldn't so some such than that the their theirs them themselves then there these they this those through to too under until up very was wasn't we were weren't what when where which while who whom why with won't would wouldn't you your yours yourself yourselves also still even much many one two get got make made read writing write things thing really lot keep kept`
@@ -60,23 +60,61 @@ export interface ScoredPost {
   sharedTags: string[];
 }
 
-export function rankRelated(target: Post, pool: Post[], limit = 6): ScoredPost[] {
+/** Slugs of stories this post explicitly links to (in-body "read next" touts
+    and internal hrefs) — the strongest signal of editor intent. */
+function linkedSlugs(post: Post): Set<string> {
+  const out = new Set<string>();
+  for (const b of post.blocks) {
+    if (b.type === "related" && b.slug) out.add(b.slug);
+    const html = "html" in b ? (b as { html?: string }).html : undefined;
+    if (html) {
+      for (const m of html.matchAll(/href="\/blog\/([a-z0-9-]+)"/gi)) out.add(m[1]);
+    }
+  }
+  return out;
+}
+
+export function rankRelated(
+  target: Post,
+  pool: Post[],
+  limit = 6,
+  opts: { series?: Series[] } = {},
+): ScoredPost[] {
   const vectors = new Map<string, Map<string, number>>();
   for (const p of pool) vectors.set(p.slug, buildVector(p));
   const self = vectors.get(target.slug) ?? buildVector(target);
 
+  // Which series each story belongs to, so parts of one series pull each other.
+  const seriesOf = new Map<string, number>();
+  (opts.series ?? []).forEach((s, idx) => {
+    for (const p of s.posts) {
+      if (!seriesOf.has(p.slug)) seriesOf.set(p.slug, idx);
+    }
+  });
+
+  const targetLinks = linkedSlugs(target);
+  const normTag = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const targetTags = new Set(target.tags.map(normTag));
+
   const scored = pool
     .filter((p) => p.slug !== target.slug)
     .map((p) => {
-      const sharedTags = p.tags.filter((t) => target.tags.includes(t));
+      const sharedTags = p.tags.filter((t) => targetTags.has(normTag(t)));
       let score = cosine(self, vectors.get(p.slug)!) * 4; // content similarity 0..~4
       score += sharedTags.length * 1.5; // explicit tag intent
       if (p.category === target.category) score += 1; // same topic
       if (p.author.name === target.author.name) score += 0.25;
+      // Same series is a strong editorial bond — beats most keyword overlap.
+      const ts = seriesOf.get(target.slug);
+      const ps = seriesOf.get(p.slug);
+      if (ts !== undefined && ts === ps) score += 3;
+      // Either direction of an explicit cross-link counts.
+      if (targetLinks.has(p.slug) || linkedSlugs(p).has(target.slug)) score += 2.5;
       return { post: p, score, sharedTags };
     })
-    .filter((x) => x.score >= 0.4)
     .sort((a, b) => b.score - a.score || (a.post.date < b.post.date ? 1 : -1));
 
-  return scored.slice(0, limit);
+  const related = scored.filter((x) => x.score >= 0.4);
+  // Show every story with any real relevance, not just the top six.
+  return (related.length ? related : scored).slice(0, limit);
 }

@@ -80,7 +80,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   if (!post) notFound();
 
   const category = await getTopicCategory(post.category);
-  const related = await getRelatedPostsDetailed(post, 6);
+  const related = await getRelatedPostsDetailed(post, 12);
   const headings = getHeadings(post.blocks);
   // The reading bar shows a recognisable image for the story: the cover when
   // set, otherwise the first picture in the body, so it never falls back to

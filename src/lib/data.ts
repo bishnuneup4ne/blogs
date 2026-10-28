@@ -245,9 +245,9 @@ export async function getAllPostSummaries(): Promise<Pick<Post, "slug" | "title"
   return (await getAllPosts()).map(({ slug, title, date, category }) => ({ slug, title, date, category }));
 }
 
-export async function getRelatedPostsDetailed(post: Post, limit = 6): Promise<ScoredPost[]> {
-  const sorted = await getAllPosts();
-  return rankRelated(post, sorted, limit);
+export async function getRelatedPostsDetailed(post: Post, limit = 12): Promise<ScoredPost[]> {
+  const [sorted, series] = await Promise.all([getAllPosts(), getAllSeries()]);
+  return rankRelated(post, sorted, limit, { series });
 }
 
 export async function getPostsByCategory(slug: string): Promise<Post[]> {
