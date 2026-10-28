@@ -88,3 +88,16 @@
 .tileActive {
   border-color: var(--blue-600);
 }
+
+/* URL import row (Add from URL) */
+.urlRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}

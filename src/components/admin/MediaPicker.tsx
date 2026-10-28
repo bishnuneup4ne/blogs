@@ -5,6 +5,13 @@ import { api, type ApiUpload } from "@/components/admin/api";
 import { Button } from "@/components/admin/Button";
 import styles from "./media-picker.module.scss";
 
+/* Fetch a remote file and store it in our own bucket, so external links
+   (GIFs, photos) become permanent local URLs. */
+async function importFromUrl(url: string): Promise<string> {
+  const r = await api.post<{ src: string }>("/api/admin/upload", { url });
+  return r.src;
+}
+
 /* One field for "upload something new" or "pick it from the library".
    Accepts images, GIFs and MP4/WebM videos — same magic-byte rules as the
    upload endpoint. */
@@ -24,6 +31,9 @@ export function MediaPicker({
   const [error, setError] = useState("");
   const [browsing, setBrowsing] = useState(false);
   const [files, setFiles] = useState<ApiUpload[] | null>(null);
+  const [urlOpen, setUrlOpen] = useState(false);
+  const [urlValue, setUrlValue] = useState("");
+  const [importing, setImporting] = useState(false);
 
   async function pick(file: File | undefined) {
     if (!file) return;
@@ -36,6 +46,33 @@ export function MediaPicker({
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function addUrl() {
+    const v = urlValue.trim();
+    if (!/^https?:\/\//i.test(v)) {
+      setError("Enter a full https:// link");
+      return;
+    }
+    setImporting(true);
+    setError("");
+    try {
+      // Direct links are used as-is only when our server would accept them
+      // (Supabase storage host); everything else is copied into our bucket.
+      let src = v;
+      try {
+        src = await importFromUrl(v);
+      } catch {
+        /* proxy unavailable — fall back to the raw link */
+      }
+      onChange(src);
+      setUrlOpen(false);
+      setUrlValue("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not import that link");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -76,12 +113,35 @@ export function MediaPicker({
         <Button variant={browsing ? "filled" : "outlined"} onClick={() => (browsing ? setBrowsing(false) : void openBrowser())}>
           {browsing ? "Close library" : "Choose from library"}
         </Button>
+        <Button variant="text" disabled={busy || importing} onClick={() => setUrlOpen((v) => !v)}>
+          Add from URL
+        </Button>
         {value ? (
           <Button variant="text" tone="danger" disabled={busy} onClick={() => onChange("")}>
             Remove
           </Button>
         ) : null}
       </div>
+
+      {urlOpen ? (
+        <div className={styles.urlRow}>
+          <input
+            type="url"
+            placeholder="https://example.com/animation.gif — copied into your library"
+            value={urlValue}
+            onChange={(e) => setUrlValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void addUrl();
+              }
+            }}
+          />
+          <Button variant="filled" disabled={importing || !/^https?:\/\//i.test(urlValue.trim())} onClick={() => void addUrl()}>
+            {importing ? "Importing…" : "Add"}
+          </Button>
+        </div>
+      ) : null}
       <input
         ref={inputRef}
         type="file"

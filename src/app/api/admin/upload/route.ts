@@ -63,22 +63,59 @@ export async function DELETE(request: Request) {
 export async function POST(request: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
-  const declared = Number(request.headers.get("content-length") ?? 0);
-  if (Number.isFinite(declared) && declared > MAX_VIDEO_BYTES + 1_000_000) {
-    return NextResponse.json({ error: "Upload is too large" }, { status: 413 });
+
+  // Two shapes: multipart file upload, or JSON { url } to import a remote file. v2
+  const contentType = request.headers.get("content-type") ?? "";
+  let bytes: Uint8Array | null = null;
+
+  if (contentType.includes("application/json")) {
+    const body = (await request.json().catch(() => null)) as { url?: unknown } | null;
+    const raw = typeof body?.url === "string" ? body.url.trim() : "";
+    let target: URL;
+    try {
+      target = new URL(raw);
+    } catch {
+      return NextResponse.json({ error: "Enter a valid http(s) URL" }, { status: 400 });
+    }
+    if (target.protocol !== "https:" && target.protocol !== "http:") {
+      return NextResponse.json({ error: "Only http(s) URLs can be imported" }, { status: 400 });
+    }
+    const fetched = await fetch(target.toString(), {
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; SiteUploadImport/1.0)" },
+      signal: AbortSignal.timeout(20_000),
+    }).catch(() => null);
+    if (!fetched?.ok) {
+      return NextResponse.json({ error: "Could not download that URL" }, { status: 400 });
+    }
+    const declaredSize = Number(fetched.headers.get("content-length") ?? 0);
+    if (declaredSize > MAX_VIDEO_BYTES) {
+      return NextResponse.json({ error: "Remote file is too large" }, { status: 413 });
+    }
+    const buf = await fetched.arrayBuffer();
+    if (buf.byteLength === 0 || buf.byteLength > MAX_VIDEO_BYTES) {
+      return NextResponse.json({ error: "Remote file is empty or too large" }, { status: 413 });
+    }
+    bytes = new Uint8Array(buf);
+  } else {
+    const declared = Number(request.headers.get("content-length") ?? 0);
+    if (Number.isFinite(declared) && declared > MAX_VIDEO_BYTES + 1_000_000) {
+      return NextResponse.json({ error: "Upload is too large" }, { status: 413 });
+    }
+    const form = await request.formData().catch(() => null);
+    const file = form?.get("file");
+    if (!(file instanceof File)) return NextResponse.json({ error: "file is required" }, { status: 400 });
+    if (file.size === 0 || file.size > MAX_VIDEO_BYTES) {
+      return NextResponse.json({ error: "File is empty or too large" }, { status: 413 });
+    }
+    bytes = new Uint8Array(await file.arrayBuffer());
   }
-  const form = await request.formData().catch(() => null);
-  const file = form?.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ error: "file is required" }, { status: 400 });
-  if (file.size === 0 || file.size > MAX_VIDEO_BYTES) {
-    return NextResponse.json({ error: "File is empty or too large" }, { status: 413 });
-  }
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const kind = MAGIC.find((m) => m.test(bytes));
+
+  const kind = MAGIC.find((m) => m.test(bytes!));
   if (!kind) {
     return NextResponse.json({ error: "Only JPEG, PNG, WebP, GIF images or MP4/WebM videos are allowed" }, { status: 400 });
   }
-  if (bytes.length === 0 || bytes.length > kind.max) {
+  if (bytes!.length === 0 || bytes!.length > kind.max) {
     return NextResponse.json(
       { error: `File must be between 1 byte and ${kind.max / 1024 / 1024}MB` },
       { status: 400 },
@@ -87,7 +124,7 @@ export async function POST(request: Request) {
 
   const id = crypto.randomUUID();
   const path = `uploads/${Date.now()}-${id}.${kind.ext}`;
-  const { error } = await db.storage.from(env.storageBucket).upload(path, bytes, { contentType: kind.mime, upsert: false });
+  const { error } = await db.storage.from(env.storageBucket).upload(path, bytes!, { contentType: kind.mime, upsert: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const { data } = db.storage.from(env.storageBucket).getPublicUrl(path);
   const itemType = kind.mime.startsWith("video/") ? "video" : "image";
