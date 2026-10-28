@@ -13,6 +13,7 @@ export const routes = {
   personal: "/personal",
   personalBlogs: "/personal/blogs",
   about: "/about",
+  resources: "/resources",
   gallery: "/gallery",
   newsletter: "/newsletter",
   search: "/search",

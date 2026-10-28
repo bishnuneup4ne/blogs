@@ -73,6 +73,7 @@ export default async function HomePage() {
           href={routes.blog}
           limit={8}
           variant="spotlight"
+          featuredSlugs={new Set(featuredPosts.map((p) => p.slug))}
         />
       ) : null}
 

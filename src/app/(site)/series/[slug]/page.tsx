@@ -83,7 +83,7 @@ export default async function SeriesPage({
             </div>
           ) : null}
           <div className={styles.headCopy}>
-            <p className={styles.kicker}>Series · {seriesPosts.length} parts{leadCategory ? ` · ${leadCategory.name}` : ""}</p>
+            <p className={styles.kicker}>Series · {seriesPosts.length} {seriesPosts.length === 1 ? "part" : "parts"}{leadCategory ? ` · ${leadCategory.name}` : ""}</p>
             <h1 className={styles.title}>{series.title}</h1>
             {series.description ? <p className={styles.lede}>{series.description}</p> : null}
             <p className={styles.metaLine}>

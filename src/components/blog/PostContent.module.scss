@@ -70,7 +70,8 @@
     margin: 16px 0;
     color: var(--fg, var(--gray-800));
 
-    a {
+    /* The CTA row is a <p> too, so exclude its button from paragraph-link styling. */
+    a:not(.cta):not(.ctaOutline) {
       color: var(--blue-700, #1967d2);
       text-decoration: underline;
       text-decoration-thickness: 1px;
@@ -80,8 +81,8 @@
       transition: color 150ms ease, text-decoration-color 150ms ease;
     }
 
-    a:hover,
-    a:focus-visible {
+    a:not(.cta):not(.ctaOutline):hover,
+    a:not(.cta):not(.ctaOutline):focus-visible {
       color: var(--blue-900, #174ea6);
       text-decoration-color: currentColor;
     }
@@ -377,6 +378,28 @@
   border-radius: var(--radius-card);
   background: var(--bg);
   cursor: zoom-in;
+  /* Portrait photos at full column width ran 1400px tall — more than a screen.
+     Cap every figure to a comfortable band and crop, so the article keeps a
+     readable vertical rhythm regardless of the source aspect ratio. */
+  max-height: min(68vh, 560px);
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: min(68vh, 560px);
+    object-fit: cover;
+  }
+}
+
+/* Narrower placements for portraits, so nothing is stretched to the column. */
+.figMedium {
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 720px);
+}
+
+.figSmall {
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 520px);
 }
 
 .zoomHint {
@@ -1898,4 +1921,385 @@
 .acc-numbered .faqQText::before {
   content: counter(faq) ".";
   min-width: 22px;
+}
+
+/* ==========================================================================
+   Block style variants
+   The editor offers 2–4 looks per block. Each rule below is the CSS that makes
+   those options real — before this, thirteen block types applied a variant
+   class that had no rules behind it, so every option looked identical.
+   ========================================================================== */
+
+/* ---------- Callout: chip (default) / left rule / outline / filled -------- */
+.co-left {
+  /* Two children (icon + body): hide the icon and let the body take the row. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 12px 0 12px 20px;
+  border: none;
+  border-left: 3px solid var(--callout-accent, var(--blue-600));
+  border-radius: 0;
+  background: transparent;
+
+  > .calloutIcon {
+    display: none;
+  }
+}
+
+.co-outline {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--callout-accent, var(--blue-600)) 45%, #dadce0);
+}
+
+.co-filled {
+  border: none;
+  background: color-mix(in srgb, var(--callout-accent, var(--blue-600)) 9%, #fff);
+}
+
+/* ---------- Table: default / striped rows / cards ------------------------- */
+.tbl-striped {
+  tbody tr:nth-child(even) {
+    background: var(--gray-50, #f8f9fa);
+  }
+}
+
+.tbl-cards {
+  border: none;
+  background: transparent;
+
+  thead {
+    display: none;
+  }
+
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  tr {
+    margin-bottom: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 14px;
+    background: var(--white, #fff);
+  }
+
+  td {
+    padding: 4px 0;
+    border: none;
+
+    &:first-child {
+      font-family: var(--font-ui);
+      font-weight: 600;
+      color: var(--gray-900, #202124);
+    }
+
+    &::before {
+      content: attr(data-label);
+      display: inline-block;
+      min-width: 110px;
+      font-size: 12px;
+      color: var(--gray-500, #80868b);
+    }
+  }
+}
+
+/* ---------- Key takeaways: card (default) / plain / checklist ------------- */
+.kp-plain {
+  padding: 0 0 0 20px;
+  border-radius: 0;
+  background: none;
+  border: none;
+  border-left: 3px solid var(--block-accent, var(--blue-600, #1a73e8));
+
+  .summaryPill {
+    display: none;
+  }
+
+  .summaryTitle {
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500, #80868b);
+  }
+}
+
+.kp-checklist {
+  background: var(--white, #fff);
+  border: 1px solid var(--gray-200, #dadce0);
+
+  .summaryList li::before {
+    content: "";
+    width: 11px;
+    height: 6px;
+    border-left: 2px solid var(--block-accent, #1e8e3e);
+    border-bottom: 2px solid var(--block-accent, #1e8e3e);
+    border-radius: 0;
+    background: none;
+    transform: rotate(-45deg);
+    top: 0.72em;
+  }
+}
+
+/* ---------- Stats: cards (default) / plain / grid tiles ------------------- */
+.st-plain {
+  gap: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+
+  .statCell {
+    border: none;
+  }
+}
+
+.st-grid {
+  gap: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+
+  .statCell {
+    padding: 20px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 16px;
+    border-left: 1px solid var(--gray-200, #dadce0);
+    background: var(--white, #fff);
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---------- Timeline: spine (default) / cards / rows ---------------------- */
+.ts-cards {
+  padding-left: 0;
+  border-left: none;
+
+  ol {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 6px;
+  }
+
+  li {
+    padding: 16px 18px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 14px;
+    background: var(--white, #fff);
+  }
+
+  .timeStripDot {
+    display: none;
+  }
+}
+
+.ts-rows {
+  padding-left: 0;
+  border-left: none;
+
+  ol {
+    gap: 0;
+    border-top: 1px solid var(--gray-200, #dadce0);
+  }
+
+  li {
+    grid-template-columns: 96px 1fr;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-200, #dadce0);
+  }
+
+  .timeStripDot {
+    display: none;
+  }
+}
+
+/* ---------- Pros/cons: columns (default) / split / stacked ---------------- */
+.pc-split {
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 4px;
+  border-radius: 18px;
+  background: var(--gray-50, #f8f9fa);
+
+  .prosCol {
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+  }
+}
+
+.pc-stacked {
+  grid-template-columns: 1fr;
+
+  .prosCol {
+    border-radius: 14px;
+  }
+}
+
+/* ---------- Steps: numbered (default) / connected / cards ----------------- */
+.sp-connected {
+  ol {
+    position: relative;
+    gap: 0;
+  }
+
+  li {
+    padding-bottom: 26px;
+    position: relative;
+
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 15px;
+      top: 34px;
+      bottom: 6px;
+      width: 2px;
+      background: color-mix(in srgb, var(--block-accent, #1a73e8) 30%, #e8eaed);
+    }
+  }
+}
+
+.sp-cards {
+  ol {
+    gap: 10px;
+  }
+
+  li {
+    padding: 16px 18px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 14px;
+    background: var(--white, #fff);
+  }
+}
+
+/* ---------- Glossary: rows (default) / grid / chips ----------------------- */
+.gl-grid {
+  columns: 2 240px;
+  column-gap: 32px;
+}
+
+.gl-chips {
+  .glossaryRow {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 8px 8px 0;
+    padding: 8px 14px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 999px;
+    background: var(--white, #fff);
+
+    dd {
+      font-size: 13px;
+    }
+  }
+}
+
+/* ---------- Before/after code: side by side (default) / unified ----------- */
+.df-unified {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  max-width: 100%;
+}
+
+/* ---------- Person: profile / card (default) / inline / quote ------------- */
+/* Already styled in .pr-* rules above; nothing to add. */
+/* ---------- Progress: bar (default) / ring / segmented -------------------- */
+.pg-ring {
+  .progressTrack {
+    height: 14px;
+    border-radius: 999px;
+    background:
+      conic-gradient(
+        var(--block-accent, var(--blue-600)) calc(var(--pct, 0) * 1%),
+        var(--gray-150, #e8eaed) 0
+      );
+  }
+
+  .progressFill {
+    display: none;
+  }
+}
+
+.pg-segmented {
+  .progressTrack {
+    display: flex;
+    gap: 3px;
+    height: 12px;
+    background: none;
+  }
+
+  .progressFill {
+    border-radius: 4px;
+  }
+}
+
+/* ---------- Link cards: grid (default) / list / tiles --------------------- */
+.lc-list {
+  .linkCardsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .linkCard {
+    padding: 14px 18px;
+  }
+}
+
+.lc-tiles {
+  .linkCardsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .linkCard {
+    aspect-ratio: 1;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* ---------- Compare: table (default) / columns ---------------------------- */
+.cp-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  border: none;
+  background: none;
+
+  .cmpHead {
+    display: none;
+  }
+
+  .cmpRow {
+    display: grid;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--gray-200, #dadce0);
+    border-radius: 14px;
+    background: var(--white, #fff);
+  }
+}
+
+/* ---------- Related: tout / banner / minimal ------------------------------ */
+.rel-banner {
+  grid-template-columns: 1fr;
+}
+
+.rel-minimal {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
 }

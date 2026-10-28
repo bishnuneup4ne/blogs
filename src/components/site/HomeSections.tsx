@@ -200,6 +200,7 @@ export function StoryCarousel({
                     ) : null}
                   </Link>
                   <div className={styles.heroTileBody}>
+                    {featuredSlugs?.has(post.slug) ? <span className={styles.featuredBadge}>Featured</span> : null}
                     <h2 className={styles.heroTileTitle}>{post.title}</h2>
                     <p className={styles.heroTileDesc}>{post.description}</p>
                     <p className={styles.heroTileMeta}>By {post.author.name} · {formatDate(post.date)} · {post.readingMinutes} min read</p>

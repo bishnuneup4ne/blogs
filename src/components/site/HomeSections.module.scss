@@ -1290,3 +1290,21 @@ a:hover .compactMedia .coverImg {
     }
   }
 }
+
+/* Marks the post that "Lead the home page" is set on. */
+.featuredBadge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  height: 24px;
+  margin-bottom: 10px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: var(--gray-900, #202124);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}

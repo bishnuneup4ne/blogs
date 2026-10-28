@@ -521,7 +521,7 @@ export function PostContent({ blocks }: { blocks: Block[] }) {
               const max = block.max && block.max > 0 ? block.max : 100;
               const pct = Math.max(0, Math.min(100, (block.value / max) * 100));
               return (
-                <div key={key} className={`${styles.progressBlock} ${block.variant ? styles[`pg-${block.variant}`] : ""}`} role="figure" aria-label={block.label || "Progress"} style={{ ...accentStyle(block), ["--pg-pct" as string]: `${pct}%`, ["--pg-color" as string]: block.color ?? "" } as React.CSSProperties}>
+                <div key={key} className={`${styles.progressBlock} ${block.variant ? styles[`pg-${block.variant}`] : ""}`}aria-label={block.label || "Progress"} style={{ ...accentStyle(block), ["--pg-pct" as string]: `${pct}%`, ["--pg-color" as string]: block.color ?? "" } as React.CSSProperties}>
                   <div className={styles.progressTop}>
                     <p className={styles.progressLabel}>{block.label || "Progress"}</p>
                     <span className={styles.progressValue}>

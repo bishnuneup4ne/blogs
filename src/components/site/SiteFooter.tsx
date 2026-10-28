@@ -17,6 +17,9 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               </Link>
             </li>
           ))}
+          <li className={styles.linksItem}>
+            <Link href={routes.resources}>Resources</Link>
+          </li>
           {settings.footerLinks.some((link) => link.href === "/privacy") ? null : (
             <li className={styles.linksItem}>
               <Link href={routes.privacy}>Privacy</Link>
