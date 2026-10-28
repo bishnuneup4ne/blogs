@@ -184,6 +184,16 @@
 
 /* ---------- Actions ---------- */
 
+/* Search has two forms: an expanding field on desktop, a direct link to the
+   search page on narrow screens where there is no room to type. */
+.searchIconMobile {
+  display: none;
+}
+
+.searchIconDesktop {
+  display: grid;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -420,7 +430,19 @@
 }
 
 @media (max-width: 700px) {
-  /* Search collapses to its icon so the bar fits a 390px screen. */
+  /* No room to type beside the masthead: the icon links to /search instead. */
+  .searchBox {
+    display: none;
+  }
+
+  .searchIconMobile {
+    display: grid;
+  }
+
+  .searchIconDesktop {
+    display: none;
+  }
+
   .searchLabel,
   .searchKey {
     display: none;
@@ -475,7 +497,7 @@
   inset: var(--header-h, 72px) 0 0;
   z-index: 80;
   background: var(--white, #fff);
-  padding: 12px var(--container-pad, 20px) 48px;
+  padding: 8px var(--container-pad, 20px) 48px;
   overflow-y: auto;
   animation: drawerIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
@@ -626,18 +648,19 @@
   display: grid;
 }
 
+/* One label per row — no index or trailing arrow to reserve columns for. */
 .drawerLink {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 4px;
+  min-height: 56px;
+  padding: 0 4px;
   border-bottom: 1px solid var(--gray-150, #e8eaed);
   font-family: var(--font-ui);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--gray-900, #202124);
   text-decoration: none;
+  transition: color 140ms ease;
 }
 
 .drawerLink:hover,

@@ -25,7 +25,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const nav = settings.nav.length ? settings.nav : [{ label: "Blog", href: "/blog" }];
-  const brandInitial = settings.identity.authorName.trim().charAt(0).toUpperCase() || "B";
 
   useEffect(() => {
     // On article pages the reading bar takes over: hide the header at exactly
@@ -219,7 +218,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               <button
                 ref={searchButtonRef}
                 type="button"
-                className={styles.iconBtn}
+                className={`${styles.iconBtn} ${styles.searchIconDesktop}`}
                 aria-label={searchOpen ? "Close search" : "Search"}
                 aria-expanded={searchOpen}
                 aria-keyshortcuts="/"
@@ -228,6 +227,11 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 {searchOpen ? <CloseIcon width={20} height={20} /> : <SearchIcon width={20} height={20} />}
               </button>
             </div>
+            {/* Narrow screens have no room for the inline field, so this icon is a
+                direct link to the search page instead. */}
+            <Link href={routes.search} className={`${styles.iconBtn} ${styles.searchIconMobile}`} aria-label="Search">
+              <SearchIcon width={20} height={20} />
+            </Link>
             <Link href={routes.gallery} className={styles.iconBtn} aria-label="Open gallery">
               <ImagesIcon />
             </Link>
@@ -258,50 +262,28 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           if (event.target === event.currentTarget) setDrawer(false);
         }}>
           <div ref={drawerRef} id="site-menu" className={styles.drawer} role="dialog" aria-modal="true" aria-label="Site navigation">
-            <div className={styles.drawerTop}>
-              <Link href={routes.home} className={styles.drawerBrand} aria-label={`${settings.identity.siteName} home`}>
-                <span className={styles.brandMark}>{brandInitial}</span>
-                <span className={styles.drawerBrandText}>
-                  <span className={styles.drawerBrandName}>
-                    <span className={styles.drawerBrandKicker}>News from</span>
-                    <span>{settings.identity.wordmark}</span>
-                  </span>
-                </span>
-              </Link>
-              <button type="button" className={styles.drawerClose} onClick={() => setDrawer(false)} aria-label="Close menu">
-                <CloseIcon width={22} height={22} />
-              </button>
-            </div>
-
-            <form onSubmit={submitSearch} className={styles.drawerSearch} role="search">
-              <SearchIcon width={19} height={19} />
-              <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the archive…" aria-label="Search the site" />
-              <button type="submit" aria-label="Submit search"><ArrowRight width={18} height={18} /></button>
-            </form>
-
-            <p className={styles.drawerEyebrow}>EXPLORE</p>
             <nav className={styles.drawerNav} aria-label="Mobile navigation">
-              {nav.map((item, index) => (
-                <Link key={item.href} href={item.href} className={`${styles.drawerLink} ${isActive(item.href) ? styles.drawerLinkActive : ""}`} aria-current={isActive(item.href) ? "page" : undefined}>
-                  <span className={styles.drawerIndex}>{String(index + 1).padStart(2, "0")}</span>
+              {nav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`${styles.drawerLink} ${isActive(item.href) ? styles.drawerLinkActive : ""}`}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                >
                   <span className={styles.drawerLabel}>{item.label}</span>
-                  <ArrowRight className={styles.drawerArrow} width={19} height={19} />
                 </Link>
               ))}
+              <Link href={routes.search} className={styles.drawerLink}>
+                <span className={styles.drawerLabel}>Search</span>
+              </Link>
             </nav>
 
-            <div className={styles.drawerFoot}>
-              {settings.toggles.newsletter && (
-                <Link href={routes.newsletter} className={styles.drawerCta}>
-                  <span>Get the newsletter</span><ArrowRight width={18} height={18} />
-                </Link>
-              )}
-              <div className={styles.drawerMeta}>
-                <a href={`mailto:${settings.identity.email}`}>Contact</a>
-                <Link href={routes.gallery}>Gallery</Link>
-                <Link href={routes.privacy}>Privacy</Link>
-              </div>
-            </div>
+            {settings.toggles.newsletter && (
+              <Link href={routes.newsletter} className={styles.drawerCta}>
+                <span>Get the newsletter</span>
+                <ArrowRight width={18} height={18} />
+              </Link>
+            )}
           </div>
         </div>
       )}
