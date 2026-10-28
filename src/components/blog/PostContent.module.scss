@@ -1207,9 +1207,6 @@
 }
 
 /* Layout variants (class-based, matching the editor's option values). */
-.lc-list .linkCardsGrid { grid-template-columns: 1fr; }
-.lc-tiles .linkCard { align-items: center; text-align: center; }
-.lc-tiles .linkCardTitle { justify-content: center; }
 
 /* ---- Comparison table ----------------------------------------------------- */
 
@@ -1734,9 +1731,6 @@
 
 /* ---- Link card variants --------------------------------------------------- */
 
-.lc-list .linkCardsGrid { grid-template-columns: 1fr; }
-.lc-tiles .linkCard { align-items: center; text-align: center; }
-.lc-tiles .linkCardTitle { justify-content: center; }
 
 /* ---- Compare variants ----------------------------------------------------- */
 
@@ -2257,16 +2251,33 @@
 }
 
 /* ---------- Link cards: grid (default) / list / tiles --------------------- */
+/* List variant: one column, and no bullet markers from the prose list rules. */
 .lc-list {
   .linkCardsGrid {
     grid-template-columns: 1fr;
     gap: 8px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .linkCardsGrid li {
+    padding: 0;
+    list-style: none;
+
+    &::before,
+    &::marker {
+      content: none;
+      display: none;
+    }
   }
 
   .linkCard {
-    padding: 14px 18px;
+    padding: 16px 20px;
   }
 }
+
+.lc-tiles .linkCard { align-items: center; text-align: center; }
+.lc-tiles .linkCardTitle { justify-content: center; }
 
 .lc-tiles {
   .linkCardsGrid {
