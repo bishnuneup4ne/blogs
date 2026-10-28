@@ -13,14 +13,27 @@
   transition: transform 260ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms ease;
 }
 
+/* Drawer open: the sheet is flush under the bar, so they read as one panel —
+   drop the hairline and keep the bar visible above the reading progress bar. */
+.shellOpen {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: var(--white, #fff);
+  border-bottom-color: transparent;
+  visibility: visible;
+  transform: none;
+}
+
 /* An overlay above us: taps must not reach the bar's controls. */
 .shell[data-overlay] .headerInner {
   pointer-events: none;
 }
 
-/* Hidden state. Written out rather than composed: Turbopack drops `composes`
-   from CSS modules, which left the hidden shell without its sticky/z-index
-   and let it sit on top of the article's reading bar. */
+/* Hidden state — only ever applied when no overlay is open (guarded in TSX).
+   Written out rather than composed: Turbopack drops `composes` from CSS
+   modules, which left the hidden shell without its sticky/z-index and let it
+   sit on top of the article's reading bar. */
 .shellHidden {
   position: sticky;
   top: 0;
@@ -458,21 +471,25 @@
 }
 
 @media (max-width: 560px) {
-  /* A bare wordmark reads as a username; keep the kicker so the masthead
-     still says what this is, sized down to fit the bar. */
+  /* Phones show just the wordmark — the "News from" kicker takes room the
+     icons need, and the drawer carries the rest. */
+  .brandKicker {
+    display: none;
+  }
+
   .brandName {
     font-size: 17px;
     letter-spacing: -0.3px;
   }
 
-  .brandKicker {
-    font-size: 9.5px;
-  }
-
   .brand {
     gap: 5px;
-    flex-wrap: wrap;
-    align-content: center;
+  }
+
+  /* One icon shortcut is enough on a phone — search lives in the bar,
+     gallery and newsletter move into the drawer. */
+  .galleryIcon {
+    display: none;
   }
 
   .cta {
@@ -497,8 +514,9 @@
   inset: var(--header-h, 72px) 0 0;
   z-index: 80;
   background: var(--white, #fff);
-  padding: 8px var(--container-pad, 20px) 48px;
+  padding: 14px var(--container-pad, 20px) 48px;
   overflow-y: auto;
+  border-top: 1px solid var(--gray-150, #e8eaed);
   animation: drawerIn 180ms cubic-bezier(0.2, 0, 0, 1);
 }
 

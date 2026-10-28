@@ -173,7 +173,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   }
 
   return (
-    <div className={`${styles.shell} ${scrolled ? styles.shellScrolled : ""} ${hidden ? styles.shellHidden : ""}`}>
+    <div className={`${drawer ? styles.shellOpen : ""} ${scrolled ? styles.shellScrolled : ""} ${hidden && !drawer ? styles.shellHidden : ""}`}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href={routes.home} className={styles.brand} aria-label={`${settings.identity.siteName} home`}>
@@ -232,7 +232,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             <Link href={routes.search} className={`${styles.iconBtn} ${styles.searchIconMobile}`} aria-label="Search">
               <SearchIcon width={20} height={20} />
             </Link>
-            <Link href={routes.gallery} className={styles.iconBtn} aria-label="Open gallery">
+            <Link href={routes.gallery} className={`${styles.iconBtn} ${styles.galleryIcon}`} aria-label="Open gallery">
               <ImagesIcon />
             </Link>
             {settings.toggles.newsletter && (
@@ -275,6 +275,9 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               ))}
               <Link href={routes.search} className={styles.drawerLink}>
                 <span className={styles.drawerLabel}>Search</span>
+              </Link>
+              <Link href={routes.gallery} className={styles.drawerLink}>
+                <span className={styles.drawerLabel}>Gallery</span>
               </Link>
             </nav>
 
