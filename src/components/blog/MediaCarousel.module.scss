@@ -1,13 +1,22 @@
 .wrap {
   /* Full-bleed outside the reading column so later cards can peek off the
      right edge; the page width comes from the article container. */
-  --page-w: calc(100cqw - 2 * var(--container-pad, 32px));
-  /* Card width; media cards are 16:9, quote slides a portrait-ish panel. */
-  --col: calc(var(--page-w) * 0.8);
-  margin-block: 36px;
+  --page-w: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
+  /* Card width matches the photo/video figure exactly — same left edge,
+     same box, so every media block in an article lines up. */
+  --col: var(--page-w);
+  margin-block: clamp(32px, 3.5vw, 48px) 0;
   margin-inline: calc(-1 * (50cqw - 50%));
   padding-inline: 0;
   overflow: hidden;
+}
+
+.wrap figcaption {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--muted, var(--gray-600));
+  text-align: center;
 }
 
 .track,
@@ -274,7 +283,7 @@
 
   .wrap {
     /* One card per view on phones, still aligned to the page gutter. */
-    --col: 100%;
+    --col: var(--page-w);
   }
 
   .quoteTile {

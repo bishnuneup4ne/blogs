@@ -751,7 +751,12 @@
 /* ---- Embeds --------------------------------------------------------------- */
 
 .embedWrap {
-  margin: 2.2em 0;
+  /* Same capped, centred box as photo/video figures. */
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
+  margin: clamp(32px, 3.5vw, 48px) 0;
 }
 
 .embedFrame {
@@ -776,49 +781,8 @@
     aspect-ratio: auto;
     min-height: 0;
   }
-}
 
-.embedCaption {
-  margin-top: 10px;
-  font-size: 0.86em;
-  color: var(--gray-600, #5f6368);
-  text-align: center;
-}
-
-/* Rich embeds (Instagram/Twitter/TikTok/Gist) render their own chrome, so the
-   wrapper just centres them at their native width. */
-.embedRich {
-  display: flex;
-  justify-content: center;
-
-  :global(blockquote.instagram-media),
-  :global(.twitter-tweet),
-  :global(.tiktok-embed),
-  :global(article.instagram-media) {
-    margin: 0 auto !important;
-    max-width: 540px;
-    min-width: 326px;
-    width: 100%;
-  }
-
-  iframe {
-    border: 0;
-    border-radius: 18px;
-  }
-}
-
-.gistContainer {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 18px;
-
-  :global(script) {
-    display: none;
-  }
-}
-
-/* Link-card fallback for hosts without a real embed API. */
-.embedFrame {
+  /* Link-card fallbacks are not media — keep them at reading width. */
   :global(.embed-link-card) {
     display: flex;
     align-items: center;
@@ -857,6 +821,152 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.embedCaption {
+  margin-top: 10px;
+  font-size: 0.86em;
+  color: var(--gray-600, #5f6368);
+  text-align: center;
+}
+
+/* ---- Before / after slider -------------------------------------------------- */
+
+.baFrame {
+  /* Same capped, centred 16:9 box as photos and video. */
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
+  margin: clamp(32px, 3.5vw, 48px) 0;
+}
+
+.baImages {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--gray-100);
+
+  img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.baAfter {
+  z-index: 0;
+}
+
+.baBefore {
+  z-index: 1;
+  clip-path: inset(0 calc(100% - var(--ba-pos, 50%)) 0 0);
+}
+
+.baHandle {
+  position: absolute;
+  top: 50%;
+  left: var(--ba-pos, 50%);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--gray-700);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -100vh;
+    bottom: -100vh;
+    width: 2px;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  }
+
+  svg {
+    position: relative;
+  }
+}
+
+.baRange {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  appearance: none;
+  background: transparent;
+}
+
+.baTagLeft,
+.baTagRight {
+  position: absolute;
+  top: 14px;
+  z-index: 2;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.baTagLeft {
+  left: 14px;
+}
+
+.baTagRight {
+  right: 14px;
+}
+
+/* Rich embeds (Instagram/Twitter/TikTok/Gist) render their own chrome, so the
+   wrapper just centres them at their native width. */
+.embedRich {
+  display: flex;
+  justify-content: center;
+
+  :global(blockquote.instagram-media),
+  :global(.twitter-tweet),
+  :global(.tiktok-embed),
+  :global(article.instagram-media) {
+    margin: 0 auto !important;
+    max-width: 540px;
+    min-width: 326px;
+    width: 100%;
+  }
+
+  iframe {
+    border: 0;
+    border-radius: 18px;
+  }
+}
+
+.gistContainer {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+
+  :global(script) {
+    display: none;
   }
 }
 
@@ -1146,20 +1256,25 @@
 /* ---- Link cards ----------------------------------------------------------- */
 
 /* Same box as media figures, so the grid lines up with photos and video. */
+/* Resources at the end of an article: a titled list of links, each row a
+   card that carries the resource name and one line of why it is worth it. */
 .linkCards {
   position: relative;
   left: 50%;
   transform: translateX(-50%);
   width: min(calc(100cqw - 2 * var(--container-pad, 32px)), 1000px);
-  margin: clamp(32px, 3.5vw, 48px) 0;
+  margin: clamp(40px, 5vw, 60px) 0;
 }
 
 .linkCardsTitle {
-  margin: 0 0 14px;
+  margin: 0 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-200, #dadce0);
   font-family: var(--font-ui);
-  font-size: 1.15em;
-  font-weight: 600;
-  color: var(--gray-900);
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--gray-900, #202124);
 }
 
 .linkCardsGrid {
@@ -1167,42 +1282,77 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 12px;
 }
 
 .linkCard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  row-gap: 5px;
+  align-content: start;
   height: 100%;
-  padding: 16px 18px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-16);
+  padding: 18px 20px;
+  border: 1px solid var(--gray-200, #dadce0);
+  border-radius: 16px;
   background: var(--white, #fff);
   text-decoration: none;
   color: inherit;
-  transition: border-color 160ms ease, box-shadow 200ms ease, transform 160ms ease;
+  transition: border-color 160ms ease, box-shadow 200ms ease, background-color 160ms ease;
 
   &:hover {
-    border-color: var(--blue-200);
-    box-shadow: var(--shadow-1);
-    transform: translateY(-1px);
+    border-color: var(--gray-400, #9aa0a6);
+    background: var(--gray-50, #f8f9fa);
+    box-shadow: 0 1px 2px rgb(60 64 67 / 6%), 0 12px 26px -22px rgb(60 64 67 / 45%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--blue-500);
+    outline-offset: 2px;
   }
 }
 
 .linkCardTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  grid-column: 1;
+  display: block;
   font-family: var(--font-ui);
-  font-weight: 600;
-  color: var(--gray-900);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--gray-900, #202124);
+
+  svg {
+    display: none;
+  }
+}
+
+/* A single arrow in the trailing column, aligned with the title row. */
+.linkCard::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  width: 15px;
+  height: 15px;
+  background: currentColor;
+  color: var(--gray-400, #9aa0a6);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M9 7h8v8'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.linkCard:hover::after {
+  color: var(--blue-700, #1967d2);
+  transform: translate(1px, -1px);
 }
 
 .linkCardDesc {
-  font-size: 0.9em;
-  color: var(--gray-600);
+  grid-column: 1 / -1;
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--gray-600, #5f6368);
   line-height: 1.5;
 }
 
